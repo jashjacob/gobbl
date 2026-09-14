@@ -69,7 +69,9 @@ extension MemoryStore {
     }
 
     /// The closest items to `query` (a raw vector; normalised here).
-    public func nearest(_ query: [Float], kinds: Set<VectorKind>, limit: Int = 20, minScore: Float = 0.35) throws -> [VectorHit] {
+    /// 0.48: Apple's sentence vectors score related text around 0.6 and
+    /// unrelated text around 0.35–0.4, so this keeps the noise out.
+    public func nearest(_ query: [Float], kinds: Set<VectorKind>, limit: Int = 20, minScore: Float = 0.48) throws -> [VectorHit] {
         let q = VectorMath.normalized(query)
         let all = try vectorCache.load { try self.allVectors() }
         var hits: [VectorHit] = []
