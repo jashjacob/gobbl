@@ -24,20 +24,21 @@
 </script>
 <style>
 :root{
-  --bg:#08080a; --bg2:#0f1013; --surface:#131418; --raised:#1a1c21; --line:rgba(255,255,255,.08);
+  --bg:#08080a; --bg2:#0f1013; --surface:#131418; --raised:#1a1c21; --line:rgba(255,255,255,.07);
   --text:#f2f3f5; --muted:#9aa0a8; --faint:#5f646d; --lime:#a6f25c; --lime2:#6fd39b; --pink:#ff6fa5; --gold:#f5c542; --blue:#5b9cf6;
   --ease:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.3,1.5,.5,1);
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--text);font:17px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .wrap{max-width:1160px;margin:0 auto;padding:0 24px}
 ::selection{background:var(--lime);color:#000}
 
 /* progress + nav */
-#progress{position:fixed;top:0;left:0;height:2px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--lime),var(--pink));z-index:60}
+#progress{position:fixed;top:0;left:0;height:2px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:var(--lime);opacity:.7;z-index:60}
+.i{width:1.1em;height:1.1em;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.18em}
 nav{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:26px;padding:10px 12px 10px 18px;border-radius:999px;
   background:rgba(18,19,23,.55);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--line);transition:padding .3s var(--ease),background .3s}
 nav.small{padding:6px 8px 6px 14px;background:rgba(18,19,23,.8)}
@@ -47,26 +48,26 @@ nav .links{display:flex;gap:20px;font-size:14px;color:var(--muted)}
 nav .links a:hover{color:var(--text)}
 .btn{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:999px;font-weight:700;font-size:15.5px;transition:transform .25s var(--spring),box-shadow .3s,background .2s;will-change:transform;white-space:nowrap}
 .btn.small{padding:8px 14px;font-size:13.5px}
-.btn.primary{background:var(--lime);color:#07120a;box-shadow:0 0 0 0 rgba(166,242,92,.5),0 10px 30px -10px rgba(166,242,92,.55)}
-.btn.primary:hover{box-shadow:0 0 0 6px rgba(166,242,92,.14),0 14px 40px -10px rgba(166,242,92,.7)}
+.btn.primary{background:var(--lime);color:#07120a;box-shadow:0 8px 24px -12px rgba(166,242,92,.45)}
+.btn.primary:hover{box-shadow:0 0 0 4px rgba(166,242,92,.12),0 10px 30px -12px rgba(166,242,92,.55)}
 .btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--line)}
 .btn.ghost:hover{background:rgba(255,255,255,.1)}
 .btn small{opacity:.65;font-weight:600}
 
 /* ambient */
-.glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;pointer-events:none;animation:drift 18s ease-in-out infinite alternate}
-@keyframes drift{to{transform:translate(60px,-40px) scale(1.15)}}
+.glow{position:absolute;border-radius:50%;filter:blur(110px);pointer-events:none;animation:drift 24s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(30px,-20px) scale(1.06)}}
 
 /* hero */
-.hero{position:relative;min-height:min(100vh,980px);padding:130px 0 40px;text-align:center;overflow:hidden}
+.hero{position:relative;min-height:min(100vh,980px);padding:150px 0 60px;text-align:center;overflow:hidden}
 .eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:13px;font-weight:600;color:var(--lime);padding:6px 12px;border-radius:999px;background:rgba(166,242,92,.08);border:1px solid rgba(166,242,92,.2);margin-bottom:22px}
 .eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 12px var(--lime);animation:pulse 1.6s infinite}
 @keyframes pulse{50%{opacity:.3}}
 h1{font-size:clamp(46px,8.4vw,104px);line-height:.95;letter-spacing:-.045em;margin:0 0 22px;font-weight:850}
 h1 .w{display:inline-block;opacity:0;transform:translateY(40px) rotate(4deg);filter:blur(8px);animation:rise .9s var(--ease) forwards;animation-delay:calc(var(--i)*90ms + 150ms)}
-h1 .grad{background:linear-gradient(100deg,var(--lime),#e8ff9e 40%,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 .grad{background:linear-gradient(100deg,var(--lime),#d9f7b8);-webkit-background-clip:text;background-clip:text;color:transparent}
 @keyframes rise{to{opacity:1;transform:none;filter:none}}
-.lede{font-size:clamp(17px,2.1vw,21px);color:var(--muted);max-width:660px;margin:0 auto 32px;opacity:0;animation:rise .9s var(--ease) .75s forwards}
+.lede{font-size:clamp(17px,1.9vw,20px);color:var(--muted);max-width:660px;margin:0 auto 32px;opacity:0;animation:rise .9s var(--ease) .75s forwards}
 .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;opacity:0;animation:rise .9s var(--ease) .9s forwards}
 .fine{margin-top:14px;font-size:13px;color:var(--faint);opacity:0;animation:rise .9s var(--ease) 1s forwards}
 
@@ -91,15 +92,15 @@ h1 .grad{background:linear-gradient(100deg,var(--lime),#e8ff9e 40%,var(--pink));
   transition:width .55s var(--spring),height .55s var(--spring),border-radius .4s var(--ease),box-shadow .4s;overflow:hidden}
 .notch.open{width:min(600px,86%);height:clamp(170px,40%,235px);border-radius:0 0 30px 30px;box-shadow:0 30px 60px -10px rgba(0,0,0,.7)}
 .notch.drop{box-shadow:0 0 0 2px var(--lime),0 0 40px rgba(166,242,92,.35)}
-.notch .mini{position:absolute;left:14px;top:3px;width:24px;height:24px;transition:all .5s var(--spring)}
-.notch.open .mini{left:22px;top:46px;width:min(120px,24%);height:min(120px,24%);aspect-ratio:1}
+.notch .mini{position:absolute;left:14px;top:3px;width:24px;height:auto;aspect-ratio:1/1;transition:left .5s var(--spring),top .5s var(--spring),width .5s var(--spring)}
+.notch.open .mini{left:22px;top:46px;width:min(120px,22%);height:auto;aspect-ratio:1/1}
 .notch .wing{position:absolute;right:16px;top:7px;font-size:11px;font-weight:700;color:var(--muted);display:flex;gap:5px;align-items:center;transition:opacity .2s}
 .notch.open .wing{opacity:0}
 .notch .tabs{position:absolute;left:20px;top:8px;display:flex;gap:6px;opacity:0;transition:opacity .3s .15s}
 .notch.open .tabs{opacity:1}
 .notch .tabs i{width:22px;height:14px;border-radius:7px;background:rgba(255,255,255,.1)}
 .notch .tabs i.on{background:rgba(255,255,255,.28)}
-.panel{position:absolute;left:calc(min(120px,24%) + 44px);right:18px;top:44px;bottom:16px;opacity:0;transform:translateY(12px);transition:opacity .35s,transform .45s var(--ease);pointer-events:none;text-align:left;font-size:12px}
+.panel{position:absolute;left:calc(min(120px,22%) + 44px);right:18px;top:44px;bottom:16px;opacity:0;transform:translateY(12px);transition:opacity .35s,transform .45s var(--ease);pointer-events:none;text-align:left;font-size:12px}
 .notch.open .panel.on{opacity:1;transform:none;transition-delay:.12s}
 .tile-row{display:flex;gap:8px;height:100%}
 .tile{flex:1;border-radius:14px;background:rgba(255,255,255,.07);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#dfe2e6;font-size:10.5px;animation:pop .5s var(--spring) both;animation-delay:calc(var(--i)*80ms)}
@@ -124,24 +125,25 @@ h1 .grad{background:linear-gradient(100deg,var(--lime),#e8ff9e 40%,var(--pink));
 .done{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;color:var(--lime);font-size:14px;opacity:0;transition:opacity .3s}
 .agent.ok .done{opacity:1}.agent.ok>*:not(.done){opacity:.1}
 .clip{display:flex;flex-direction:column;gap:6px;height:100%}
-.clip .search{height:24px;border-radius:12px;background:rgba(255,255,255,.07);padding:0 10px;display:flex;align-items:center;color:var(--faint);font-size:11px}
+.clip .search{height:24px;border-radius:12px;background:rgba(255,255,255,.07);padding:0 10px;display:flex;gap:6px;align-items:center;color:var(--faint);font-size:11px}
 .clip .row{display:flex;gap:8px;align-items:center;padding:5px 8px;border-radius:9px;background:rgba(255,255,255,.04);color:#dfe2e6;font-size:11px;animation:pop .45s var(--ease) both;animation-delay:calc(var(--i)*70ms)}
 .clip .row i{width:18px;height:18px;border-radius:5px;background:var(--c);flex:none}
 .tools{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;height:100%}
 .tools div{border-radius:12px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:#dfe2e6;font-size:10.5px}
+.tools .i{width:15px;height:15px;color:#b9bec6}
 .tools .big{grid-row:span 2;font:600 26px ui-rounded,-apple-system,sans-serif;color:#fff}
 
 /* marquee */
-.marquee{border-block:1px solid var(--line);overflow:hidden;padding:18px 0;background:var(--bg2);-webkit-mask:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
-.marquee .track{display:flex;gap:44px;width:max-content;animation:scroll 38s linear infinite;font-weight:700;color:var(--muted);font-size:17px}
-.marquee .track span{display:flex;gap:10px;align-items:center}
-.marquee .track b{color:var(--lime)}
+.marquee{border-block:1px solid var(--line);overflow:hidden;padding:20px 0;background:var(--bg2);-webkit-mask:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+.marquee .track{display:flex;gap:44px;width:max-content;animation:scroll 38s linear infinite;font-weight:600;color:var(--muted);font-size:16px}
+.marquee .track span{display:flex;gap:44px;align-items:center}
+.marquee .track span::after{content:"";width:4px;height:4px;border-radius:50%;background:var(--faint)}
 @keyframes scroll{to{transform:translateX(-50%)}}
 
-section{position:relative;padding:130px 0}
-.kicker{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--lime);margin-bottom:14px}
-h2{font-size:clamp(34px,5.4vw,64px);letter-spacing:-.035em;line-height:1.02;margin:0 0 18px;font-weight:820}
-.sub{color:var(--muted);font-size:clamp(16px,1.8vw,19px);max-width:620px;margin:0 0 40px}
+section{position:relative;padding:170px 0}
+.kicker{font-size:12.5px;font-weight:650;letter-spacing:.14em;text-transform:uppercase;color:var(--lime);margin-bottom:14px}
+h2{font-size:clamp(30px,4.3vw,52px);letter-spacing:-.03em;line-height:1.06;margin:0 0 18px;font-weight:780}
+.sub{color:var(--muted);font-size:clamp(17px,1.6vw,18px);max-width:620px;margin:0 0 56px}
 
 /* reveal: only hidden once the script is running, so content never stays invisible */
 .js .reveal{opacity:0;transform:translateY(40px);transition:opacity .9s var(--ease),transform .9s var(--ease);transition-delay:calc(var(--i,0)*90ms)}
@@ -156,20 +158,22 @@ h2{font-size:clamp(34px,5.4vw,64px);letter-spacing:-.035em;line-height:1.02;marg
 .steps{display:flex;flex-direction:column;gap:min(32vh,320px);padding:min(18vh,170px) 0 min(30vh,300px)}
 .step{opacity:.25;transition:opacity .5s,transform .5s var(--ease);transform:translateX(20px)}
 .step.active{opacity:1;transform:none}
-.step .n{font:700 13px ui-monospace,Menlo,monospace;color:var(--lime)}
-.step h3{font-size:clamp(26px,3vw,36px);letter-spacing:-.02em;margin:6px 0 10px;line-height:1.1}
+.step .n{display:flex;gap:8px;align-items:center;font:600 13px ui-monospace,Menlo,monospace;color:var(--muted)}
+.step .n .i{width:16px;height:16px;color:var(--lime)}
+.step h3{font-size:clamp(24px,2.6vw,32px);letter-spacing:-.02em;margin:6px 0 10px;line-height:1.1}
 .step p{color:var(--muted);margin:0;font-size:17px}
 
 /* bento */
-.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
-.card{position:relative;grid-column:span 2;border-radius:22px;padding:26px;background:linear-gradient(180deg,var(--raised),var(--surface));border:1px solid var(--line);overflow:hidden;transform-style:preserve-3d;transition:transform .35s var(--ease),border-color .3s}
-.card:hover{border-color:rgba(166,242,92,.35)}
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:40px}
+.card{position:relative;grid-column:span 2;border-radius:20px;padding:28px;background:linear-gradient(180deg,var(--raised),var(--surface));border:1px solid var(--line);overflow:hidden;transform-style:preserve-3d;transition:transform .35s var(--ease),border-color .3s}
+.card:hover{border-color:rgba(255,255,255,.14)}
 .card.wide{grid-column:span 3}.card.tall{grid-row:span 2}
-.card .ico{font-size:28px;margin-bottom:14px;display:inline-block;transition:transform .5s var(--spring)}
-.card:hover .ico{transform:scale(1.25) rotate(-8deg)}
-.card h3{margin:0 0 6px;font-size:19px;letter-spacing:-.01em}
+.card .ico{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;margin-bottom:18px;background:rgba(166,242,92,.1);border:1px solid rgba(166,242,92,.16);color:var(--lime);transition:transform .4s var(--ease)}
+.card .ico .i{width:22px;height:22px}
+.card:hover .ico{transform:translateY(-2px)}
+.card h3{margin:0 0 6px;font-size:18px;letter-spacing:-.01em}
 .card p{margin:0;color:var(--muted);font-size:15px}
-.card::before{content:"";position:absolute;inset:0;background:radial-gradient(400px circle at var(--mx,50%) var(--my,50%),rgba(166,242,92,.12),transparent 40%);opacity:0;transition:opacity .3s}
+.card::before{content:"";position:absolute;inset:0;background:radial-gradient(400px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.05),transparent 40%);opacity:0;transition:opacity .3s}
 .card:hover::before{opacity:1}
 
 /* agents */
@@ -215,7 +219,7 @@ input[type=color]::-webkit-color-swatch-wrapper{padding:0}input[type=color]::-we
 
 /* faq + final */
 .faq details{border-bottom:1px solid var(--line);padding:20px 0}
-.faq summary{cursor:pointer;font-weight:650;font-size:18px;list-style:none;display:flex;justify-content:space-between}
+.faq summary{cursor:pointer;font-weight:600;font-size:18px;list-style:none;display:flex;justify-content:space-between}
 .faq summary::after{content:"+";color:var(--faint);transition:transform .3s}
 .faq details[open] summary::after{transform:rotate(45deg)}
 .faq p{color:var(--muted);margin:12px 0 0;max-width:720px}
@@ -234,35 +238,60 @@ footer a:hover{color:var(--text)}
   .bento{grid-template-columns:1fr 1fr}.card,.card.wide{grid-column:span 2}
   .stats{grid-template-columns:1fr 1fr}
   .notch.open{width:92%}
-  .panel{left:calc(min(120px,24%) + 30px)}
+  .panel{left:calc(min(120px,22%) + 30px)}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   h1 .w,.lede,.cta,.fine,.mac{opacity:1;transform:none;filter:none}
-  .reveal{opacity:1;transform:none}
+  .reveal,.js .reveal{opacity:1;transform:none}
   .cursor,.flyer{display:none}
 }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-tray" viewBox="0 0 24 24"><path d="M4 13l2.5-7h11L20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 13h4.5l1.5 2.5h4l1.5-2.5H20"/></symbol>
+  <symbol id="i-wand" viewBox="0 0 24 24"><path d="M4.5 19.5l10-10"/><path d="M13 8l3 3"/><path d="M18 3.5v3M16.5 5h3"/><path d="M19.5 11.5v2M18.5 12.5h2"/><path d="M9.5 3.5v2M8.5 4.5h2"/></symbol>
+  <symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="5.5" y="4.5" width="13" height="16" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 11h6M9 15h4"/></symbol>
+  <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 17.5V6l10-2v11.5"/><circle cx="7" cy="17.5" r="2"/><circle cx="17" cy="15.5" r="2"/></symbol>
+  <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7"/><path d="M12 13.5V10M10 3h4M18 7l1.5-1.5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/></symbol>
+  <symbol id="i-battery" viewBox="0 0 24 24"><rect x="3" y="8" width="16" height="8" rx="2"/><path d="M21.5 11v2M6.5 11v2"/></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M7.5 10l2.5 2-2.5 2M12.5 15h4"/></symbol>
+  <symbol id="i-film" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M7.5 5v14M16.5 5v14M3.5 9.5h4M3.5 14.5h4M16.5 9.5h4M16.5 14.5h4"/></symbol>
+  <symbol id="i-basket" viewBox="0 0 24 24"><path d="M3.5 10h17l-1.6 8.3a2 2 0 0 1-2 1.7H7.1a2 2 0 0 1-2-1.7z"/><path d="M8 10l3-5.5M16 10l-3-5.5M9.5 13.5v3M14.5 13.5v3"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12.5" rx="2"/><path d="M9 20.5h6M12 16.5v4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2"/></symbol>
+  <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6.5 10h1M10.5 10h1M14.5 10h1M8 14h8"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19.5c-4 1.2-4-2-5.5-2.5M15 21.5v-3.2a2.8 2.8 0 0 0-.8-2.2c2.6-.3 5.3-1.3 5.3-5.8a4.5 4.5 0 0 0-1.2-3.1 4.2 4.2 0 0 0-.1-3.1s-1-.3-3.2 1.2a11 11 0 0 0-6 0C6.8 3.8 5.8 4.1 5.8 4.1a4.2 4.2 0 0 0-.1 3.1 4.5 4.5 0 0 0-1.2 3.1c0 4.5 2.7 5.5 5.3 5.8a2.8 2.8 0 0 0-.8 2.2v3.2"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M3.5 7.5L12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5L12 11.5l8.5-4M12 11.5v9M7.8 5.5l8.4 4"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3.5s6 6.3 6 10.5a6 6 0 0 1-12 0c0-4.2 6-10.5 6-10.5z"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16M9 9h6M12 9v6"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24"><path d="M3.5 17l5.5-5.5 4 4 7.5-7.5M15 8h5.5v5.5"/></symbol>
+</defs></svg>
 <div id="progress"></div>
 <canvas id="confetti"></canvas>
 
 <nav id="nav">
   <a class="brand" href="#"><img src="/img/icon.png?v=__V__" alt="">Gobbl</a>
   <div class="links"><a href="#story">Features</a><a href="#agents">AI agents</a><a href="#play">Your pet</a><a href="#faq">FAQ</a></div>
-  <a class="btn primary small magnetic" href="https://github.com/xeveio/gobbl">★ Star on GitHub</a>
+  <a class="btn primary small magnetic" href="https://github.com/xeveio/gobbl"><svg class="i" aria-hidden="true"><use href="#i-github"/></svg>Star on GitHub</a>
 </nav>
 
 <header class="hero">
-  <div class="glow" style="width:520px;height:520px;background:#a6f25c;left:-160px;top:80px;opacity:.18"></div>
-  <div class="glow" style="width:480px;height:480px;background:#ff6fa5;right:-140px;top:220px;opacity:.16;animation-delay:-6s"></div>
+  <div class="glow" style="width:760px;height:520px;background:#a6f25c;left:50%;top:40px;margin-left:-380px;opacity:.09"></div>
   <div class="wrap">
     <div class="eyebrow"><i></i>Free &amp; open source · for Mac</div>
     <h1><span class="w" style="--i:0">Your</span> <span class="w" style="--i:1">notch</span> <span class="w" style="--i:2">has</span> <span class="w grad" style="--i:3">a</span> <span class="w grad" style="--i:4">pet.</span></h1>
     <p class="lede">Gobbl moves a tiny creature into your MacBook's notch. It eats the files you drop, keeps your clipboard, dances to your music, and cheers when your AI agent finishes.</p>
     <div class="cta">
-      <a class="btn primary magnetic" href="https://github.com/xeveio/gobbl">★ Star on GitHub</a>
+      <a class="btn primary magnetic" href="https://github.com/xeveio/gobbl"><svg class="i" aria-hidden="true"><use href="#i-github"/></svg>Star on GitHub</a>
       <a class="btn ghost magnetic" href="/download">Download for Mac <small data-version>· coming soon</small></a>
     </div>
     <div class="fine">macOS 14+ · works on Macs without a notch too · near-zero CPU at rest</div>
@@ -280,9 +309,9 @@ footer a:hover{color:var(--text)}
           <div class="tabs"><i class="on"></i><i></i><i></i><i></i><i></i></div>
           <div class="panel" data-panel="shelf"><div class="tile-row"><div class="tile" style="--i:0"><div class="sq" style="--c:linear-gradient(#ff8b7f,#e0443b)"></div>Pitch.pdf</div><div class="tile" style="--i:1"><div class="sq" style="--c:linear-gradient(#8fb8ff,#3b82f6)"></div>Shot.png</div><div class="tile" style="--i:2"><div class="sq" style="--c:linear-gradient(#ffe08a,#f59e0b)"></div>Notes.zip</div></div></div>
           <div class="panel" data-panel="music"><div class="music"><div class="art"></div><div style="flex:1"><b>Midnight City</b><small>Gob is dancing</small><div class="bar"><i></i></div><div class="eq"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i></div></div></div></div>
-          <div class="panel" data-panel="agent"><div class="agent"><b>✳ Claude Code wants to use Bash</b><code>npm test --silent</code><div class="btns"><span class="pill go">✓ Allow</span><span class="pill">Deny</span><span class="pill">Ask in terminal</span></div><div class="done">✓ Allowed. Tests pass</div></div></div>
-          <div class="panel" data-panel="clip"><div class="clip"><div class="search">🔍 Search clipboard</div><div class="row" style="--i:0"><i style="--c:#5b9cf6"></i>https://gobbl.xeve.io</div><div class="row" style="--i:1"><i style="--c:#a6f25c"></i>Meeting notes: ship Friday 🚀</div><div class="row" style="--i:2"><i style="--c:#ff6fa5"></i>#FF6FA5</div></div></div>
-          <div class="panel" data-panel="tools"><div class="tools"><div class="big">25:00<small style="font-size:10px;color:#9aa0a8">Focus</small></div><div>☕ Awake</div><div>🎙 Mute</div><div>🎨 Color</div><div>🔤 Screen text</div></div></div>
+          <div class="panel" data-panel="agent"><div class="agent"><b>Claude Code wants to use Bash</b><code>npm test --silent</code><div class="btns"><span class="pill go">Allow</span><span class="pill">Deny</span><span class="pill">Ask in terminal</span></div><div class="done">Allowed. Tests pass.</div></div></div>
+          <div class="panel" data-panel="clip"><div class="clip"><div class="search"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg>Search clipboard</div><div class="row" style="--i:0"><i style="--c:#5b9cf6"></i>https://gobbl.xeve.io</div><div class="row" style="--i:1"><i style="--c:#a6f25c"></i>Meeting notes: ship Friday</div><div class="row" style="--i:2"><i style="--c:#ff6fa5"></i>#FF6FA5</div></div></div>
+          <div class="panel" data-panel="tools"><div class="tools"><div class="big">25:00<small style="font-size:10px;color:#9aa0a8">Focus</small></div><div><svg class="i" aria-hidden="true"><use href="#i-bolt"/></svg>Awake</div><div><svg class="i" aria-hidden="true"><use href="#i-mic"/></svg>Mute</div><div><svg class="i" aria-hidden="true"><use href="#i-drop"/></svg>Color</div><div><svg class="i" aria-hidden="true"><use href="#i-scan"/></svg>Screen text</div></div></div>
         </div>
         <div class="flyer" id="flyer"><div class="file"><div class="doc" data-ext="PDF"></div></div></div>
         <svg class="cursor" id="cursor" viewBox="0 0 24 24"><path d="M4 2l15 8.5-6.6 1.4L16 20l-2.7 1.2-3.5-8L5 17z" fill="#fff" stroke="#000" stroke-width="1.2"/></svg>
@@ -292,7 +321,7 @@ footer a:hover{color:var(--text)}
 </header>
 
 <div class="marquee" aria-hidden="true"><div class="track" id="marquee">
-  <span><b>✦</b> Drop files on the notch</span><span><b>✦</b> ⇧⌘Space clipboard</span><span><b>✦</b> Music from any app</span><span><b>✦</b> Claude Code &amp; Codex</span><span><b>✦</b> Volume &amp; brightness HUDs</span><span><b>✦</b> Next meeting + Join</span><span><b>✦</b> Focus timer</span><span><b>✦</b> OCR &amp; background removal</span><span><b>✦</b> 11 hats</span><span><b>✦</b> Shareable skins</span>
+  <span>Drop files on the notch</span><span>⇧⌘Space clipboard</span><span>Music from any app</span><span>Claude Code &amp; Codex</span><span>Volume &amp; brightness HUDs</span><span>Next meeting + Join</span><span>Focus timer</span><span>OCR &amp; background removal</span><span>11 hats</span><span>Shareable skins</span>
 </div></div>
 
 <section id="story">
@@ -305,20 +334,20 @@ footer a:hover{color:var(--text)}
             <canvas class="mini" width="240" height="240"></canvas>
             <div class="tabs"><i class="on"></i><i></i><i></i><i></i><i></i></div>
             <div class="panel on" data-panel="shelf"><div class="tile-row"><div class="tile" style="--i:0"><div class="sq" style="--c:linear-gradient(#ff8b7f,#e0443b)"></div>Pitch.pdf</div><div class="tile" style="--i:1"><div class="sq" style="--c:linear-gradient(#8fb8ff,#3b82f6)"></div>Shot.png</div><div class="tile" style="--i:2"><div class="sq" style="--c:linear-gradient(#ffe08a,#f59e0b)"></div>Notes.zip</div></div></div>
-            <div class="panel" data-panel="clip"><div class="clip"><div class="search">🔍 Search clipboard</div><div class="row" style="--i:0"><i style="--c:#5b9cf6"></i>https://gobbl.xeve.io</div><div class="row" style="--i:1"><i style="--c:#a6f25c"></i>Meeting notes: ship Friday 🚀</div><div class="row" style="--i:2"><i style="--c:#ff6fa5"></i>#FF6FA5</div></div></div>
+            <div class="panel" data-panel="clip"><div class="clip"><div class="search"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg>Search clipboard</div><div class="row" style="--i:0"><i style="--c:#5b9cf6"></i>https://gobbl.xeve.io</div><div class="row" style="--i:1"><i style="--c:#a6f25c"></i>Meeting notes: ship Friday</div><div class="row" style="--i:2"><i style="--c:#ff6fa5"></i>#FF6FA5</div></div></div>
             <div class="panel" data-panel="music"><div class="music"><div class="art"></div><div style="flex:1"><b>Midnight City</b><small>Gob is dancing</small><div class="bar"><i></i></div><div class="eq"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i></div></div></div></div>
-            <div class="panel" data-panel="agent"><div class="agent"><b>✳ Claude Code wants to use Bash</b><code>npm test --silent</code><div class="btns"><span class="pill go">✓ Allow</span><span class="pill">Deny</span><span class="pill">Ask in terminal</span></div><div class="done">✓ Allowed</div></div></div>
-            <div class="panel" data-panel="tools"><div class="tools"><div class="big">25:00<small style="font-size:10px;color:#9aa0a8">Focus</small></div><div>☕ Awake</div><div>🎙 Mute</div><div>🎨 Color</div><div>🔤 Screen text</div></div></div>
+            <div class="panel" data-panel="agent"><div class="agent"><b>Claude Code wants to use Bash</b><code>npm test --silent</code><div class="btns"><span class="pill go">Allow</span><span class="pill">Deny</span><span class="pill">Ask in terminal</span></div><div class="done">Allowed</div></div></div>
+            <div class="panel" data-panel="tools"><div class="tools"><div class="big">25:00<small style="font-size:10px;color:#9aa0a8">Focus</small></div><div><svg class="i" aria-hidden="true"><use href="#i-bolt"/></svg>Awake</div><div><svg class="i" aria-hidden="true"><use href="#i-mic"/></svg>Mute</div><div><svg class="i" aria-hidden="true"><use href="#i-drop"/></svg>Color</div><div><svg class="i" aria-hidden="true"><use href="#i-scan"/></svg>Screen text</div></div></div>
           </div>
         </div>
       </div>
     </div>
     <div class="steps">
-      <div class="step" data-show="shelf" data-mood="eating"><div class="n">01 · Shelf</div><h3>Drop it on the notch. Gob eats it.</h3><p>Park files in the notch and drag them out anywhere. Right-click to convert, compress, remove a background, copy the text, or zip. All on your Mac.</p></div>
-      <div class="step" data-show="clip" data-mood="curious"><div class="n">02 · Clipboard</div><h3>Everything you copied, one shortcut away.</h3><p>⇧⌘Space opens a searchable history with pins. Password-manager copies are never saved.</p></div>
-      <div class="step" data-show="music" data-mood="dance"><div class="n">03 · Music</div><h3>Now playing, from any app.</h3><p>Spotify, Music, YouTube in Chrome: artwork, controls, synced lyrics and output switching. Gob dances along.</p></div>
-      <div class="step" data-show="agent" data-mood="alert"><div class="n">04 · AI agents</div><h3>Approve Claude without leaving what you're doing.</h3><p>Gob works along with Claude Code and Codex, and Allow / Deny prompts appear right in the notch.</p></div>
-      <div class="step" data-show="tools" data-mood="happy"><div class="n">05 · Tools</div><h3>The little things, one click each.</h3><p>Focus timer, keep-awake, mic mute, color picker, copy text from anywhere on screen, and volume &amp; brightness in the notch.</p></div>
+      <div class="step" data-show="shelf" data-mood="eating"><div class="n"><svg class="i" aria-hidden="true"><use href="#i-tray"/></svg>01 · Shelf</div><h3>Drop it on the notch. Gob eats it.</h3><p>Park files in the notch and drag them out anywhere. Right-click to convert, compress, remove a background, copy the text, or zip. All on your Mac.</p></div>
+      <div class="step" data-show="clip" data-mood="curious"><div class="n"><svg class="i" aria-hidden="true"><use href="#i-clipboard"/></svg>02 · Clipboard</div><h3>Everything you copied, one shortcut away.</h3><p>⇧⌘Space opens a searchable history with pins. Password-manager copies are never saved.</p></div>
+      <div class="step" data-show="music" data-mood="dance"><div class="n"><svg class="i" aria-hidden="true"><use href="#i-music"/></svg>03 · Music</div><h3>Now playing, from any app.</h3><p>Spotify, Music, YouTube in Chrome: artwork, controls, synced lyrics and output switching. Gob dances along.</p></div>
+      <div class="step" data-show="agent" data-mood="alert"><div class="n"><svg class="i" aria-hidden="true"><use href="#i-terminal"/></svg>04 · AI agents</div><h3>Approve Claude without leaving what you're doing.</h3><p>Gob works along with Claude Code and Codex, and Allow / Deny prompts appear right in the notch.</p></div>
+      <div class="step" data-show="tools" data-mood="happy"><div class="n"><svg class="i" aria-hidden="true"><use href="#i-timer"/></svg>05 · Tools</div><h3>The little things, one click each.</h3><p>Focus timer, keep-awake, mic mute, color picker, copy text from anywhere on screen, and volume &amp; brightness in the notch.</p></div>
     </div>
   </div>
 </section>
@@ -327,7 +356,7 @@ footer a:hover{color:var(--text)}
   <div class="wrap">
     <div class="kicker reveal">For people who ship with AI</div>
     <h2 class="reveal" style="--i:1">It cheers when your<br>agent finishes.</h2>
-    <p class="sub reveal" style="--i:2">Connect Claude Code or Codex in one click. Gob gets to work when you send a prompt, waves when the agent needs you, and throws a tiny party when it's done.</p>
+    <p class="sub reveal" style="--i:2">Connect Claude Code or Codex in one click. Gob gets to work when you send a prompt, waves when the agent needs you, and celebrates when it's done.</p>
     <div class="agents">
       <div class="term reveal left"><div class="bar"><i></i><i></i><i></i></div><pre id="term"></pre></div>
       <div class="agent-pet reveal right"><canvas id="agentPet" width="440" height="440"></canvas><div class="status" id="agentStatus">Waiting for a prompt…</div></div>
@@ -339,15 +368,15 @@ footer a:hover{color:var(--text)}
   <div class="wrap">
     <div class="kicker reveal">Make it yours</div>
     <h2 class="reveal" style="--i:1">Every Gobbl ships different.</h2>
-    <p class="sub reveal" style="--i:2">A late-70s classic, a mid-80s compact or a late-90s candy computer, each with a face on its screen and a slot it eats your files through. It arrives in a box: eight colours, and 1 in 100 ship as a sparkly limited edition. 11 hats to earn. Try typing: it'll type along.</p>
+    <p class="sub reveal" style="--i:2">A late-70s classic, a mid-80s compact or a late-90s candy computer, each with a face on its screen and a slot it eats your files through. It arrives in a box in one of eight colours, and 1 in 100 ship as a limited edition. Eleven hats to earn. Start typing and it types along.</p>
     <div class="play">
       <div class="stage reveal left" id="stage"><div class="hint">Click to pet · move your mouse</div><canvas id="playPet" width="680" height="680"></canvas><div class="tag" id="playTag">Sprout</div></div>
       <div class="controls reveal right">
         <div class="ctl"><h4>Computer</h4><div class="seg" id="charSeg"><button data-c="classic">Classic ’77</button><button class="on" data-c="retro">Compact ’84</button><button data-c="candy">Candy ’98</button></div></div>
         <div class="ctl"><h4>Species</h4><div class="chips" id="species"></div></div>
         <div class="ctl"><h4>Hat</h4><div class="chips" id="hats"></div></div>
-        <div class="ctl"><h4>Design a skin</h4><div class="colors"><label><input type="color" id="cTop" value="#b8f28a">Top</label><label><input type="color" id="cBot" value="#5bb84a">Bottom</label><label><input type="color" id="cFace" value="#16161a">Face</label><button class="btn ghost small" id="saveSkin">⬇ Download .gobskin</button></div></div>
-        <div class="ctl"><button class="btn primary magnetic" id="hatch">📦 Open a mystery box</button></div>
+        <div class="ctl"><h4>Design a skin</h4><div class="colors"><label><input type="color" id="cTop" value="#b8f28a">Top</label><label><input type="color" id="cBot" value="#5bb84a">Bottom</label><label><input type="color" id="cFace" value="#16161a">Face</label><button class="btn ghost small" id="saveSkin"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Download .gobskin</button></div></div>
+        <div class="ctl"><button class="btn primary magnetic" id="hatch"><svg class="i" aria-hidden="true"><use href="#i-box"/></svg>Open a mystery box</button></div>
       </div>
     </div>
   </div>
@@ -356,20 +385,23 @@ footer a:hover{color:var(--text)}
 <section id="looks">
   <div class="wrap">
     <div class="kicker reveal">And a lot more</div>
-    <h2 class="reveal" style="--i:1">Small app. Big notch.</h2>
+    <h2 class="reveal" style="--i:1">The rest of the toolkit.</h2>
     <div class="bento">
-      <div class="card wide reveal" style="--i:0"><div class="ico">🎬</div><h3>Clips in one click</h3><p>Render a 6-second MP4 + GIF of your pet, or record your real notch. Made for sharing.</p></div>
-      <div class="card wide reveal" style="--i:1"><div class="ico">🧺</div><h3>Shake to drop</h3><p>Shake while dragging a file and a drop basket pops up right under your pointer.</p></div>
-      <div class="card reveal" style="--i:2"><div class="ico">🔊</div><h3>Sleek HUDs</h3><p>Volume, brightness, Caps Lock and battery in the notch instead of the big system popups.</p></div>
-      <div class="card reveal" style="--i:3"><div class="ico">📅</div><h3>Next meeting</h3><p>One-click Join, and a nudge from Gob five minutes before.</p></div>
-      <div class="card reveal" style="--i:4"><div class="ico">🔥</div><h3>Streaks &amp; hats</h3><p>Use your Mac, keep your streak, unlock hats. Seasonal ones for Halloween, Diwali and December.</p></div>
-      <div class="card wide reveal" style="--i:5"><div class="ico">🖥️</div><h3>Every screen</h3><p>A pill on Macs without a notch and on external displays. Hides for full-screen apps.</p></div>
-      <div class="card wide reveal" style="--i:6"><div class="ico">🔒</div><h3>Private by design</h3><p>The app has no account and no analytics. Clipboard and shelf stay on your Mac. Permissions only when you turn a feature on.</p></div>
+      <div class="card wide reveal" style="--i:0"><div class="ico"><svg class="i" aria-hidden="true"><use href="#i-keyboard"/></svg></div><h3>Write anywhere</h3><p>Tap the Gobbl key (right ⌥) in any text field to write, rewrite or draft right where your cursor is.</p></div>
+      <div class="card wide reveal" style="--i:1"><div class="ico"><svg class="i" aria-hidden="true"><use href="#i-mic"/></svg></div><h3>Dictation</h3><p>Hold the Gobbl key and talk. Whisper runs on your Mac, so your voice never leaves it.</p></div>
+      <div class="card reveal" style="--i:2"><div class="ico"><svg class="i" aria-hidden="true"><use href="#i-speaker"/></svg></div><h3>System HUDs</h3><p>Volume, brightness, Caps Lock and battery in the notch instead of the large system overlays.</p></div>
+      <div class="card reveal" style="--i:3"><div class="ico"><svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg></div><h3>Next meeting</h3><p>One-click Join, and a quiet nudge from Gob five minutes before.</p></div>
+      <div class="card reveal" style="--i:4"><div class="ico"><svg class="i" aria-hidden="true"><use href="#i-wand"/></svg></div><h3>File tools</h3><p>Convert, compress, remove backgrounds, copy text or zip, straight from the shelf.</p></div>
+      <div class="card wide reveal" style="--i:5"><div class="ico"><svg class="i" aria-hidden="true"><use href="#i-film"/></svg></div><h3>Clips in one click</h3><p>Render a 6-second MP4 and GIF of your pet, or record your real notch.</p></div>
+      <div class="card wide reveal" style="--i:6"><div class="ico"><svg class="i" aria-hidden="true"><use href="#i-basket"/></svg></div><h3>Shake to drop</h3><p>Shake while dragging a file and a drop basket appears under your pointer.</p></div>
+      <div class="card reveal" style="--i:7"><div class="ico"><svg class="i" aria-hidden="true"><use href="#i-trend"/></svg></div><h3>Streaks &amp; hats</h3><p>Use your Mac, keep your streak, unlock hats. Seasonal ones for Halloween, Diwali and December.</p></div>
+      <div class="card reveal" style="--i:8"><div class="ico"><svg class="i" aria-hidden="true"><use href="#i-monitor"/></svg></div><h3>Every screen</h3><p>A pill on Macs without a notch and on external displays. Hides for full-screen apps.</p></div>
+      <div class="card reveal" style="--i:9"><div class="ico"><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg></div><h3>Private by design</h3><p>No account and no analytics in the app. Clipboard and shelf stay on your Mac.</p></div>
     </div>
   </div>
 </section>
 
-<section style="padding-top:40px">
+<section style="padding-top:0">
   <div class="wrap stats">
     <div class="stat reveal" style="--i:0"><b data-count="0" data-suffix="%">0%</b><span>CPU while Gob rests</span></div>
     <div class="stat reveal" style="--i:1"><b data-count="8">8</b><span>colours to unbox</span></div>
@@ -390,19 +422,18 @@ footer a:hover{color:var(--text)}
 </section>
 
 <section class="final">
-  <div class="glow" style="width:600px;height:600px;background:#a6f25c;left:50%;top:10%;margin-left:-300px;opacity:.14"></div>
   <div class="wrap">
     <canvas id="finalPet" width="360" height="360" class="reveal"></canvas>
     <h2 class="reveal" style="--i:1">Give your notch<br>something to do.</h2>
     <div class="cta reveal" style="--i:2;opacity:1;animation:none">
-      <a class="btn primary magnetic" href="https://github.com/xeveio/gobbl">★ Star on GitHub</a>
+      <a class="btn primary magnetic" href="https://github.com/xeveio/gobbl"><svg class="i" aria-hidden="true"><use href="#i-github"/></svg>Star on GitHub</a>
       <a class="btn ghost magnetic" href="/download">Download for Mac <small>· coming soon</small></a>
     </div>
   </div>
 </section>
 
 <div class="wrap"><footer>
-  <span>© 2026 <a href="https://xeve.io">Xeve</a> · Made with love for the notch</span>
+  <span>© 2026 <a href="https://xeve.io">Xeve</a> · Built for the notch</span>
   <span><a href="https://github.com/xeveio/gobbl">GitHub</a> · <a href="https://github.com/xeveio/gobbl/blob/main/LICENSE">MIT License</a></span>
 </footer></div>
 
@@ -485,11 +516,13 @@ function drawPet(ctx, s, t, o) {
   const parts = ch === "classic" ? classic(ctx, s, t, o, m, sq, bx, by, p) : ch === "candy" ? candy(ctx, s, t, o, m, sq, bx, by, p) : compact(ctx, s, t, o, m, sq, bx, by, p);
   screen(ctx, s, t, o, m, parts.screen);
   if (o.hat) hat(ctx, s, t, o.hat, parts.body);
-  if (o.shiny) for (let i = 0; i < 3; i++) { const q = (t * .7 + i / 3) % 1, a = i * 2.1 + .6; ctx.fillStyle = "#fff"; ctx.font = `${s * .12 * Math.sin(q * Math.PI) + 1}px sans-serif`; ctx.fillText("✦", parts.body.x + parts.body.w / 2 + Math.cos(a) * parts.body.w * .6, parts.body.y + parts.body.h / 2 + Math.sin(a) * parts.body.h * .62); }
+  if (o.shiny) for (let i = 0; i < 3; i++) { const q = (t * .7 + i / 3) % 1, a = i * 2.1 + .6; ctx.fillStyle = "#fff"; sparkle(ctx, parts.body.x + parts.body.w / 2 + Math.cos(a) * parts.body.w * .6, parts.body.y + parts.body.h / 2 + Math.sin(a) * parts.body.h * .62, s * .05 * Math.sin(q * Math.PI) + .5); }
   ctx.restore();
   if (s > 60) extras(ctx, s, t, m, parts.body, ages, heat);
 }
 
+// A four-point glint for limited editions (drawn, not a text glyph).
+function sparkle(ctx, x, y, r) { ctx.beginPath(); ctx.moveTo(x, y - r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.quadraticCurveTo(x, y, x, y + r); ctx.quadraticCurveTo(x, y, x - r, y); ctx.quadraticCurveTo(x, y, x, y - r); ctx.fill(); }
 function disk(ctx, t, o, slot, size) {
   const q = o.open ? 0 : (t * 1.4) % 1;
   ctx.fillStyle = "#3e6be0"; rr(ctx, slot.x + slot.w / 2 - size / 2, slot.y + slot.h / 2 - size * (1 - q), size, size * (1 - q), size * .06, true);
@@ -649,7 +682,11 @@ function extras(ctx, s, t, m, b, ages, heat) {
       ctx.fillStyle = "#2a2d33"; ctx.font = `700 ${k * .5}px ui-rounded,-apple-system,sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(L[seed % L.length], 0, 0);
       ctx.restore();
     });
-    if (heat >= .6) { ctx.font = `${s * .16}px sans-serif`; ctx.fillText("🔥", b.x - s * .08, b.y + s * .02); }
+    if (heat > .15) { // a small heat bar beside Gob that fills as you type faster
+      const bw = s * .022, bh = b.h * .55, x = b.x - s * .06, y = b.y + b.h * .2, k = Math.min(1, heat);
+      ctx.fillStyle = "rgba(255,255,255,.12)"; rr(ctx, x, y, bw, bh, bw / 2, true);
+      ctx.save(); ctx.shadowColor = "#a6f25c"; ctx.shadowBlur = s * .03 * k; ctx.fillStyle = k > .8 ? "#f5c542" : "#a6f25c"; rr(ctx, x, y + bh * (1 - k), bw, bh * k, bw / 2, true); ctx.restore();
+    }
   }
 }
 
@@ -667,6 +704,8 @@ function frame(now) {
   const t = reduce ? 1 : now / 1000;
   for (const p of pets) {
     if (!p.visible) continue;
+    // Keep every pet canvas square even if its CSS box drifts (layout size, not transformed).
+    const cw = p.canvas.offsetWidth; if (cw && Math.abs(cw - p.canvas.offsetHeight) > 1) p.canvas.style.height = cw + "px";
     const r = p.canvas.getBoundingClientRect();
     p.state.look = Math.max(-1, Math.min(1, (mouse.x - (r.left + r.width / 2)) / 350));
     p.state.lookY = Math.max(-1, Math.min(1, (mouse.y - (r.top + r.height / 2)) / 350));
@@ -689,11 +728,11 @@ const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting
 $$(".reveal").forEach(el => io.observe(el));
 if (!reduce) {
   $$(".magnetic").forEach(b => {
-    b.addEventListener("pointermove", e => { const r = b.getBoundingClientRect(); b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * .18}px,${(e.clientY - r.top - r.height / 2) * .28}px)`; });
+    b.addEventListener("pointermove", e => { const r = b.getBoundingClientRect(); b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * .09}px,${(e.clientY - r.top - r.height / 2) * .14}px)`; });
     b.addEventListener("pointerleave", () => b.style.transform = "");
   });
   $$(".card").forEach(c => {
-    c.addEventListener("pointermove", e => { const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height; c.style.transform = `perspective(900px) rotateX(${(.5 - y) * 8}deg) rotateY(${(x - .5) * 10}deg) translateZ(0)`; c.style.setProperty("--mx", x * 100 + "%"); c.style.setProperty("--my", y * 100 + "%"); });
+    c.addEventListener("pointermove", e => { const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height; c.style.transform = `perspective(900px) rotateX(${(.5 - y) * 6}deg) rotateY(${(x - .5) * 6}deg) translateZ(0)`; c.style.setProperty("--mx", x * 100 + "%"); c.style.setProperty("--my", y * 100 + "%"); });
     c.addEventListener("pointerleave", () => c.style.transform = "");
   });
 }
@@ -793,17 +832,16 @@ const say = html => term.innerHTML = term.innerHTML.replace('<span class="caret"
 async function agentLoop() {
   while (true) {
     term.innerHTML = '<span class="caret"></span>'; setStatus("Waiting for a prompt…"); agentPet.state.rest = "idle"; agentPet.state.mood = "idle";
-    say('<span class="p">❯</span> '); await type("add dark mode to the settings page");
+    say('<span class="p">&gt;</span> '); await type("add dark mode to the settings page");
     say("\n"); await sleep(300); agentPet.state.until = 0; agentPet.state.rest = "think"; agentPet.state.mood = "think"; setStatus("Claude is thinking…", "work");
-    say('<span class="d">  ✻ Thinking…\n</span>'); await sleep(1800);
+    say('<span class="d">  * Thinking…\n</span>'); await sleep(1800);
     agentPet.state.rest = "work"; agentPet.state.mood = "work"; setStatus("Claude is coding", "work");
     say('<span class="d">  ⏺ Reading src/settings/…\n</span>'); await sleep(900);
     say('<span class="d">  ⏺ Editing Theme.swift, SettingsView.swift\n</span>'); await sleep(1400);
     say('<span class="y">  ? Allow Bash: npm test --silent</span>  <span class="d">(answered in the notch)</span>\n'); react(agentPet, "alert", 1600); setStatus("Needs you, Allow in the notch", "need"); await sleep(1700);
-    say('<span class="p">  ✓ Allowed</span>\n'); agentPet.state.mood = "work"; setStatus("Claude is coding", "work"); await sleep(900);
+    say('<span class="p">  Allowed</span>\n'); agentPet.state.mood = "work"; setStatus("Claude is coding", "work"); await sleep(900);
     say('<span class="d">  ⏺ 42 tests passed\n</span>'); await sleep(700);
-    say('<span class="p">  ✓ Done.</span> Dark mode is live.\n'); agentPet.state.rest = "idle"; react(agentPet, "party", 2600); setStatus("✓ Task done", "ok");
-    const r = $("#agentPet").getBoundingClientRect(); if (r.top < innerHeight && r.bottom > 0) confetti(r.left + r.width / 2, r.top + r.height / 3, 60);
+    say('<span class="p">  Done.</span> Dark mode is live.\n'); agentPet.state.rest = "idle"; react(agentPet, "party", 2600); setStatus("Task done", "ok");
     await sleep(4200);
   }
 }
@@ -819,7 +857,7 @@ SPECIES.forEach(([name, hue], i) => {
   species.appendChild(b);
 });
 const hats = $("#hats");
-[["none", "None"], ["party", "🎉 Party"], ["beanie", "🧢 Beanie"], ["headphones", "🎧 Headphones"], ["halo", "😇 Halo"], ["crown", "👑 Crown"]].forEach(([k, label], i) => {
+[["none", "None"], ["party", "Party"], ["beanie", "Beanie"], ["headphones", "Headphones"], ["halo", "Halo"], ["crown", "Crown"]].forEach(([k, label], i) => {
   const b = document.createElement("button"); b.className = "chip" + (i === 0 ? " on" : ""); b.textContent = label;
   b.onclick = () => { $$(".chip", hats).forEach(x => x.classList.remove("on")); b.classList.add("on"); play.state.hat = k === "none" ? null : k; react(play, "happy", 900); };
   hats.appendChild(b);
@@ -841,12 +879,12 @@ $("#hatch").onclick = async e => {
   track("open_box");
   // A random model too: computers ship, they don't hatch.
   const models = { classic: "Classic", retro: "Compact", candy: "Candy" }, char = Object.keys(models)[Math.floor(Math.random() * 3)];
-  tag.textContent = "📦 Unboxing…"; play.state.boxUntil = performance.now() + 1200; await sleep(1200); play.state.boxUntil = 0;
+  tag.textContent = "Unboxing…"; play.state.boxUntil = performance.now() + 1200; await sleep(1200); play.state.boxUntil = 0;
   play.state.char = char; $$("#charSeg button").forEach(b => b.classList.toggle("on", b.dataset.c === char));
   delete play.state.top; delete play.state.bottom; delete play.state.face;
   play.state.hue = pick[1]; play.state.shiny = shiny;
   $$(".sw", species).forEach((x, i) => x.classList.toggle("on", SPECIES[i] === pick));
-  tag.innerHTML = `It's a ${shiny ? "limited-edition " : ""}${pick[0]} ${models[char]}! <span style="font-size:12px;letter-spacing:.12em;color:var(--lime)">${(shiny ? "limited" : rarity(pick[2])).toUpperCase()}</span>`;
+  tag.innerHTML = `It's a ${shiny ? "limited-edition " : ""}${pick[0]} ${models[char]} <span style="font-size:12px;letter-spacing:.12em;color:var(--lime)">${(shiny ? "limited" : rarity(pick[2])).toUpperCase()}</span>`;
   stage.style.setProperty("--stage", hsl(pick[1], 80, 60).replace("hsl", "hsla").replace(")", ",.28)"));
   react(play, "party", 2200);
   const b = stage.getBoundingClientRect(); confetti(b.left + b.width / 2, b.top + b.height / 3);
@@ -862,7 +900,6 @@ addEventListener("keydown", e => {
   for (const p of pets) if (p.visible && (!p.state.until || p.state.mood === "type")) react(p, "type", 800);
 });
 new IntersectionObserver(es => { if (es[0].isIntersecting) react(fin, "party", 2400); }, { threshold: .6 }).observe($("#finalPet"));
-$$('.final .btn').forEach(b => b.addEventListener("click", () => { const r = b.getBoundingClientRect(); confetti(r.left + r.width / 2, r.top); }));
 })();
 </script>
 </body>

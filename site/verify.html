@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Gobbl verification</title>
+<style>
+  html, body { margin: 0; background: transparent; font: 13px -apple-system, system-ui, sans-serif; color: #9aa0a8; }
+  main { display: grid; place-items: center; min-height: 80px; }
+</style>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+<body>
+<main>
+  <!-- Loaded by the Gobbl app in a web view. The Turnstile token is handed to the
+       app through a script message and then sent once to ai.xeve.io/v1/register. -->
+  <div class="cf-turnstile" data-sitekey="0x4AAAAAAEz14NIz1iJBlM6p" data-theme="auto" data-callback="gobblVerified"></div>
+</main>
+<script>
+  function gobblVerified(token) {
+    try { window.webkit.messageHandlers.gobbl.postMessage(token); } catch (_) {}
+  }
+</script>
+</body>
+</html>
