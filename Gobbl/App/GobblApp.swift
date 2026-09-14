@@ -125,6 +125,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 exit(0)
             }
             if args.contains("--onboarding") { Onboarding.show() }
+            if args.contains("--settings") { AppActions.openSettings() }
             #endif
             if !args.contains("--expand") && !args.contains("--no-onboarding") { Onboarding.showIfNeeded() }
         }
@@ -173,9 +174,29 @@ struct MenuBarMenu: View {
 }
 
 enum AppActions {
-    /// An accessory app has to activate itself or Settings opens behind other windows.
-    @MainActor static func openSettings() {
+    @MainActor static func openSettings() { SettingsWindow.show() }
+}
+
+/// Gobbl's Settings window, owned directly. Since macOS 14 the
+/// `showSettingsWindow:` action is ignored unless it comes from a SwiftUI
+/// SettingsLink, so an accessory app opening Settings from the notch or the
+/// menu bar needs its own window.
+@MainActor
+enum SettingsWindow {
+    private static var window: NSWindow?
+
+    static func show() {
+        if window == nil {
+            let w = NSWindow(contentViewController: NSHostingController(rootView: SettingsView()))
+            w.title = "Gobbl Settings"
+            w.styleMask = [.titled, .closable, .miniaturizable]
+            w.isReleasedWhenClosed = false
+            w.setFrameAutosaveName("GobblSettings")
+            w.center()
+            window = w
+        }
+        // An accessory app must activate itself or the window opens behind others.
         NSApp.activate(ignoringOtherApps: true)
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        window?.makeKeyAndOrderFront(nil)
     }
 }
