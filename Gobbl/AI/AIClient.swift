@@ -87,6 +87,16 @@ final class AIClient {
         await refreshQuota()
     }
 
+    /// 401: the service doesn't recognise this install or its signature (for
+    /// example the signing key became unreadable after the app's signature
+    /// changed). Showing "On" would be a lie, so drop back to "Turn On…".
+    private func forgetInstallIfRejected(_ status: Int) {
+        guard status == 401 else { return }
+        installID = nil
+        UserDefaults.standard.removeObject(forKey: "aiInstallID")
+        remainingToday = nil
+    }
+
     func signOut() {
         installID = nil
         UserDefaults.standard.removeObject(forKey: "aiInstallID")
@@ -97,8 +107,10 @@ final class AIClient {
 
     func refreshQuota() async {
         guard let request = try? signedRequest("GET", path: "/v1/quota", body: Data()),
-              let (data, response) = try? await URLSession.shared.data(for: request),
-              (response as? HTTPURLResponse)?.statusCode == 200,
+              let (data, response) = try? await URLSession.shared.data(for: request) else { return }
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        forgetInstallIfRejected(status)
+        guard status == 200,
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
         remainingToday = json["actionsRemaining"] as? Int
     }
@@ -117,6 +129,7 @@ final class AIClient {
                     if status != 200 {
                         var errorBody = Data()
                         for try await byte in bytes { errorBody.append(byte); if errorBody.count > 4096 { break } }
+                        forgetInstallIfRejected(status)
                         throw Self.error(status: status, data: errorBody)
                     }
                     var parser = SSEParser()
@@ -163,6 +176,7 @@ final class AIClient {
         let (reply, response) = try await URLSession.shared.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard status == 200 else {
+            forgetInstallIfRejected(status)
             let error = Self.error(status: status, data: reply)
             lastError = "\(Self.timeStamp()) \(path): \(error.errorDescription ?? "")"
             throw error

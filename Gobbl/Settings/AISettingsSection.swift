@@ -28,7 +28,7 @@ struct AISettingsSection: View {
             Toggle(isOn: $keyEnabled) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Gobbl key: right ⌥")
-                    Text("Tap to write or rewrite in any text field. Double-tap for edit mode, hold to dictate (coming next). ⌃⌥G also works.")
+                    Text("Tap to write or rewrite in any text field. Double-tap for edit mode, hold to dictate. ⌃⌥G also writes.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
