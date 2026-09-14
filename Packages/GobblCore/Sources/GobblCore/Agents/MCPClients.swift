@@ -60,7 +60,8 @@ public struct MCPClient: Identifiable, Equatable, Sendable {
                   restartNeeded: true),
         MCPClient(id: "gemini", name: "Gemini CLI", config: [".gemini/settings.json"], detect: [".gemini"],
                   format: .json(key: "mcpServers", style: .plain), cli: "gemini",
-                  add: ["mcp", "add", "-s", "user", "gobbl", "{BIN}"], remove: ["mcp", "remove", "gobbl"]),
+                  // Gemini defaults to project scope; removal has to name the user scope it was added to.
+                  add: ["mcp", "add", "-s", "user", "gobbl", "{BIN}"], remove: ["mcp", "remove", "-s", "user", "gobbl"]),
         MCPClient(id: "lmstudio", name: "LM Studio", config: [".cache/lm-studio/mcp.json", ".lmstudio/mcp.json"],
                   detect: [".lmstudio", ".cache/lm-studio", "/Applications/LM Studio.app"], format: .json(key: "mcpServers", style: .plain)),
         MCPClient(id: "zed", name: "Zed", config: [".config/zed/settings.json"], detect: [".config/zed", "/Applications/Zed.app"],
