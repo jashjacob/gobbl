@@ -433,12 +433,19 @@ private struct FlowChips: View {
 private struct SearchPane: View {
     @State private var query = ""
     @State private var hits: [MemoryStore.Hit] = []
+    @State private var byMeaning = false
 
     var body: some View {
         VStack(spacing: 0) {
-            TextField("Search everything Gobbl remembers", text: $query)
-                .textFieldStyle(.roundedBorder)
-                .padding(12)
+            HStack(spacing: 10) {
+                TextField(byMeaning ? "Describe what you're looking for" : "Search everything Gobbl remembers", text: $query)
+                    .textFieldStyle(.roundedBorder)
+                Toggle("By meaning", isOn: $byMeaning)
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                    .help("Find things that mean the same, even with different words (on this Mac)")
+            }
+            .padding(12)
             List(hits, id: \.chunkID) { hit in
                 VStack(alignment: .leading, spacing: 3) {
                     Text(MemoryRecall.source(hit)).font(.caption).foregroundStyle(.secondary)
@@ -450,8 +457,15 @@ private struct SearchPane: View {
                 if hits.isEmpty && !query.isEmpty { Text("No matches").foregroundStyle(.secondary) }
             }
         }
-        .onChange(of: query) { _, q in
-            hits = (try? MemoryModel.shared.store?.search(q, limit: 80)) ?? []
+        .onChange(of: query) { _, _ in run() }
+        .onChange(of: byMeaning) { _, _ in run() }
+    }
+
+    private func run() {
+        if byMeaning {
+            hits = query.count >= 3 ? SemanticIndex.shared.search(query, limit: 60) : []
+        } else {
+            hits = (try? MemoryModel.shared.store?.search(query, limit: 80)) ?? []
         }
     }
 

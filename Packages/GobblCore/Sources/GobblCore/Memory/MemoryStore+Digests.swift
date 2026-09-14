@@ -124,6 +124,8 @@ extension MemoryStore {
         try locked {
             try run("DELETE FROM chunks WHERE segment_id = ?", [id])
             try run("DELETE FROM segments WHERE id = ?", [id])
+            try exec("DELETE FROM vectors WHERE kind = 'chunk' AND ref NOT IN (SELECT id FROM chunks)")
+            vectorCache.invalidate()
             try exec("PRAGMA incremental_vacuum")
         }
     }

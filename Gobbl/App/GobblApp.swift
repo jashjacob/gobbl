@@ -65,6 +65,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             TodoCenter.shared.start()
             KnowledgeCenter.shared.start()
             DigestCenter.shared.start()
+            SemanticIndex.shared.start()
             // ⌃⌥G: the same as tapping the Gobbl key, for keyboards without a right ⌥.
             if let write = HotKey(keyCode: kVK_ANSI_G, modifiers: controlKey | optionKey, id: 2, action: {
                 WriteAction.run()

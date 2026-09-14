@@ -114,12 +114,35 @@ final class Routines {
                   now: now, quiet: quiet, focusing: focusing)
         }
 
+        preMeetingBrief(now, quiet: quiet)
+
         // A meeting in 15 minutes while you're deep in something else.
         if let next = CalendarModel.shared.next, next.start > now, next.start.timeIntervalSince(now) < 15 * 60 {
             let key = "meeting-\(next.id)"
             nudge(key, "\(next.title) starts at \(next.start.formatted(date: .omitted, time: .shortened))", symbol: "calendar",
                   now: now, quiet: quiet, focusing: false)
         }
+    }
+
+    /// Ten minutes before a meeting with people Gobbl knows: who they are,
+    /// when you last talked, and what's open between you.
+    private func preMeetingBrief(_ now: Date, quiet: Bool) {
+        guard let meeting = CalendarModel.shared.next, !meeting.attendees.isEmpty,
+              meeting.start > now, meeting.start.timeIntervalSince(now) < 11 * 60,
+              let store = MemoryModel.shared.store else { return }
+        let people = meeting.attendees.compactMap { (try? store.findEntity(named: $0, type: .person)) ?? nil }.prefix(3)
+        guard !people.isEmpty else { return }
+        let lines = people.map { p -> String in
+            var line = p.name
+            if let role = p.role { line += ", \(role)" }
+            if let org = p.org { line += " at \(org)" }
+            if let seen = p.lastSeen { line += ". Last talked \(seen.formatted(.relative(presentation: .named)))\(p.apps.first.map { " on \($0)" } ?? "")" }
+            let open = TodoCenter.shared.open.filter { t in t.people.contains { EntityRules.normalize($0) == EntityRules.normalize(p.name) } }
+            if !open.isEmpty { line += ". Open: " + open.prefix(2).map(\.title).joined(separator: "; ") }
+            return line
+        }
+        nudge("premeet-\(meeting.id)", "Before \(meeting.title): " + lines.joined(separator: " · "), symbol: "person.2.fill",
+              now: now, quiet: quiet, focusing: false)
     }
 
     private func nudge(_ key: String, _ text: String, symbol: String, now: Date, quiet: Bool, focusing: Bool) {

@@ -33,6 +33,10 @@ enum MemoryRecall {
         let words = keywords(question)
         var hits = (try? store.search(words.joined(separator: " "), limit: 8)) ?? []
         if hits.isEmpty, let first = words.first { hits = (try? store.search(first, limit: 6)) ?? [] }
+        // Few word matches: add what's closest in meaning.
+        if hits.count < 3 {
+            hits += SemanticIndex.shared.search(question, limit: 4).filter { h in !hits.contains { $0.chunkID == h.chunkID } }
+        }
         for hit in hits { add(source(hit), hit.snippet.replacingOccurrences(of: "[", with: "").replacingOccurrences(of: "]", with: "")) }
         return items
     }

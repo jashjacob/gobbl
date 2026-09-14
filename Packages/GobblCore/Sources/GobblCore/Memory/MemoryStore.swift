@@ -40,6 +40,8 @@ public final class MemoryStore: @unchecked Sendable {
     var db: OpaquePointer?
     private let lock = NSLock()
     public let readOnly: Bool
+    /// Search-by-meaning vectors, kept in memory between searches.
+    let vectorCache = VectorCache()
 
     public init(url: URL, readOnly: Bool = false) throws {
         self.readOnly = readOnly
@@ -108,6 +110,9 @@ public final class MemoryStore: @unchecked Sendable {
         }
         if version < 4 {
             try migrateDigests()
+        }
+        if version < 5 {
+            try migrateVectors()
         }
     }
 
@@ -308,13 +313,16 @@ public final class MemoryStore: @unchecked Sendable {
         try locked {
             try run("DELETE FROM chunks WHERE ts BETWEEN ? AND ?", [from.timeIntervalSince1970, to.timeIntervalSince1970])
             try exec("DELETE FROM segments WHERE id NOT IN (SELECT DISTINCT segment_id FROM chunks)")
+            try exec("DELETE FROM vectors WHERE kind = 'chunk' AND ref NOT IN (SELECT id FROM chunks)")
+            vectorCache.invalidate()
             try exec("PRAGMA incremental_vacuum")
         }
     }
 
     public func forgetAll() throws {
         try locked {
-            try exec("DELETE FROM chunks; DELETE FROM segments; INSERT INTO chunks_fts(chunks_fts) VALUES('rebuild'); VACUUM;")
+            try exec("DELETE FROM vectors; DELETE FROM chunks; DELETE FROM segments; INSERT INTO chunks_fts(chunks_fts) VALUES('rebuild'); VACUUM;")
+            vectorCache.invalidate()
         }
     }
 
@@ -322,6 +330,8 @@ public final class MemoryStore: @unchecked Sendable {
     public func forget(appBundle: String) throws {
         try locked {
             try run("DELETE FROM segments WHERE app_bundle = ?", [appBundle])
+            try exec("DELETE FROM vectors WHERE kind = 'chunk' AND ref NOT IN (SELECT id FROM chunks)")
+            vectorCache.invalidate()
             try exec("PRAGMA incremental_vacuum")
         }
     }

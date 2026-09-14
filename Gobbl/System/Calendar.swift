@@ -15,6 +15,8 @@ final class CalendarModel {
         let end: Date
         let color: Color
         let joinURL: URL?
+        /// Other people invited (names, or email addresses when there's no name).
+        var attendees: [String] = []
     }
 
     private(set) var events: [Event] = []
@@ -91,7 +93,10 @@ final class CalendarModel {
     private static func event(from e: EKEvent) -> Event {
         Event(id: "\(e.eventIdentifier ?? e.title ?? "")@\(e.startDate.timeIntervalSince1970)",
               title: e.title ?? "Untitled", start: e.startDate, end: e.endDate,
-              color: Color(cgColor: e.calendar.cgColor), joinURL: joinURL(e))
+              color: Color(cgColor: e.calendar.cgColor), joinURL: joinURL(e),
+              attendees: (e.attendees ?? []).filter { !$0.isCurrentUser }.compactMap {
+                  $0.name ?? $0.url.absoluteString.replacingOccurrences(of: "mailto:", with: "")
+              })
     }
 
     private static let meetingHosts = ["zoom.us", "meet.google.com", "teams.microsoft.com", "teams.live.com",
