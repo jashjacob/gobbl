@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+# gobbl-agent: forwards Claude Code hook and Codex notify events to Gobbl.
+#
+#   Claude Code hook:  /usr/bin/perl gobbl-agent claude     (event JSON on stdin)
+#   Codex notify:      /usr/bin/perl gobbl-agent codex JSON (event JSON as the last argument)
+#
+# Sends "<source>\t<json>\n" to Gobbl's Unix socket. For a PermissionRequest
+# it waits for Gobbl's reply (the user clicking Allow/Deny in the notch) and
+# prints it for Claude Code. If Gobbl isn't running, or nobody answers in time,
+# it prints nothing and exits 0, so Claude Code simply asks in the terminal.
+# Part of Gobbl (MIT) — https://github.com/xeveio/gobbl
+use strict;
+use warnings;
+use Socket;
+
+my $source = shift @ARGV // 'claude';
+my $payload = '';
+if ($source eq 'codex') {
+    $payload = $ARGV[-1] // '';
+} else {
+    local $/;
+    $payload = <STDIN> // '';
+}
+$payload =~ s/[\r\n]+/ /g;
+exit 0 if $payload eq '';
+
+my $path = "$ENV{HOME}/Library/Application Support/Gobbl/agent.sock";
+socket(my $sock, PF_UNIX, SOCK_STREAM, 0) or exit 0;
+connect($sock, sockaddr_un($path)) or exit 0;
+select((select($sock), $| = 1)[0]);
+print $sock "$source\t$payload\n";
+
+if ($payload =~ /"hook_event_name"\s*:\s*"PermissionRequest"/) {
+    my $reply = '';
+    eval {
+        local $SIG{ALRM} = sub { die "timeout\n" };
+        alarm 40;
+        $reply = <$sock> // '';
+        alarm 0;
+    };
+    print $reply if $reply =~ /^\s*\{/;
+}
+close $sock;
+exit 0;

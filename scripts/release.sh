@@ -269,6 +269,8 @@ if $UPLOAD; then
   # The feed is only true if what it points at is fetchable — check before publishing it.
   curl -fsSI --retry 5 --retry-delay 5 --retry-all-errors "${PUBLIC_BASE}/${DMG_NAME}" >/dev/null \
     || die "${PUBLIC_BASE}/${DMG_NAME} is not reachable; appcast NOT published"
+  # Remote off switches (see Gobbl/System/RemoteFlags.swift).
+  s3 "$ROOT/scripts/flags.json" "$SPACE/$SPACE_PREFIX/flags.json" application/json
   s3 "$OUT/appcast.xml" "$SPACE/$SPACE_PREFIX/appcast.xml" application/xml
   curl -fsS "${PUBLIC_BASE}/appcast.xml" | grep -q "<sparkle:version>${VERSION}</sparkle:version>" \
     && echo "  live: ${PUBLIC_BASE}/appcast.xml → ${VERSION}" \

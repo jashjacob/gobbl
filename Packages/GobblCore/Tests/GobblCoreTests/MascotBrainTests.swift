@@ -40,6 +40,49 @@ import Testing
         #expect(b.mood(at: t0) == .love)
     }
 
+    @Test func agentsWorkingBeatsSleepAndMusic() {
+        var b = MascotBrain()
+        b.handle(.userIdle(MascotBrain.sleepAfter * 2), now: t0)
+        b.handle(.musicPlaying(true), now: t0)
+        b.handle(.agentsWorking(true), now: t0)
+        #expect(b.mood(at: t0) == .working)
+        b.handle(.agentDone, now: t0)
+        #expect(b.mood(at: t0) == .celebrating)
+        #expect(b.stats.agentTasks == 1)
+        b.handle(.agentsWorking(false), now: t0)
+        #expect(b.mood(at: t0.addingTimeInterval(10)) == .sleeping)
+    }
+
+    @Test func agentNeedsInputAlertsEvenWhenQuiet() {
+        var b = MascotBrain()
+        b.quiet = true
+        b.handle(.agentNeedsInput, now: t0)
+        #expect(b.mood(at: t0) == .alert)
+    }
+
+    @Test func hotCPUMakesGobSweat() {
+        var b = MascotBrain()
+        b.handle(.cpuLoad(0.95), now: t0)
+        #expect(b.mood(at: t0) == .sweaty)
+        b.handle(.cpuLoad(0.3), now: t0)
+        #expect(b.mood(at: t0) == .idle)
+    }
+
+    @Test func musicStartsCountAsSongs() {
+        var b = MascotBrain()
+        b.handle(.musicPlaying(true), now: t0)
+        b.handle(.musicPlaying(true), now: t0)
+        b.handle(.musicPlaying(false), now: t0)
+        b.handle(.musicPlaying(true), now: t0)
+        #expect(b.stats.songs == 2)
+    }
+
+    @Test func milestones() {
+        #expect(MascotBrain.milestone(from: 9, to: 10) == 10)
+        #expect(MascotBrain.milestone(from: 40, to: 120) == 100)
+        #expect(MascotBrain.milestone(from: 10, to: 11) == nil)
+    }
+
     @Test func pluggingInCheersUpUnlessQuiet() {
         var b = MascotBrain()
         b.handle(.pluggedIn, now: t0)

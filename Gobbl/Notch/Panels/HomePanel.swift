@@ -30,13 +30,48 @@ struct PetCorner: View {
                 Image(systemName: "eye.slash").font(.system(size: 26)).foregroundStyle(Palette.textTertiary)
                     .frame(height: 84)
             } else {
-                GobView(mood: pet.mood, genome: pet.genome, stage: pet.stats.stage, size: 84,
+                GobView(mood: pet.mood, genome: pet.genome, stage: pet.stats.stage, size: 84, hat: pet.hat,
                         anticipating: anticipating, look: { pet.look })
                     .onTapGesture { pet.send(.petted) }
                     .help("Pet \(pet.name)")
                     .contextMenu {
-                        Button("Share \(pet.name)'s Card…") { PetCard.share() }
                         Button("Pet \(pet.name)") { pet.send(.petted) }
+                        Menu("Character") {
+                            ForEach(PetCharacter.allCases) { character in
+                                Button {
+                                    pet.character = character
+                                } label: {
+                                    if pet.character == character { Label(character.title, systemImage: "checkmark") } else { Text(character.title) }
+                                }
+                            }
+                        }
+                        Menu("Skin") {
+                            Button {
+                                pet.skinID = nil
+                            } label: {
+                                if pet.skinID == nil { Label("Species colours", systemImage: "checkmark") } else { Text("Species colours") }
+                            }
+                            ForEach(SkinLibrary.shared.all) { skin in
+                                Button {
+                                    pet.skinID = skin.id
+                                } label: {
+                                    if pet.skinID == skin.id { Label(skin.name, systemImage: "checkmark") } else { Text(skin.name) }
+                                }
+                            }
+                            if let skin = pet.skin {
+                                Divider()
+                                Button("Share “\(skin.name)”…") { SkinLibrary.shared.share(skin) }
+                            }
+                        }
+                        WardrobeMenu()
+                        Divider()
+                        Button("Share \(pet.name)'s Card…") { PetCard.share() }
+                        Menu("Make a Clip") {
+                            ForEach(ClipStudio.Scene.allCases) { scene in
+                                Button(scene.title) { ClipStudio.export(scene) }
+                            }
+                        }
+                        Button("Record My Notch (6 s)…") { NotchRecorder.shared.record() }
                     }
             }
             HStack(spacing: 4) {
@@ -63,6 +98,29 @@ struct PetCorner: View {
     }
 }
 
+/// Hats: owned ones to wear, locked ones with how to earn them.
+struct WardrobeMenu: View {
+    @State private var pet = PetModel.shared
+
+    var body: some View {
+        let owned = pet.ownedHats
+        Menu("Wardrobe") {
+            ForEach(Hat.allCases) { hat in
+                if owned.contains(hat) {
+                    Button {
+                        pet.hat = hat
+                    } label: {
+                        if pet.hat == hat { Label(hat.title, systemImage: "checkmark") } else { Text(hat.title) }
+                    }
+                } else {
+                    Button("🔒 \(hat.title) — \(hat.requirement)") {}
+                        .disabled(true)
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Now playing
 
 struct NowPlayingCard: View {
@@ -82,10 +140,7 @@ struct NowPlayingCard: View {
                         .font(.system(size: 12.5, weight: .semibold))
                         .foregroundStyle(Palette.text)
                         .lineLimit(1)
-                    Text(n.artist ?? media.appName ?? "")
-                        .font(.system(size: 11))
-                        .foregroundStyle(Palette.textSecondary)
-                        .lineLimit(1)
+                    SubtitleLine(nowPlaying: n, fallback: n.artist ?? media.appName ?? "")
                     ProgressRow(nowPlaying: n)
                     HStack(spacing: 16) {
                         IconButton(symbol: "backward.fill", size: 11, tint: Palette.text) { media.previous() }
@@ -93,6 +148,7 @@ struct NowPlayingCard: View {
                             media.togglePlayPause()
                         }
                         IconButton(symbol: "forward.fill", size: 11, tint: Palette.text) { media.next() }
+                        OutputPicker()
                     }
                 } else {
                     Text(media.available ? "Nothing playing" : "Now Playing unavailable")
@@ -123,6 +179,50 @@ struct NowPlayingCard: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Palette.well)
         }
+    }
+}
+
+/// The artist, or — with lyrics on and a synced match — the line being sung.
+private struct SubtitleLine: View {
+    let nowPlaying: NowPlaying
+    let fallback: String
+    @State private var lyrics = LyricsModel.shared
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 0.5, paused: lyrics.lines.isEmpty || !nowPlaying.playing)) { context in
+            let line = lyrics.lines.isEmpty ? nil : lyrics.line(at: nowPlaying.elapsed(at: context.date) ?? 0)
+            Text(line ?? fallback)
+                .font(.system(size: 11, weight: line == nil ? .regular : .medium))
+                .foregroundStyle(line == nil ? Palette.textSecondary : Palette.accent)
+                .lineLimit(1)
+                .contentTransition(.opacity)
+                .animation(.easeOut(duration: 0.2), value: line)
+        }
+    }
+}
+
+/// Where the sound goes: speakers, AirPods, AirPlay devices the system lists.
+private struct OutputPicker: View {
+    var body: some View {
+        Menu {
+            let current = AudioDevices.defaultOutput
+            ForEach(AudioDevices.outputs()) { device in
+                Button {
+                    AudioDevices.setDefaultOutput(device.id)
+                    HUDModel.shared.show(.init(symbol: "hifispeaker.fill", label: String(device.name.prefix(12)), tint: Palette.accent))
+                } label: {
+                    if device.id == current { Label(device.name, systemImage: "checkmark") } else { Text(device.name) }
+                }
+            }
+        } label: {
+            Image(systemName: "hifispeaker.2.fill")
+                .font(.system(size: 10.5, weight: .semibold))
+                .foregroundStyle(Palette.textSecondary)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("Sound output")
     }
 }
 

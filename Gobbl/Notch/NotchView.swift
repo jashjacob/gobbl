@@ -81,6 +81,7 @@ struct NotchView: View {
         case .home: HomePanel(state: state)
         case .shelf: ShelfPanel(dropTargeted: state.dropTargeted)
         case .clipboard: ClipboardPanel(state: state)
+        case .agents: AgentsPanel()
         case .tools: ToolsPanel()
         }
     }
@@ -134,7 +135,7 @@ struct NotchView: View {
                 .foregroundStyle(state.dropTargeted ? Palette.accent : Palette.textSecondary)
                 .padding(.leading, inset)
         } else {
-            GobView(mood: pet.mood, genome: pet.genome, stage: pet.stats.stage, size: g.headerHeight - 4,
+            GobView(mood: pet.mood, genome: pet.genome, stage: pet.stats.stage, size: g.headerHeight - 4, hat: pet.hat,
                     anticipating: state.dropTargeted, lively: false, look: { pet.look })
                 .padding(.leading, g.hasNotch ? 12 : 0)
         }
@@ -194,10 +195,21 @@ private struct StatusWing: View {
     @State private var media = MediaController.shared
     @State private var shelf = ShelfModel.shared
     @State private var awake = KeepAwake.shared
+    @State private var agents = AgentHub.shared
 
     var body: some View {
         HStack(spacing: 5) {
-            if focus.isRunning {
+            if agents.anyWaiting {
+                Image(systemName: "exclamationmark.bubble.fill")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Palette.gold)
+            } else if agents.tracker.anyWorking {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 10.5, weight: .semibold))
+                    .foregroundStyle(Palette.accent)
+                let busy = agents.sessions.filter(\.isWorking).count
+                if busy > 1 { Text("\(busy)").font(.mono(11.5, weight: .semibold)) }
+            } else if focus.isRunning {
                 Image(systemName: focus.phase == .rest ? "cup.and.saucer.fill" : "timer")
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(Palette.accent)

@@ -159,6 +159,36 @@ enum FileActions {
         }
     }
 
+    /// Asks for a new name and renames the file in place; the shelf follows it.
+    static func rename(_ item: ShelfItem) {
+        let alert = NSAlert()
+        alert.messageText = "Rename “\(item.name)”"
+        alert.addButton(withTitle: "Rename")
+        alert.addButton(withTitle: "Cancel")
+        let field = NSTextField(string: item.name)
+        field.frame = NSRect(x: 0, y: 0, width: 280, height: 24)
+        alert.accessoryView = field
+        NSApp.activate(ignoringOtherApps: true)
+        alert.window.initialFirstResponder = field
+        // Select the name without its extension, like Finder.
+        DispatchQueue.main.async {
+            let base = (item.name as NSString).deletingPathExtension
+            field.currentEditor()?.selectedRange = NSRange(location: 0, length: (base as NSString).length)
+        }
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let name = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, name != item.name, !name.contains("/") else { return }
+        let target = item.url.deletingLastPathComponent().appendingPathComponent(name)
+        do {
+            guard !FileManager.default.fileExists(atPath: target.path) else { throw ActionError("“\(name)” already exists") }
+            try FileManager.default.moveItem(at: item.url, to: target)
+            ShelfModel.shared.replace(item, with: target)
+            HUDModel.shared.show(.init(symbol: "pencil", label: "Renamed", tint: Palette.accent))
+        } catch {
+            fail(error)
+        }
+    }
+
     // MARK: Plumbing
 
     struct ActionError: LocalizedError {
@@ -292,5 +322,8 @@ struct FileActionsMenu: View {
             }
         }
         Button("Compress to ZIP") { FileActions.zip(urls) }
+        if items.count == 1 {
+            Button("Rename…") { FileActions.rename(items[0]) }
+        }
     }
 }

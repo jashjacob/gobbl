@@ -7,14 +7,17 @@ Free and open source, by [Xeve](https://xeve.io). Site: https://gobbl.xeve.io
 
 ## Features
 
-- **Pet:** hatches from an egg (8 species, 1% shiny), reacts to what you do (eats files, dances to music, sleeps when you're away, nudges you before meetings), levels up and evolves. Shareable pet card.
+- **Pet:** hatches from an egg (8 species, 1% shiny) as a squishy blob or a little retro computer. Reacts to what you do: eats files, dances to music, sleeps when you're away, sweats when the CPU is pegged, works along with your AI agent, nudges you before meetings. Levels up, keeps a daily streak, earns 11 hats (4 seasonal). Shareable pet card and clips (see `docs/MASCOT.md`).
+- **AI agents:** connect Claude Code and Codex from Settings; Gob works along, cheers when a task finishes, and can Allow/Deny Claude's permission prompts from the notch (falls back to the terminal after 30 s).
+- **Clips:** render 6-second scenes to MP4 + GIF, or record the real notch.
+- **Drop basket:** shake while dragging files to get a drop zone at the pointer.
 - **Shelf:** drop files on the notch; drag them out, AirDrop, share, Quick Look.
 - **File tools:** convert/compress images, compress PDFs and video, remove backgrounds, OCR to clipboard, zip. All on-device.
 - **Clipboard history:** ⇧⌘Space, search, pins; skips concealed/transient (password) items.
 - **Now playing:** any app, via the bundled [mediaremote-adapter](Vendor/mediaremote-adapter) run by `/usr/bin/perl`.
 - **HUDs:** volume, brightness, Caps Lock, charging and low-battery in the notch (optional, needs Accessibility).
 - **Calendar:** next meeting with Join link; five-minute nudge.
-- **Tools:** focus timer, keep-awake.
+- **Tools:** focus timer, keep-awake, mic mute, color picker, copy text from the screen; audio output picker and optional synced lyrics (lrclib.net) on the music card.
 - Pill mode on Macs without a notch and on external displays; hides for full-screen apps.
 
 ## Build

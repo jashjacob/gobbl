@@ -48,6 +48,12 @@ public struct Shelf: Codable, Equatable, Sendable {
         items.removeAll { $0.id == id }
     }
 
+    /// After a rename or conversion in place: same item, new file.
+    public mutating func replace(_ id: ShelfItem.ID, with url: URL) {
+        guard let i = items.firstIndex(where: { $0.id == id }) else { return }
+        items[i].url = url.standardizedFileURL
+    }
+
     public mutating func removeAll() {
         items.removeAll()
     }

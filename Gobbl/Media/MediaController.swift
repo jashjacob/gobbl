@@ -26,6 +26,10 @@ final class MediaController {
     private var framework: URL? { Bundle.main.url(forResource: "MediaRemoteAdapter", withExtension: "framework") }
 
     func start() {
+        guard RemoteFlags.mediaRemote else {
+            available = false
+            return
+        }
         guard process == nil, let script, let framework else {
             if script == nil || framework == nil { available = false }
             return
@@ -132,6 +136,7 @@ final class MediaController {
             artwork = n.artworkData.flatMap { NSImage(data: $0) }
         }
         if n.playing != wasPlaying { PetModel.shared.send(.musicPlaying(n.playing)) }
+        LyricsModel.shared.trackChanged(n)
         restarts = 0
     }
 

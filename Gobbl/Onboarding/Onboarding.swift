@@ -133,6 +133,12 @@ private struct HatchStep: View {
                     RarityChip(rarity: pet.genome.rarity, shiny: pet.genome.shiny)
                 }
                 Text(rarityLine).font(.system(size: 13)).foregroundStyle(Palette.textSecondary)
+                Picker("", selection: Binding(get: { pet.character }, set: { pet.character = $0 })) {
+                    ForEach(PetCharacter.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 240)
                 HStack(spacing: 10) {
                     TextField("Name", text: $name)
                         .textFieldStyle(.roundedBorder)
@@ -212,6 +218,7 @@ private struct PermissionsStep: View {
     @State private var calendar = CalendarModel.shared
     @State private var trusted = MediaKeyTap.isTrusted
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var agentsLinked = AgentLink.claudeStatus().connected || AgentLink.codexConnected()
     private let poll = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -228,6 +235,15 @@ private struct PermissionsStep: View {
             PermissionRow(symbol: "calendar", title: "Your next meeting",
                           detail: "Gob nudges you five minutes before it starts.", granted: calendar.authorized) {
                 Task { await calendar.requestAccess() }
+            }
+            if AgentLink.claudeInstalled || AgentLink.codexInstalled {
+                PermissionRow(symbol: "sparkles", title: "Cheer on your AI agents",
+                              detail: "Gob works along with Claude Code and Codex, and celebrates when they finish.",
+                              granted: agentsLinked) {
+                    if AgentLink.claudeInstalled { try? AgentLink.connectClaude(approvals: false) }
+                    if AgentLink.codexInstalled { try? AgentLink.connectCodex() }
+                    agentsLinked = AgentLink.claudeStatus().connected || AgentLink.codexConnected()
+                }
             }
             PermissionRow(symbol: "power", title: "Open at login",
                           detail: "So Gob is there every morning.", granted: launchAtLogin) {

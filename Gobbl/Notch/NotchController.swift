@@ -3,7 +3,7 @@ import GobblCore
 import SwiftUI
 
 enum NotchTab: String, CaseIterable, Identifiable {
-    case home, shelf, clipboard, tools
+    case home, shelf, clipboard, agents, tools
 
     var id: String { rawValue }
 
@@ -12,6 +12,7 @@ enum NotchTab: String, CaseIterable, Identifiable {
         case .home: "house.fill"
         case .shelf: "tray.full.fill"
         case .clipboard: "doc.on.clipboard.fill"
+        case .agents: "sparkles"
         case .tools: "timer"
         }
     }
@@ -207,6 +208,7 @@ final class NotchController {
     private var applied: Settings?
     private var dragBaseline = NSPasteboard(name: .drag).changeCount
     private var cursorNear = false
+    private var shake = ShakeDetector()
     private var started = false
 
     struct Settings: Equatable {
@@ -301,7 +303,7 @@ final class NotchController {
     // MARK: Input
 
     private func installMonitors() {
-        let mask: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDragged, .leftMouseDown]
+        let mask: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDragged, .leftMouseDown, .leftMouseUp]
         if let global = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: { [weak self] event in
             MainActor.assumeIsolated { self?.handle(event) }
         }) { monitors.append(global) }
@@ -323,8 +325,19 @@ final class NotchController {
             dragBaseline = NSPasteboard(name: .drag).changeCount
             windows.values.forEach { $0.mouseDown(at: p) }
         }
+        if event.type == .leftMouseUp {
+            Basket.shared.dragEnded()
+            return
+        }
         // A drag that wrote to the drag pasteboard is carrying something (files, text…).
         let dragging = event.type == .leftMouseDragged && NSPasteboard(name: .drag).changeCount != dragBaseline
+        if shake.feed(x: p.x, time: event.timestamp) {
+            if dragging {
+                Basket.shared.show(at: p)
+            } else if windows.values.contains(where: { $0.isVisible && hypot(p.x - $0.state.geometry.centerX, p.y - $0.state.geometry.screenTop) < 320 }) {
+                PetModel.shared.send(.shaken)
+            }
+        }
         let hover = applied?.expandOnHover ?? true
         var near: NotchWindow?
         for window in windows.values {

@@ -1,6 +1,15 @@
 import GobblCore
 import ServiceManagement
 import SwiftUI
+import UniformTypeIdentifiers
+
+@MainActor private func importSkin() {
+    let panel = NSOpenPanel()
+    panel.allowedContentTypes = [UTType(filenameExtension: PetSkin.fileExtension) ?? .json]
+    panel.allowsMultipleSelection = false
+    guard panel.runModal() == .OK, let url = panel.url else { return }
+    SkinLibrary.shared.install(from: url)
+}
 
 struct SettingsView: View {
     @State private var pet = PetModel.shared
@@ -11,6 +20,9 @@ struct SettingsView: View {
     @AppStorage("notchAllDisplays") private var allDisplays = false
     @AppStorage("notchExpandOnHover") private var expandOnHover = true
     @AppStorage("hudReplace") private var hudReplace = false
+    @AppStorage("basketEnabled") private var basketEnabled = true
+    @AppStorage("lyricsEnabled") private var lyricsEnabled = false
+    @AppStorage("airpodsHUD") private var airpodsHUD = false
     @AppStorage("clipboardEnabled") private var clipboardEnabled = true
     @AppStorage("calendarEnabled") private var calendarEnabled = true
     @AppStorage(PetModel.Keys.hidden) private var petHidden = false
@@ -19,13 +31,14 @@ struct SettingsView: View {
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var trusted = MediaKeyTap.isTrusted
     @State private var confirmRehatch = false
+    @State private var showSkinEditor = false
     private let poll = Timer.publish(every: 1.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
         Form {
             Section {
                 HStack(spacing: 14) {
-                    GobView(mood: pet.mood, genome: pet.genome, stage: pet.stats.stage, size: 60)
+                    GobView(mood: pet.mood, genome: pet.genome, stage: pet.stats.stage, size: 60, hat: pet.hat)
                         .padding(6)
                         .background(RoundedRectangle(cornerRadius: 12).fill(.black))
                         .onTapGesture { pet.send(.petted) }
@@ -39,6 +52,31 @@ struct SettingsView: View {
                     }
                 }
                 TextField("Name", text: $petName)
+                Picker("Character", selection: Binding(get: { pet.character }, set: { pet.character = $0 })) {
+                    ForEach(PetCharacter.allCases) { Text($0.title).tag($0) }
+                }
+                Picker("Skin", selection: Binding(get: { pet.skinID ?? "" }, set: { pet.skinID = $0.isEmpty ? nil : $0 })) {
+                    Text("\(pet.genome.species.displayName) (species colours)").tag("")
+                    ForEach(SkinLibrary.shared.all) { Text($0.name).tag($0.id) }
+                }
+                HStack {
+                    Button("Make a Skin…") { showSkinEditor = true }
+                    Button("Import…") { importSkin() }
+                    if let skin = pet.skin {
+                        Button("Share “\(skin.name)”…") { SkinLibrary.shared.share(skin) }
+                        if SkinLibrary.shared.isCustom(skin) {
+                            Button("Delete", role: .destructive) { SkinLibrary.shared.remove(skin) }
+                        }
+                    }
+                }
+                Picker("Hat", selection: Binding(get: { pet.hat }, set: { pet.hat = $0 })) {
+                    ForEach(pet.ownedHats) { Text($0.title).tag($0) }
+                }
+                if let next = Hat.allCases.first(where: { !pet.ownedHats.contains($0) && !$0.isSeasonal }) {
+                    LabeledContent("Next hat", value: "\(next.title): \(next.requirement)")
+                        .foregroundStyle(.secondary)
+                }
+                LabeledContent("Streak", value: "\(pet.stats.streak) days (best \(pet.stats.longestStreak))")
                 Toggle("Show pet", isOn: Binding(get: { !petHidden }, set: { petHidden = !$0 }))
                 Toggle("Quiet mode", isOn: $petQuiet)
                 HStack {
@@ -57,6 +95,19 @@ struct SettingsView: View {
                 Toggle("Show Gobbl in the notch", isOn: $notchEnabled)
                 Toggle("Show on every display", isOn: $allDisplays)
                 Toggle("Open when the pointer hovers over it", isOn: $expandOnHover)
+                Toggle("Shake while dragging files to open a drop basket", isOn: $basketEnabled)
+            }
+
+            Section {
+                Toggle("Show synced lyrics under the song", isOn: $lyricsEnabled)
+                    .onChange(of: lyricsEnabled) { _, _ in LyricsModel.shared.trackChanged(MediaController.shared.nowPlaying) }
+                Toggle("Show headphone battery when they connect", isOn: $airpodsHUD)
+                    .onChange(of: airpodsHUD) { _, _ in SystemEvents.shared.applyBluetooth() }
+            } header: {
+                Text("Music & Headphones")
+            } footer: {
+                Text("Lyrics come from lrclib.net, which receives the song title and artist. Headphone battery asks for Bluetooth access.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
 
             Section {
@@ -93,6 +144,8 @@ struct SettingsView: View {
                 Text("Stored only on this Mac. Items that password managers mark as concealed are never saved.")
                     .font(.caption).foregroundStyle(.secondary)
             }
+
+            AgentsSettingsSection()
 
             Section("Calendar") {
                 if calendar.authorized {
@@ -140,6 +193,7 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 500, height: 620)
         .onReceive(poll) { _ in trusted = MediaKeyTap.isTrusted }
+        .sheet(isPresented: $showSkinEditor) { SkinEditor() }
         .confirmationDialog("Hatch a new egg?", isPresented: $confirmRehatch) {
             Button("Hatch", role: .destructive) { pet.rehatch() }
         } message: {

@@ -38,7 +38,10 @@ final class ShelfModel {
         }
         group.notify(queue: .main) { [weak self] in
             MainActor.assumeIsolated {
-                let urls = box.urls
+                // A dropped .gobskin is something to wear, not to shelve.
+                let skins = box.urls.filter { $0.pathExtension.lowercased() == PetSkin.fileExtension }
+                skins.forEach { SkinLibrary.shared.install(from: $0) }
+                let urls = box.urls.filter { !skins.contains($0) }
                 guard let self, !urls.isEmpty else { return }
                 self.add(urls)
                 // Re-dropping a shelved file still earns a chomp.
@@ -54,6 +57,11 @@ final class ShelfModel {
 
     func remove(_ item: ShelfItem) {
         shelf.remove(item.id)
+        save()
+    }
+
+    func replace(_ item: ShelfItem, with url: URL) {
+        shelf.replace(item.id, with: url)
         save()
     }
 

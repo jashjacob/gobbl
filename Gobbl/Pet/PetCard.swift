@@ -17,7 +17,7 @@ enum PetCard {
     @discardableResult
     static func render(to folder: URL? = nil) -> URL? {
         let pet = PetModel.shared
-        let renderer = ImageRenderer(content: PetCardView(name: pet.name, genome: pet.genome, stats: pet.stats))
+        let renderer = ImageRenderer(content: PetCardView(name: pet.name, genome: pet.genome, stats: pet.stats, hat: pet.hat))
         renderer.scale = 2
         guard let image = renderer.nsImage, let tiff = image.tiffRepresentation,
               let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else { return nil }
@@ -36,6 +36,7 @@ struct PetCardView: View {
     let name: String
     let genome: PetGenome
     let stats: MascotStats
+    var hat: Hat = .none
 
     private var hue: Double { genome.species.hue }
 
@@ -52,7 +53,7 @@ struct PetCardView: View {
                     RarityChip(rarity: genome.rarity, shiny: genome.shiny)
                 }
                 Spacer(minLength: 0)
-                GobView(mood: .happy, genome: genome, stage: stats.stage, size: 230, frozen: true)
+                GobView(mood: .happy, genome: genome, stage: stats.stage, size: 230, hat: hat, frozen: true)
                 Text(name)
                     .font(.system(size: 46, weight: .heavy, design: .rounded))
                     .foregroundStyle(.white)
@@ -65,6 +66,7 @@ struct PetCardView: View {
                     stat("\(stats.filesGobbled)", "files gobbled")
                     stat("\(stats.burps)", "burps")
                     stat("\(stats.pets)", "pets")
+                    stat("\(stats.longestStreak)", "day streak")
                     stat("\(daysTogether)", daysTogether == 1 ? "day together" : "days together")
                 }
                 Text("Your notch has a pet · gobbl.xeve.io")

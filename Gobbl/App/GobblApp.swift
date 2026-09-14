@@ -31,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             source.setEventHandler {
                 MainActor.assumeIsolated {
                     MediaController.shared.stop()
+                    AgentHub.shared.stop()
                     KeepAwake.shared.set(false)
                 }
                 exit(0)
@@ -45,8 +46,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             ClipboardModel.shared.start()
             CalendarModel.shared.start()
             PowerMonitor.shared.start()
+            AgentHub.shared.start()
+            SystemEvents.shared.start()
             HUDService.apply()
             _ = Updater.shared // starts Sparkle's scheduled checks
+            RemoteFlags.refresh()
             if let clipboard = HotKey(keyCode: kVK_Space, modifiers: cmdKey | shiftKey, id: 1, action: {
                 NotchController.shared.open(tab: .clipboard)
             }) {
@@ -69,15 +73,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if let i = args.firstIndex(of: "--render-card"), i + 1 < args.count {
                 PetCard.render(to: URL(fileURLWithPath: args[i + 1]))
             }
+            if let i = args.firstIndex(of: "--render-clip"), i + 2 < args.count,
+               let scene = ClipStudio.Scene(rawValue: args[i + 1]) {
+                let dir = URL(fileURLWithPath: args[i + 2])
+                Task {
+                    try? await ClipStudio.render(scene, video: dir.appendingPathComponent("\(scene.rawValue).mp4"),
+                                                 gif: dir.appendingPathComponent("\(scene.rawValue).gif"))
+                    exit(0)
+                }
+            }
             if args.contains("--onboarding") { Onboarding.show() }
             #endif
             if !args.contains("--expand") && !args.contains("--no-onboarding") { Onboarding.showIfNeeded() }
         }
     }
 
+    /// Double-clicked .gobskin files.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        MainActor.assumeIsolated {
+            for url in urls where url.pathExtension.lowercased() == PetSkin.fileExtension {
+                SkinLibrary.shared.install(from: url)
+            }
+        }
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         MainActor.assumeIsolated {
             MediaController.shared.stop()
+            AgentHub.shared.stop()
             KeepAwake.shared.set(false)
         }
     }

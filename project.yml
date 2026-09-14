@@ -38,6 +38,19 @@ targets:
         LSUIElement: true
         NSHumanReadableCopyright: "© 2026 Xeve"
         NSCalendarsFullAccessUsageDescription: "Gobbl shows your next meeting in the notch, and Gob nudges you five minutes before it starts."
+        # .gobskin: shareable pet skins (JSON), opened by Gobbl on double-click.
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: com.xeve.gobbl.skin
+            UTTypeDescription: Gobbl Skin
+            UTTypeConformsTo: [public.json]
+            UTTypeTagSpecification:
+              public.filename-extension: [gobskin]
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Gobbl Skin
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Owner
+            LSItemContentTypes: [com.xeve.gobbl.skin]
+        NSBluetoothAlwaysUsageDescription: "Gobbl shows your AirPods' battery in the notch when they connect."
         NSCalendarsUsageDescription: "Gobbl shows your next meeting in the notch, and Gob nudges you five minutes before it starts."
         # Sparkle auto-updates. SUFeedURL is compiled into every shipped binary,
         # so it points at dl.xeve.io (a Cloudflare Worker we control) rather
@@ -59,6 +72,7 @@ targets:
           rm -rf "$R/MediaRemoteAdapter.framework"
           cp -R "$DERIVED_FILE_DIR/mediaremote/MediaRemoteAdapter.framework" "$R/"
           cp "$SRCROOT/Vendor/mediaremote-adapter/bin/mediaremote-adapter.pl" "$R/"
+          cp "$SRCROOT/Gobbl/Agents/gobbl-agent" "$R/"
     settings:
       base:
         ENABLE_USER_SCRIPT_SANDBOXING: NO
