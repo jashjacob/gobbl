@@ -71,6 +71,11 @@ final class Routines {
             }
             do {
                 var context = ChatContext.build()
+                // Yesterday's digest, so the morning brief can pick up where the day left off.
+                if kind == .morning,
+                   let yesterday = DigestCenter.shared.text(forDay: DayParts.dayKey(Date().addingTimeInterval(-86400), calendar: .current)) {
+                    context["yesterday"] = yesterday
+                }
                 // Open to-dos (and, in the morning, a few "maybe"s) so the brief can mention them.
                 let iso = ISO8601DateFormatter()
                 let todos = TodoCenter.shared.open + (kind == .morning ? Array(TodoCenter.shared.maybe.prefix(3)) : [])

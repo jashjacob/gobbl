@@ -64,6 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             MemoryModel.shared.apply()
             TodoCenter.shared.start()
             KnowledgeCenter.shared.start()
+            DigestCenter.shared.start()
             // ⌃⌥G: the same as tapping the Gobbl key, for keyboards without a right ⌥.
             if let write = HotKey(keyCode: kVK_ANSI_G, modifiers: controlKey | optionKey, id: 2, action: {
                 WriteAction.run()
@@ -80,6 +81,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     NotchController.shared.open(tab: tab, focus: false)
                     NotchController.shared.debugExpand()
                 }
+            }
+            if args.contains("--digest-selftest") {
+                DigestSelfTest.run()
             }
             if args.contains("--todo-selftest") {
                 TodoSelfTest.run()

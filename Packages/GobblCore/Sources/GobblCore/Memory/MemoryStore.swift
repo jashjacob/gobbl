@@ -106,6 +106,9 @@ public final class MemoryStore: @unchecked Sendable {
         if version < 3 {
             try migrateKnowledge()
         }
+        if version < 4 {
+            try migrateDigests()
+        }
     }
 
     // MARK: To-dos

@@ -3,7 +3,7 @@ import GobblCore
 import SwiftUI
 
 enum MemorySection: Hashable {
-    case todos, people, projects, orgs, topics, search
+    case todos, timeline, people, projects, orgs, topics, search
 }
 
 @MainActor @Observable
@@ -47,6 +47,7 @@ struct MemoryView: View {
         NavigationSplitView {
             List(selection: $selection) {
                 Label("To-dos", systemImage: "checklist").tag(MemorySection.todos)
+                Label("Timeline", systemImage: "calendar.day.timeline.left").tag(MemorySection.timeline)
                 Section("Knowledge") {
                     Label("People", systemImage: "person.2").tag(MemorySection.people)
                     Label("Projects", systemImage: "folder").tag(MemorySection.projects)
@@ -69,6 +70,7 @@ struct MemoryView: View {
                 } else {
                     switch selection ?? .todos {
                     case .todos: TodosPane()
+                    case .timeline: TimelinePane()
                     case .people: EntitiesPane(type: .person)
                     case .projects: EntitiesPane(type: .project)
                     case .orgs: EntitiesPane(type: .org)
