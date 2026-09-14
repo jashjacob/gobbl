@@ -4,7 +4,7 @@
  * A parser returns null only when the output is unusable (not JSON / wrong top-level shape),
  * which triggers the one retry on the fallback model.
  */
-import type { DigestRequest, ExtractRequest } from "./validate";
+import type { DigestRequest, ExtractRequest, PlanRequest } from "./validate";
 
 export const TODO_SIGNALS = ["reply_to", "page_contains", "message_sent", "file_sent", "none"] as const;
 export const ENTITY_TYPES = ["person", "project", "org", "topic", "tool"] as const;
@@ -259,5 +259,93 @@ export function digestParser(req: DigestRequest) {
   return (content: string): DigestResult | null => {
     const raw = parseModelJson(content);
     return raw && Array.isArray(raw.parts) ? clampDigest(raw, req) : null;
+  };
+}
+
+export const PLAN_WANTS = ["activity", "time", "contacts", "messages", "sites", "todos", "person", "search", "when"] as const;
+export const PLAN_PARTS = ["morning", "afternoon", "evening"] as const;
+export const PLAN_ORDERS = ["relevance", "latest", "earliest"] as const;
+
+export interface PlanResult {
+  needs_memory: boolean;
+  from: string | null;
+  to: string | null;
+  part: (typeof PLAN_PARTS)[number] | null;
+  last_hours: number | null;
+  apps: string[];
+  sites: string[];
+  chats: string[];
+  people: string[];
+  from_me: boolean | null;
+  queries: string[];
+  want: (typeof PLAN_WANTS)[number][];
+  order: (typeof PLAN_ORDERS)[number];
+}
+
+export const EMPTY_PLAN: PlanResult = {
+  needs_memory: false,
+  from: null,
+  to: null,
+  part: null,
+  last_hours: null,
+  apps: [],
+  sites: [],
+  chats: [],
+  people: [],
+  from_me: null,
+  queries: [],
+  want: [],
+  order: "relevance",
+};
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+const dayMs = (d: string) => Date.parse(`${d}T00:00:00Z`);
+
+/** Only names the app sent come back, in the app's spelling. */
+function canonical(v: unknown, known: string[], max: number): string[] {
+  const map = new Map(known.map((k) => [k.toLowerCase(), k]));
+  return strList(v, max * 2, 120)
+    .map((x) => map.get(x.toLowerCase()))
+    .filter((x): x is string => !!x)
+    .slice(0, max);
+}
+
+export function clampPlan(raw: Record<string, unknown>, req: PlanRequest): PlanResult {
+  // A day range that ends by today and spans at most 31 days.
+  let from = typeof raw.from === "string" && DAY.test(raw.from) && raw.from <= req.today ? raw.from : null;
+  let to = typeof raw.to === "string" && DAY.test(raw.to) ? (raw.to > req.today ? req.today : raw.to) : null;
+  if (from && !to) to = from === req.today ? req.today : from;
+  if (to && !from) from = to;
+  if (from && to && from > to) [from, to] = [to, from];
+  if (from && to && (dayMs(to) - dayMs(from)) / 86_400_000 > 30) from = new Date(dayMs(to) - 30 * 86_400_000).toISOString().slice(0, 10);
+  const hours = typeof raw.last_hours === "number" && Number.isFinite(raw.last_hours) ? Math.round(raw.last_hours) : null;
+  const want = Array.isArray(raw.want)
+    ? [...new Set(raw.want.map((w) => oneOf(w, PLAN_WANTS)).filter((w): w is PlanResult["want"][number] => !!w))]
+    : [];
+  const plan: PlanResult = {
+    needs_memory: true,
+    from,
+    to,
+    part: oneOf(raw.part, PLAN_PARTS) ?? null,
+    last_hours: hours && hours >= 1 ? Math.min(24, hours) : null,
+    apps: canonical(raw.apps, req.apps, 6),
+    sites: canonical(raw.sites, req.sites, 6),
+    chats: canonical(raw.chats, req.chats, 6),
+    people: strList(raw.people, 4, 60),
+    from_me: typeof raw.from_me === "boolean" ? raw.from_me : null,
+    queries: strList(raw.queries, 3, 60),
+    want,
+    order: oneOf(raw.order, PLAN_ORDERS) ?? "relevance",
+  };
+  const asked = (plan.from ? 1 : 0) + (plan.last_hours ? 1 : 0) + plan.want.length + plan.queries.length + plan.people.length + plan.apps.length + plan.sites.length + plan.chats.length;
+  const needs = typeof raw.needs_memory === "boolean" ? raw.needs_memory : asked > 0;
+  return needs ? plan : EMPTY_PLAN;
+}
+
+/** Parser for runJsonTask: any JSON object is usable. */
+export function planParser(req: PlanRequest) {
+  return (content: string): PlanResult | null => {
+    const raw = parseModelJson(content);
+    return raw ? clampPlan(raw, req) : null;
   };
 }

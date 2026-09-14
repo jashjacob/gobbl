@@ -264,6 +264,38 @@ public final class MemoryStore: @unchecked Sendable {
         }
     }
 
+    /// Chunks captured in [from, to), newest first, for chat recall ("what did Samar say today").
+    /// `snippet` holds the full text here.
+    public func chunks(from: Date, to: Date, limit: Int = 2000) throws -> [Hit] {
+        try locked {
+            try rows("""
+            SELECT c.id, c.segment_id, s.app_name, s.app_bundle, s.window, s.chat, s.url_domain, c.sender, c.from_me, c.ts, c.text
+            FROM chunks c JOIN segments s ON s.id = c.segment_id WHERE c.ts >= ? AND c.ts < ? ORDER BY c.ts DESC LIMIT ?
+            """, [from.timeIntervalSince1970, to.timeIntervalSince1970, limit], Self.hit)
+        }
+    }
+
+    /// Apps, sites and chats seen since `since`, most used first: the names a chat question can narrow to.
+    public func recentPlaces(since: Date, limit: Int = 400) throws -> [(app: String, domain: String?, chat: String?, segments: Int)] {
+        try locked {
+            try rows("""
+            SELECT app_name, url_domain, chat, count(*) FROM segments WHERE ended >= ?
+            GROUP BY app_name, url_domain, chat ORDER BY count(*) DESC LIMIT ?
+            """, [since.timeIntervalSince1970, limit]) { s in
+                (Self.text(s, 0) ?? "", Self.text(s, 1), Self.text(s, 2), Int(sqlite3_column_int(s, 3)))
+            }
+        }
+    }
+
+    /// When memory's oldest remaining capture was taken, nil when empty.
+    public func firstCapture() throws -> Date? {
+        try locked {
+            try rows("SELECT min(ts) FROM chunks", []) { s in
+                sqlite3_column_type(s, 0) == SQLITE_NULL ? nil : Date(timeIntervalSince1970: sqlite3_column_double(s, 0))
+            }.first ?? nil
+        }
+    }
+
     /// Chunks captured after `since`, oldest first, for extraction and digests.
     /// `snippet` holds the full text here.
     public func chunks(since: Date, limit: Int = 500) throws -> [Hit] {

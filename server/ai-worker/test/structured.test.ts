@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { modelsFrom } from "../src/config";
 import { runJsonTask } from "../src/openrouter";
-import { buildDigestMessages, buildExtractMessages } from "../src/prompts";
+import { buildDigestMessages, buildExtractMessages, buildPlanMessages } from "../src/prompts";
 import { JSON_ROUTES } from "../src/routes";
-import { EMPTY_EXTRACT, clampDigest, clampExtract, digestParser, extractParser, parseModelJson } from "../src/structured";
-import { validateDigest, validateExtract } from "../src/validate";
+import { EMPTY_EXTRACT, EMPTY_PLAN, clampDigest, clampExtract, clampPlan, digestParser, extractParser, parseModelJson, planParser } from "../src/structured";
+import { validateDigest, validateExtract, validatePlan } from "../src/validate";
 
 const NOW = "2026-09-14T18:00:00+05:30";
 const item = (ref: string, text: string, extra: Record<string, unknown> = {}) => ({ ref, app: "WhatsApp", kind: "message", text, ...extra });
@@ -299,5 +299,66 @@ describe("runJsonTask (mocked fetch)", () => {
     });
     expect(p.empty).toEqual({ parts: [] });
     expect(JSON_ROUTES["/v1/extract"]({ batch: [item("r1", "hi")], now: NOW })).toMatchObject({ ok: true, maxTokens: 900 });
+  });
+});
+
+describe("plan", () => {
+  const req = {
+    question: "who did i talk to on watsapp yesterday",
+    conversation: [],
+    today: "2026-09-14",
+    apps: ["WhatsApp", "Safari", "Mail"],
+    sites: ["youtube.com"],
+    chats: ["Tech", "Samar"],
+    people: ["Samar Rao"],
+  };
+
+  it("validates the request and wires the helper quota class", () => {
+    const p = JSON_ROUTES["/v1/plan"](req);
+    if (!p.ok) throw new Error(p.error);
+    expect(p).toMatchObject({ maxTokens: 200, cls: "helper" });
+    expect(JSON_ROUTES["/v1/plan"]({ ...req, today: "today" })).toMatchObject({ error: "invalid_day" });
+    expect(JSON_ROUTES["/v1/plan"]({ ...req, question: " " })).toMatchObject({ error: "empty_input" });
+    const [, user] = buildPlanMessages(validatePlan(req).ok ? (validatePlan(req) as any).value : req);
+    expect(user.content).toContain("<apps>WhatsApp, Safari, Mail</apps>");
+    expect(user.content).toContain("<question>who did i talk to on watsapp yesterday</question>");
+  });
+
+  it("clamps the model's plan to known names and sane dates", () => {
+    const plan = clampPlan(
+      {
+        from: "2026-09-13",
+        to: "2026-09-20",
+        last_hours: 99,
+        apps: ["whatsapp", "Telegram"],
+        sites: ["YouTube.com", "evil.com"],
+        chats: ["tech"],
+        people: ["Samar"],
+        from_me: false,
+        queries: ["a", "b", "c", "d"],
+        want: ["contacts", "bogus", "contacts"],
+        order: "sideways",
+      },
+      req,
+    );
+    expect(plan).toEqual({
+      needs_memory: true,
+      from: "2026-09-13",
+      to: "2026-09-14",
+      part: null,
+      last_hours: 24,
+      apps: ["WhatsApp"],
+      sites: ["youtube.com"],
+      chats: ["Tech"],
+      people: ["Samar"],
+      from_me: false,
+      queries: ["a", "b", "c"],
+      want: ["contacts"],
+      order: "relevance",
+    });
+    expect(clampPlan({ from: "2026-01-01", to: "2026-09-14" }, req).from).toBe("2026-08-15");
+    expect(clampPlan({ from: "2026-09-20" }, req).from).toBeNull();
+    expect(clampPlan({ needs_memory: false, want: ["activity"] }, req)).toEqual(EMPTY_PLAN);
+    expect(planParser(req)("not json")).toBeNull();
   });
 });

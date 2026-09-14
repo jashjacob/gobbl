@@ -317,7 +317,7 @@ export function validateBrief(body: unknown): Validated<BriefRequest> {
 // ---------------------------------------------------------------- memory
 
 const MEMORY_SOURCE_CHARS = 80;
-const MEMORY_TEXT_CHARS = 600;
+const MEMORY_TEXT_CHARS = 1_500;
 /** A memory cut shorter than this by the total cap is dropped rather than kept as a stub. */
 const MEMORY_MIN_TAIL = 40;
 
@@ -465,4 +465,62 @@ export function validateDigest(body: unknown): Validated<DigestRequest> {
   if (parts.length === 0) return bad("empty_input");
   parts.sort((a, b) => DAY_PARTS.indexOf(a.part) - DAY_PARTS.indexOf(b.part));
   return { ok: true, value: { day: body.day, parts, locale: loc }, inputChars: chars };
+}
+
+// ---------------------------------------------------------------- plan
+
+/** A chat question, turned into memory lookups the app runs on the Mac. */
+export interface PlanRequest {
+  question: string;
+  /** The last few turns, for follow-ups such as "and on WhatsApp?". */
+  conversation: { role: "user" | "assistant"; content: string }[];
+  today: string;
+  weekday?: string;
+  /** Local time of day, "14:05", for "this morning" and "the last hour". */
+  time?: string;
+  /** Apps, sites and chats memory has seen lately, so the plan can name them exactly. */
+  apps: string[];
+  sites: string[];
+  chats: string[];
+  /** Known people and projects, for fixing typos in names. */
+  people: string[];
+}
+
+export function validatePlan(body: unknown): Validated<PlanRequest> {
+  if (!isObj(body)) return bad("invalid_body");
+  if (typeof body.question !== "string" || !body.question.trim()) return bad("empty_input");
+  if (body.question.length > 1000) return tooLarge;
+  if (typeof body.today !== "string" || !DAY_RE.test(body.today)) return bad("invalid_day");
+  const names = (v: unknown, max: number) =>
+    Array.isArray(v) ? v.map((x) => short(x, 80)).filter((x): x is string => !!x).slice(0, max) : [];
+  const conversation = Array.isArray(body.conversation)
+    ? body.conversation
+        .filter((m): m is { role: "user" | "assistant"; content: string } =>
+          isObj(m) && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+        .slice(-4)
+        .map((m) => ({ role: m.role, content: m.content.slice(0, 300) }))
+    : [];
+  const apps = names(body.apps, 40);
+  const sites = names(body.sites, 40);
+  const chats = names(body.chats, 60);
+  const people = names(body.people, 60);
+  const chars =
+    body.question.length +
+    conversation.reduce((n, m) => n + m.content.length, 0) +
+    [...apps, ...sites, ...chats, ...people].join("").length;
+  return {
+    ok: true,
+    value: {
+      question: body.question.trim(),
+      conversation,
+      today: body.today,
+      weekday: short(body.weekday, 20),
+      time: short(body.time, 10),
+      apps,
+      sites,
+      chats,
+      people,
+    },
+    inputChars: chars,
+  };
 }

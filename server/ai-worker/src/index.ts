@@ -235,10 +235,10 @@ async function jsonTask(run: Run, path: string, body: unknown): Promise<Response
   const { env } = run;
   const prepared = JSON_ROUTES[path](body);
   if (!prepared.ok) return json({ error: prepared.error }, prepared.status);
-  const { messages, inputChars, maxTokens, parse, empty } = prepared;
+  const { messages, inputChars, maxTokens, parse, empty, cls } = prepared;
 
   const est = estimateCostUsd(inputChars, maxTokens);
-  const settle = await reserve(run, "background", est);
+  const settle = await reserve(run, cls, est);
   if (settle instanceof Response) return settle;
 
   const r = await runJsonTask(env.OPENROUTER_API_KEY, messages, modelsFrom(env), maxTokens, parse, est);

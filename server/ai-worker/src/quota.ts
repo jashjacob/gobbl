@@ -4,8 +4,9 @@ import { nextUtcMidnight, utcDay } from "./util";
 /**
  * "user" = something the user asked for (write, chat, …), counted in `actions`.
  * "background" = app-initiated work (extract, digest), counted in `background`.
+ * "helper" = a small step of a user action (chat's memory plan): only its cost counts.
  */
-export type QuotaClass = "user" | "background";
+export type QuotaClass = "user" | "background" | "helper";
 
 /** Per-install daily counters. `usd` includes outstanding reservations and is shared by both classes. */
 export interface InstallState {
@@ -56,10 +57,12 @@ export function reserveInstall(
   if (cls === "background" && background >= limits.dailyBackground)
     return { ok: false, state: s, reason: "background", resetsAt };
   if (s.usd + estUsd > limits.dailyUsd) return { ok: false, state: s, reason: "usd", resetsAt };
-  const next: InstallState =
-    cls === "user"
-      ? { day: s.day, actions: s.actions + 1, background, usd: s.usd + estUsd }
-      : { day: s.day, actions: s.actions, background: background + 1, usd: s.usd + estUsd };
+  const next: InstallState = {
+    day: s.day,
+    actions: s.actions + (cls === "user" ? 1 : 0),
+    background: background + (cls === "background" ? 1 : 0),
+    usd: s.usd + estUsd,
+  };
   return { ok: true, state: next, day: s.day, resetsAt };
 }
 

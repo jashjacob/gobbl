@@ -48,7 +48,7 @@ describe("client body shapes", () => {
   it("every task route is registered", () => {
     expect(Object.keys(TASK_ROUTES).sort()).toEqual(["/v1/brief", "/v1/chat", "/v1/cleanup", "/v1/edit", "/v1/write"]);
     expect(TASK_ROUTES["/v1/edit"]({ text: "a", instruction: "b" })).toMatchObject({ ok: true, maxTokens: 1200 });
-    expect(Object.keys(JSON_ROUTES).sort()).toEqual(["/v1/digest", "/v1/extract"]);
+    expect(Object.keys(JSON_ROUTES).sort()).toEqual(["/v1/digest", "/v1/extract", "/v1/plan"]);
   });
 });
 
@@ -136,15 +136,15 @@ describe("memory", () => {
     expect(r.inputChars).toBeGreaterThan(plain.inputChars);
   });
 
-  it("caps 12 items, 80/600 chars per field and 3000 chars total, dropping junk", () => {
-    const many = Array.from({ length: 20 }, (_, i) => ({ source: `S${i}`.padEnd(100, "s"), text: "t".repeat(700) }));
+  it("caps 16 items, 80/1500 chars per field and 6000 chars total, dropping junk", () => {
+    const many = Array.from({ length: 20 }, (_, i) => ({ source: `S${i}`.padEnd(100, "s"), text: "t".repeat(1600) }));
     const m = parseMemory([null, 5, { text: "  " }, ...many]);
-    expect(m.length).toBeLessThanOrEqual(12);
-    expect(m.every((i) => i.source.length <= 80 && i.text.length <= 600)).toBe(true);
-    expect(m.reduce((n, i) => n + i.source.length + i.text.length, 0)).toBeLessThanOrEqual(3000);
-    expect(m.length).toBe(5); // 4 × 680 = 2720, the 5th is cut to fit
-    expect(m[4].text.endsWith("…")).toBe(true);
-    expect(parseMemory(Array.from({ length: 30 }, () => ({ text: "x" }))).length).toBe(12);
+    expect(m.length).toBeLessThanOrEqual(16);
+    expect(m.every((i) => i.source.length <= 80 && i.text.length <= 1500)).toBe(true);
+    expect(m.reduce((n, i) => n + i.source.length + i.text.length, 0)).toBeLessThanOrEqual(6000);
+    expect(m.length).toBe(4); // 3 × 1580 = 4740, the 4th is cut to fit
+    expect(m[3].text.endsWith("…")).toBe(true);
+    expect(parseMemory(Array.from({ length: 30 }, () => ({ text: "x" }))).length).toBe(16);
     expect(parseMemory({ text: "not an array" })).toEqual([]);
     expect(parseMemory([{ text: "no source" }])).toEqual([{ source: "memory", text: "no source" }]);
   });

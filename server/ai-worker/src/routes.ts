@@ -7,9 +7,11 @@ import {
   buildDigestMessages,
   buildEditMessages,
   buildExtractMessages,
+  buildPlanMessages,
   buildWriteMessages,
 } from "./prompts";
-import { EMPTY_DIGEST, EMPTY_EXTRACT, digestParser, extractParser } from "./structured";
+import type { QuotaClass } from "./quota";
+import { EMPTY_DIGEST, EMPTY_EXTRACT, EMPTY_PLAN, digestParser, extractParser, planParser } from "./structured";
 import {
   type Validated,
   validateBrief,
@@ -18,6 +20,7 @@ import {
   validateDigest,
   validateEdit,
   validateExtract,
+  validatePlan,
   validateWrite,
 } from "./validate";
 
@@ -51,6 +54,7 @@ export type JsonPrepared =
       parse: (content: string) => object | null;
       /** Returned with `degraded: true` when both attempts are unusable. */
       empty: object;
+      cls: QuotaClass;
     }
   | { ok: false; status: 400 | 413; error: string };
 
@@ -60,15 +64,20 @@ function jsonRoute<T, R extends object>(
   parser: (v: T) => (content: string) => R | null,
   empty: R,
   maxTokens: number,
+  cls: QuotaClass = "background",
 ) {
   return (body: unknown): JsonPrepared => {
     const r = validate(body);
-    return r.ok ? { ok: true, messages: build(r.value), inputChars: r.inputChars, maxTokens, parse: parser(r.value), empty } : r;
+    return r.ok ? { ok: true, messages: build(r.value), inputChars: r.inputChars, maxTokens, parse: parser(r.value), empty, cls } : r;
   };
 }
 
-/** Background endpoints: POST, signed, one JSON response, counted in the background quota (not actions). */
+/**
+ * JSON endpoints: POST, signed, one JSON response. Extract and digest count in the background
+ * quota; plan is part of a chat the user already pays an action for, so only its cost counts.
+ */
 export const JSON_ROUTES: Record<string, (body: unknown) => JsonPrepared> = {
   "/v1/extract": jsonRoute(validateExtract, buildExtractMessages, extractParser, EMPTY_EXTRACT, MAX_TOKENS.extract),
   "/v1/digest": jsonRoute(validateDigest, buildDigestMessages, digestParser, EMPTY_DIGEST, MAX_TOKENS.digest),
+  "/v1/plan": jsonRoute(validatePlan, buildPlanMessages, planParser, EMPTY_PLAN, MAX_TOKENS.plan, "helper"),
 };

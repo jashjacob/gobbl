@@ -71,10 +71,7 @@ final class ChatModel {
             default: nil
             }
         }.suffix(12)
-        // What memory knows about the people and things in the question.
         var chatContext = ChatContext.build()
-        let recalled = MemoryRecall.items(for: text)
-        if !recalled.isEmpty { chatContext["memory"] = recalled }
         let answer = Message(kind: .assistant, text: "")
         messages.append(answer)
         busy = true
@@ -84,6 +81,9 @@ final class ChatModel {
                 busy = false
                 PetModel.shared.send(.assistantBusy(false))
             }
+            // The AI plans what to look up; the Mac looks it up and sends only that.
+            let recalled = await MemoryRecall.items(for: text, conversation: Array(history.dropLast()))
+            if !recalled.isEmpty { chatContext["memory"] = recalled }
             do {
                 for try await delta in AIClient.shared.stream("/v1/chat", body: ["messages": Array(history), "context": chatContext,
                                                                                   "locale": AIClient.locale]) {

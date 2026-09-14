@@ -86,10 +86,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if let i = args.firstIndex(of: "--recall"), i + 1 < args.count {
                 // What memory would send with this chat question: sources and sizes only.
                 let question = args[i + 1]
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    let items = MemoryRecall.items(for: question)
+                Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    let items = await MemoryRecall.items(for: question)
+                    print("plan: \(MemoryRecall.lastPlan?.summary ?? "none (heuristic fallback)")")
                     print("memory items for \"\(question)\": \(items.count)")
-                    for item in items { print(" - \(item["source"] ?? ""): \(item["text"]?.count ?? 0) chars") }
+                    for item in items {
+                        print(" - \(item["source"] ?? ""): \(item["text"]?.count ?? 0) chars")
+                        if args.contains("--verbose") { print((item["text"] ?? "").split(separator: "\n").map { "     \($0)" }.joined(separator: "\n")) }
+                    }
                     fflush(stdout)
                     exit(0)
                 }
