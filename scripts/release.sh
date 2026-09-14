@@ -282,8 +282,12 @@ fi
 
 if $GITHUB; then
   step "GitHub release gobbl-v${VERSION}"
-  gh release create "gobbl-v${VERSION}" "$DMG" --title "Gobbl ${VERSION}" \
-    ${NOTES:+--notes-file "$NOTES"} ${NOTES:---notes "Gobbl ${VERSION}"}
+  # (Notes go in the body, never as an attachment.)
+  if [ -n "$NOTES" ]; then
+    gh release create "gobbl-v${VERSION}" "$DMG" --title "Gobbl ${VERSION}" --notes-file "$NOTES"
+  else
+    gh release create "gobbl-v${VERSION}" "$DMG" --title "Gobbl ${VERSION}" --notes "Gobbl ${VERSION}"
+  fi
 fi
 
 step "Done"

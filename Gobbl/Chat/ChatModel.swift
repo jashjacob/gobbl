@@ -115,6 +115,18 @@ final class ChatModel {
 
     func clear() { messages.removeAll() }
 
+    #if DEBUG
+    /// `--demo`: a short sample conversation for screenshots (memory only).
+    func seedDemo() {
+        messages = [
+            Message(kind: .user, text: "What's on today?"),
+            Message(kind: .assistant, text: "A design review at 3:00 with a Zoom link, and you promised Samar the Q3 deck by Friday. Your focus block is free until then."),
+            Message(kind: .user, text: "Remind me at 5 to send the deck"),
+            Message(kind: .note(symbol: "bell.fill"), text: "Reminder set for 5:00 PM: Send the deck"),
+        ]
+    }
+    #endif
+
     private func update(_ id: UUID, _ change: (inout Message) -> Void) {
         guard let i = messages.firstIndex(where: { $0.id == id }) else { return }
         change(&messages[i])

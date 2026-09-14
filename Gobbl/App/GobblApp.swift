@@ -83,6 +83,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     NotchController.shared.debugExpand()
                 }
             }
+            if args.contains("--demo") {
+                DemoData.load()
+            }
             if args.contains("--digest-selftest") {
                 DigestSelfTest.run()
             }

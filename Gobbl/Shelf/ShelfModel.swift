@@ -55,6 +55,15 @@ final class ShelfModel {
         save()
     }
 
+    #if DEBUG
+    /// `--demo`: sample files for screenshots, shown but never saved over the real shelf.
+    func setDemo(_ urls: [URL]) {
+        var demo = Shelf()
+        demo.add(urls)
+        shelf = demo
+    }
+    #endif
+
     func remove(_ item: ShelfItem) {
         shelf.remove(item.id)
         save()

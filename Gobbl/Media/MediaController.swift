@@ -26,6 +26,10 @@ final class MediaController {
     private var framework: URL? { Bundle.main.url(forResource: "MediaRemoteAdapter", withExtension: "framework") }
 
     func start() {
+        #if DEBUG
+        // Screenshots show the sample track, never what's really playing.
+        if CommandLine.arguments.contains("--demo") { return }
+        #endif
         guard RemoteFlags.mediaRemote else {
             available = false
             return
@@ -58,6 +62,15 @@ final class MediaController {
             available = false
         }
     }
+
+    #if DEBUG
+    /// `--demo`: a sample track for screenshots instead of whatever is playing.
+    func setDemo(_ track: NowPlaying, artwork: NSImage?) {
+        stop()
+        nowPlaying = track
+        self.artwork = artwork
+    }
+    #endif
 
     func stop() {
         stopping = true

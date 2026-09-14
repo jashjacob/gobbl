@@ -89,6 +89,18 @@ final class AgentHub {
         NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
     }
 
+    #if DEBUG
+    /// `--demo`: sample agent sessions for screenshots.
+    func demo(_ events: [AgentEvent]) {
+        var t = tracker
+        // Spread over the last few minutes so times read "2 min ago", not "in 0s".
+        for (i, e) in events.enumerated() {
+            _ = t.apply(e, now: Date().addingTimeInterval(-Double(events.count - i) * 150))
+        }
+        tracker = t
+    }
+    #endif
+
     func clearFinished() {
         var t = tracker
         t.expire(now: Date().addingTimeInterval(AgentTracker.forgetDone + 1))

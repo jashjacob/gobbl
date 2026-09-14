@@ -44,6 +44,15 @@ final class CalendarModel {
         }
     }
 
+    #if DEBUG
+    /// `--demo`: sample events for screenshots, without touching the real calendar.
+    func setDemo(_ demo: [Event]) {
+        stop()
+        authorized = true
+        events = demo
+    }
+    #endif
+
     func stop() {
         timer?.invalidate()
         timer = nil
