@@ -60,7 +60,8 @@ enum MemoryRecall {
     /// Questions about what the user did: which day, if any.
     static func activitySpan(_ question: String) -> (day: String, label: String)? {
         let q = question.lowercased()
-        let asksActivity = q.range(of: #"\b(what (did|have|was) i|what i did|worked on|working on|been doing|been up to|my day|recap|summar|how did i spend|where did (my )?time go|what happened)"#,
+        // Keyed on phrases that survive typos ("waht did i do today").
+        let asksActivity = q.range(of: #"\b(did i|i did|have i been|was i|do today|done today|worked on|working on|been doing|been up to|my day|recap|summar|how did i spend|where did (my )?time go|what happened)\b"#,
                                    options: .regularExpression) != nil
         guard asksActivity else { return nil }
         let yesterday = q.contains("yesterday")

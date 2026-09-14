@@ -83,6 +83,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     NotchController.shared.debugExpand()
                 }
             }
+            if let i = args.firstIndex(of: "--recall"), i + 1 < args.count {
+                // What memory would send with this chat question: sources and sizes only.
+                let question = args[i + 1]
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    let items = MemoryRecall.items(for: question)
+                    print("memory items for \"\(question)\": \(items.count)")
+                    for item in items { print(" - \(item["source"] ?? ""): \(item["text"]?.count ?? 0) chars") }
+                    fflush(stdout)
+                    exit(0)
+                }
+            }
             if args.contains("--demo") {
                 DemoData.load()
             }
