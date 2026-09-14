@@ -30,6 +30,22 @@ enum MemoryRecall {
             }
             if !list.isEmpty { add("Gobbl to-dos", list.joined(separator: "\n")) }
         }
+        // "What did I do today?", "recap yesterday": the day's digest and where the time went.
+        if let span = activitySpan(question), let range = DayParts.range(of: span.day, calendar: .current) {
+            if let digest = DigestCenter.shared.text(forDay: span.day) { add("Gobbl digest · \(span.label)", digest) }
+            let segments = (try? store.segments(from: range.start, to: min(range.end, Date()), excerptChars: 160)) ?? []
+            var byPlace: [String: (minutes: Double, excerpt: String)] = [:]
+            for s in segments {
+                let place = "\(s.app) · \(s.chat ?? s.domain ?? String(s.window.prefix(40)))"
+                let current = byPlace[place] ?? (0, "")
+                byPlace[place] = (current.minutes + s.minutes, current.excerpt.isEmpty ? s.excerpt : current.excerpt)
+            }
+            let lines = byPlace.sorted { $0.value.minutes > $1.value.minutes }.prefix(10).map { place, v in
+                "- \(place): \(Int(v.minutes.rounded())) min. \(v.excerpt.prefix(120))"
+            }
+            if !lines.isEmpty { add("Activity · \(span.label)", lines.joined(separator: "\n")) }
+        }
+
         let words = keywords(question)
         var hits = (try? store.search(words.joined(separator: " "), limit: 8)) ?? []
         if hits.isEmpty, let first = words.first { hits = (try? store.search(first, limit: 6)) ?? [] }
@@ -39,6 +55,17 @@ enum MemoryRecall {
         }
         for hit in hits { add(source(hit), hit.snippet.replacingOccurrences(of: "[", with: "").replacingOccurrences(of: "]", with: "")) }
         return items
+    }
+
+    /// Questions about what the user did: which day, if any.
+    static func activitySpan(_ question: String) -> (day: String, label: String)? {
+        let q = question.lowercased()
+        let asksActivity = q.range(of: #"\b(what (did|have|was) i|what i did|worked on|working on|been doing|been up to|my day|recap|summar|how did i spend|where did (my )?time go|what happened)"#,
+                                   options: .regularExpression) != nil
+        guard asksActivity else { return nil }
+        let yesterday = q.contains("yesterday")
+        let date = yesterday ? Date().addingTimeInterval(-86400) : Date()
+        return (DayParts.dayKey(date, calendar: .current), yesterday ? "yesterday" : "today")
     }
 
     static func source(_ h: MemoryStore.Hit) -> String {
