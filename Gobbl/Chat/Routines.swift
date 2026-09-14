@@ -70,7 +70,16 @@ final class Routines {
                 PetModel.shared.send(.assistantBusy(false))
             }
             do {
-                let text = try await AIClient.shared.complete("/v1/brief", body: ["kind": kind.rawValue, "context": ChatContext.build(),
+                var context = ChatContext.build()
+                // Open to-dos (and, in the morning, a few "maybe"s) so the brief can mention them.
+                let iso = ISO8601DateFormatter()
+                let todos = TodoCenter.shared.open + (kind == .morning ? Array(TodoCenter.shared.maybe.prefix(3)) : [])
+                context["todos"] = todos.prefix(10).map { t -> [String: String] in
+                    var item = ["title": t.status == .maybe ? "Maybe: \(t.title)" : t.title]
+                    if let due = t.due { item["due"] = iso.string(from: due) }
+                    return item
+                }
+                let text = try await AIClient.shared.complete("/v1/brief", body: ["kind": kind.rawValue, "context": context,
                                                                                   "locale": AIClient.locale])
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !text.isEmpty else { return }

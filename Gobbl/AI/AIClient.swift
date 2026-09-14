@@ -154,6 +154,25 @@ final class AIClient {
         }
     }
 
+    /// A JSON (not streamed) task endpoint: "/v1/extract", "/v1/digest".
+    func json(_ path: String, body: [String: Any]) async throws -> [String: Any] {
+        guard isRegistered else { throw AIError.notRegistered }
+        let data = try JSONSerialization.data(withJSONObject: body)
+        log(path: path, body: data)
+        let request = try signedRequest("POST", path: path, body: data)
+        let (reply, response) = try await URLSession.shared.data(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard status == 200 else {
+            let error = Self.error(status: status, data: reply)
+            lastError = "\(Self.timeStamp()) \(path): \(error.errorDescription ?? "")"
+            throw error
+        }
+        guard let object = try JSONSerialization.jsonObject(with: reply) as? [String: Any] else {
+            throw AIError.server("The AI service sent something unexpected.")
+        }
+        return object
+    }
+
     /// Collects a whole streamed response.
     func complete(_ path: String, body: [String: Any]) async throws -> String {
         var text = ""

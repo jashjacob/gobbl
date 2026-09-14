@@ -13,6 +13,7 @@ struct HomePanel: View {
             VStack(spacing: 8) {
                 NowPlayingCard()
                 EventCard()
+                TodoCard()
             }
             .frame(maxWidth: .infinity)
         }

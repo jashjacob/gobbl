@@ -163,6 +163,8 @@ struct SettingsView: View {
 
             RoutinesSettingsSection()
 
+            MemorySettingsSection()
+
             AgentsSettingsSection()
 
             Section("Calendar") {

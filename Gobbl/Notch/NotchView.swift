@@ -148,6 +148,10 @@ struct NotchView: View {
     private var trailing: some View {
         if state.expanded {
             HStack(spacing: 4) {
+                IconButton(symbol: "brain.head.profile", help: "Memory: to-dos, people and search") {
+                    state.window?.close()
+                    MemoryWindow.show()
+                }
                 IconButton(symbol: "gearshape.fill", help: "Settings") {
                     state.window?.close()
                     AppActions.openSettings()
@@ -199,9 +203,17 @@ private struct StatusWing: View {
     @State private var shelf = ShelfModel.shared
     @State private var awake = KeepAwake.shared
     @State private var agents = AgentHub.shared
+    @State private var memory = MemoryModel.shared
 
     var body: some View {
         HStack(spacing: 5) {
+            if memory.isCapturing {
+                // Always visible while Gobbl remembers the screen.
+                Circle()
+                    .fill(Palette.accent.opacity(0.85))
+                    .frame(width: 5, height: 5)
+                    .help("Gobbl is remembering what's on screen. Pause it in Settings → Memory.")
+            }
             if agents.anyWaiting {
                 Image(systemName: "exclamationmark.bubble.fill")
                     .font(.system(size: 11, weight: .semibold))

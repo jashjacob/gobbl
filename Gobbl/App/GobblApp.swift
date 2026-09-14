@@ -61,6 +61,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Dictation.shared.warmUp()
             ReminderStore.shared.start()
             Routines.shared.start()
+            MemoryModel.shared.apply()
+            TodoCenter.shared.start()
+            KnowledgeCenter.shared.start()
             // ⌃⌥G: the same as tapping the Gobbl key, for keyboards without a right ⌥.
             if let write = HotKey(keyCode: kVK_ANSI_G, modifiers: controlKey | optionKey, id: 2, action: {
                 WriteAction.run()
@@ -77,6 +80,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     NotchController.shared.open(tab: tab, focus: false)
                     NotchController.shared.debugExpand()
                 }
+            }
+            if args.contains("--todo-selftest") {
+                TodoSelfTest.run()
+            }
+            if let i = args.firstIndex(of: "--ax-dump"), i + 1 < args.count {
+                AXDump.run(bundleID: args[i + 1])
+            }
+            if let i = args.firstIndex(of: "--transcribe"), i + 1 < args.count {
+                Dictation.shared.debugTranscribe(URL(fileURLWithPath: args[i + 1]))
             }
             if let i = args.firstIndex(of: "--mood"), i + 1 < args.count, let mood = Mood(rawValue: args[i + 1]) {
                 PetModel.shared.debugMood = mood
