@@ -87,7 +87,9 @@ enum AgentLink {
 
     private static func write(_ data: Data, to url: URL, backup: Data?) throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        if let backup { try backup.write(to: url.appendingPathExtension("gobbl-backup")) }
+        // Keep the first backup: the file as it was before Gobbl ever changed it.
+        let backupURL = url.appendingPathExtension("gobbl-backup")
+        if let backup, !FileManager.default.fileExists(atPath: backupURL.path) { try backup.write(to: backupURL) }
         try data.write(to: url, options: .atomic)
     }
 

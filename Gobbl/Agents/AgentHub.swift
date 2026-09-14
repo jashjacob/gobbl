@@ -50,6 +50,7 @@ final class AgentHub {
         } catch {
             NSLog("Gobbl: agent socket failed: \(error)")
         }
+        MCPConnector.shared.launch()
     }
 
     func stop() {
@@ -98,6 +99,11 @@ final class AgentHub {
 
     private func receive(_ line: String, reply: AgentReply) {
         let parts = line.split(separator: "\t", maxSplits: 1)
+        // gobbl-mcp asking for something only the running app has; answered on the same connection.
+        if parts.count == 2, parts[0] == "mcp" {
+            MCPBridge.handle(String(parts[1]), reply: reply)
+            return
+        }
         guard parts.count == 2, let source = AgentEvent.Source(rawValue: String(parts[0])),
               let event = AgentEvent.parse(source: source, json: Data(parts[1].utf8)) else {
             reply.close()

@@ -100,6 +100,9 @@ if [ -d "$SPK" ]; then
   sign "$SPK/Versions/B/Updater.app"
   sign "$SPK"
 fi
+# The MCP server for AI apps: a Mach-O of our own inside Contents/MacOS.
+[ -f "$APP_PATH/Contents/MacOS/gobbl-mcp" ] || die "gobbl-mcp missing from the app bundle"
+sign "$APP_PATH/Contents/MacOS/gobbl-mcp"
 sign "$APP_PATH"
 codesign --verify --deep --strict --verbose=2 "$APP_PATH" 2>&1 | tail -2
 if codesign -d --entitlements - --xml "$APP_PATH" 2>/dev/null | grep -q "get-task-allow"; then

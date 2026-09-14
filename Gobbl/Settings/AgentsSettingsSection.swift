@@ -44,6 +44,7 @@ struct AgentsSettingsSection: View {
             Text("Gob works along while your agent runs and cheers when it finishes. Events go to Gobbl through a private socket on this Mac; nothing is sent anywhere. Each file is backed up to .gobbl-backup before it's changed.")
                 .font(.caption).foregroundStyle(.secondary)
         }
+        MCPConnectorSection()
     }
 
     private func setClaude(_ on: Bool, approvals: Bool) {
@@ -64,5 +65,83 @@ struct AgentsSettingsSection: View {
             self.error = AgentLink.describe(error)
         }
         codex = AgentLink.codexConnected()
+    }
+}
+
+/// One switch that connects every AI app on this Mac to Gobbl's memory (MCP).
+struct MCPConnectorSection: View {
+    @State private var connector = MCPConnector.shared
+    @State private var copied = false
+
+    var body: some View {
+        Section {
+            Toggle(isOn: Binding(get: { connector.autoConnect }, set: { connector.setAutoConnect($0) })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Connect AI apps automatically")
+                    Text("Claude, ChatGPT, Cursor and others can search your memory, to-dos and people, and set reminders. Answers come from this Mac.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            .disabled(connector.busy)
+            if connector.loaded && connector.rows.isEmpty {
+                Text("No AI apps found on this Mac.").font(.caption).foregroundStyle(.secondary)
+            }
+            ForEach(connector.rows) { row in
+                HStack(spacing: 8) {
+                    Circle().fill(color(row.status)).frame(width: 8, height: 8)
+                    Text(row.client.name)
+                    Spacer()
+                    if connector.busy {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Text(detail(row)).font(.caption).foregroundStyle(connector.restartNeeded.contains(row.id) ? .orange : .secondary)
+                    }
+                }
+            }
+            HStack {
+                Text(MCPLink.shimURL.path)
+                    .font(.caption.monospaced()).foregroundStyle(.secondary)
+                    .lineLimit(1).truncationMode(.middle).textSelection(.enabled)
+                Spacer()
+                Button(copied ? "Copied" : "Copy") {
+                    try? MCPLink.installShim()
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(MCPLink.shimURL.path, forType: .string)
+                    copied = true
+                }
+            }
+            if connector.requestCount > 0 {
+                Text(requestsLabel).font(.caption).foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("Memory for AI apps")
+        } footer: {
+            Text("For any other app, add an MCP server that runs the command above. Only the tool name and time of each request are logged, in mcp-requests.jsonl.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        .task { connector.refresh() }
+    }
+
+    private var requestsLabel: String {
+        var s = connector.requestCount == 1 ? "1 request from AI apps" : "\(connector.requestCount) requests from AI apps"
+        if let last = connector.lastRequest { s += ", last " + last.formatted(.relative(presentation: .named)) }
+        return s
+    }
+
+    private func color(_ status: MCPLink.Status) -> Color {
+        switch status {
+        case .connected: .green
+        case .notConnected: .secondary.opacity(0.5)
+        case .manual: .orange
+        case .failed: .red
+        }
+    }
+
+    private func detail(_ row: MCPConnector.Row) -> String {
+        switch row.status {
+        case .connected: connector.restartNeeded.contains(row.id) ? "Restart needed" : "Connected"
+        case .notConnected: connector.restartNeeded.contains(row.id) ? "Restart needed" : "Not connected"
+        case .manual(let why), .failed(let why): why
+        }
     }
 }
