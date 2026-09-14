@@ -34,9 +34,16 @@ final class PetModel {
     @ObservationIgnored private var lookRestTask: Task<Void, Never>?
     /// Recent key presses (times only — never which key), for the typing animation.
     @ObservationIgnored private(set) var keyTimes: [Date] = []
+    /// Key presses in the current burst (a count only), for the characters on
+    /// the pet's screen. A pause of 20 s starts a fresh screen.
+    @ObservationIgnored private(set) var typedCount = 0
     /// DEBUG `--mood`: pins the drawn mood, for screenshots.
     @ObservationIgnored var debugMood: Mood? {
-        didSet { refresh() }
+        didSet {
+            // A few lines of text on the screen for typing screenshots.
+            if debugMood == .typing { typedCount = 23 }
+            refresh()
+        }
     }
 
     @ObservationIgnored private var timer: Timer?
@@ -110,6 +117,7 @@ final class PetModel {
     /// A key press anywhere (from TypingMonitor).
     func keyPressed() {
         let now = Date()
+        if let last = keyTimes.last, now.timeIntervalSince(last) < 20 { typedCount += 1 } else { typedCount = 1 }
         keyTimes.append(now)
         keyTimes.removeAll { now.timeIntervalSince($0) > 2 }
         brain.quiet = defaults.bool(forKey: Keys.quiet)

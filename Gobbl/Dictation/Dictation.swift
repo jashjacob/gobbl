@@ -1,6 +1,11 @@
 import AppKit
+import CoreML
 import GobblCore
 import Observation
+import os
+
+/// Timings and outcomes only, never what was said. `log show --predicate 'subsystem == "com.xeve.gobbl"'`.
+private let log = Logger(subsystem: "com.xeve.gobbl", category: "dictation")
 // WhisperKit's classes aren't marked Sendable; Gobbl only touches them from the main actor.
 @preconcurrency import WhisperKit
 
@@ -14,15 +19,20 @@ import Observation
 final class Dictation {
     static let shared = Dictation()
 
+    /// Measured on an M4 Pro, a 3 s sentence once warm: Small 0.4–0.6 s,
+    /// Base 0.2 s, Turbo 3 s on the GPU (its big encoder only gets fast on the
+    /// Neural Engine, whose first compile takes over ten minutes).
     enum ModelChoice: String, CaseIterable, Identifiable {
+        case small = "openai_whisper-small"
         case turbo = "openai_whisper-large-v3-v20240930_turbo_632MB"
         case base = "openai_whisper-base"
 
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .turbo: "Best: Whisper Turbo (about 630 MB)"
-            case .base: "Fast: Whisper Base (about 150 MB)"
+            case .small: "Recommended: Whisper Small (about 480 MB)"
+            case .turbo: "Most accurate: Whisper Turbo (about 630 MB, slower)"
+            case .base: "Fastest: Whisper Base (about 150 MB)"
             }
         }
     }
@@ -148,13 +158,26 @@ final class Dictation {
         if let loading { return try await loading.value.kit }
         guard let folder = installedFolder else { throw DictationError.noModel }
         let task = Task { () throws -> Loaded in
-            Loaded(try await WhisperKit(WhisperKitConfig(modelFolder: folder, verbose: false, logLevel: .error,
-                                                         prewarm: true, load: true, download: false)))
+            // "gpu" skips the Neural Engine compile (over ten minutes for Turbo on
+            // an M4 Pro the first time); "ane" is faster once that compile is cached.
+            let units: MLComputeUnits = UserDefaults.standard.string(forKey: "dictationCompute") == "ane" ? .cpuAndNeuralEngine : .cpuAndGPU
+            return Loaded(try await WhisperKit(WhisperKitConfig(modelFolder: folder,
+                                                                computeOptions: ModelComputeOptions(audioEncoderCompute: units,
+                                                                                                    textDecoderCompute: units),
+                                                                verbose: false, logLevel: .error,
+                                                                prewarm: false, load: true, download: false)))
         }
         loading = task
         defer { loading = nil }
         let loaded = try await task.value.kit
         whisper = loaded
+        // The first transcription pays a one-time GPU setup (1.5–2.5 s): spend it
+        // here instead of on the user's first dictation. Faint noise rather than
+        // silence, so the text decoder runs too (on silence it's skipped).
+        let warm = Date()
+        let noise = (0..<WhisperKit.sampleRate).map { _ in Float.random(in: -0.02...0.02) }
+        _ = try? await loaded.transcribe(audioArray: noise)
+        log.info("model warmed in \(Date().timeIntervalSince(warm), format: .fixed(precision: 2))s")
         return loaded
     }
 
@@ -203,17 +226,24 @@ final class Dictation {
         PetModel.shared.send(.dictating(true))
         HUDModel.shared.show(.init(symbol: locked ? "lock.fill" : "mic.fill", label: locked ? "Hands-free" : "Listening",
                                    tint: Palette.accent), for: 600)
+        log.info("hold began (locked: \(locked)), model loaded: \(self.whisper != nil)")
         Task {
             guard await AudioProcessor.requestRecordPermission() else {
+                log.error("microphone permission denied")
                 cancel(message: "Microphone is off")
                 return
             }
-            guard isRecording else { return }
+            guard isRecording else {
+                log.info("released before the microphone started")
+                return
+            }
             do {
                 try audio.startRecordingLive(inputDeviceID: nil) { _ in
                     Task { @MainActor in Dictation.shared.meter() }
                 }
+                log.info("recording after \(Date().timeIntervalSince(self.startedAt), format: .fixed(precision: 2))s")
             } catch {
+                log.error("microphone failed to start: \(error.localizedDescription, privacy: .public)")
                 cancel(message: "Mic unavailable")
             }
         }
@@ -263,6 +293,7 @@ final class Dictation {
         let samples = Array(audio.audioSamples)
         let duration = Double(samples.count) / Double(WhisperKit.sampleRate)
         let quiet = peakEnergy < 0.2
+        log.info("released: \(samples.count) samples (\(duration, format: .fixed(precision: 2))s), peak level \(self.peakEnergy, format: .fixed(precision: 2))")
         guard duration >= 0.35 else {
             HUDModel.shared.show(.init(symbol: "mic.fill", label: "Hold to talk", tint: Palette.accent), for: 1.2)
             return
@@ -276,10 +307,14 @@ final class Dictation {
                 scheduleUnload()
             }
             do {
+                let t0 = Date()
                 let whisper = try await load()
+                let t1 = Date()
                 let results = try await whisper.transcribe(audioArray: samples, decodeOptions: decodingOptions(for: whisper))
                 var text = DictationCleanup.verbatim(results.map(\.text).joined(separator: " "))
+                log.info("model ready in \(t1.timeIntervalSince(t0), format: .fixed(precision: 2))s, transcribed in \(Date().timeIntervalSince(t1), format: .fixed(precision: 2))s: \(text.count) characters")
                 if text.isEmpty || (DictationCleanup.isLikelyHallucination(text) && (quiet || duration < 2.5)) {
+                    log.info("dropped: empty or silence hallucination")
                     HUDModel.shared.show(.init(symbol: "ear", label: "Didn't catch that", tint: Palette.gold), for: 2)
                     return
                 }
@@ -303,11 +338,34 @@ final class Dictation {
                 HUDModel.shared.show(.init(symbol: "checkmark.circle.fill", label: "\(text.split(separator: " ").count) words",
                                            tint: Palette.accent), for: 1.5)
             } catch {
+                log.error("failed: \(error.localizedDescription, privacy: .public)")
                 HUDModel.shared.show(.init(symbol: "exclamationmark.triangle.fill", label: "Dictation failed", tint: Palette.gold), for: 3)
                 status = error.localizedDescription
             }
         }
     }
+
+    #if DEBUG
+    /// `--transcribe file.wav`: times the model on a known recording.
+    func debugTranscribe(_ url: URL) {
+        Task {
+            let t0 = Date()
+            do {
+                let whisper = try await load()
+                print(String(format: "load %.2fs", Date().timeIntervalSince(t0)))
+                // Three runs: the first pays one-time GPU setup, the rest are what a user feels.
+                for run in 1...3 {
+                    let t1 = Date()
+                    let results = try await whisper.transcribe(audioPath: url.path, decodeOptions: decodingOptions(for: whisper))
+                    print(String(format: "run %d transcribe %.2fs: ", run, Date().timeIntervalSince(t1)) + results.map(\.text).joined())
+                }
+            } catch {
+                print("transcribe error: \(error)")
+            }
+            fflush(stdout)
+        }
+    }
+    #endif
 
     func repaste(_ text: String) {
         Task { await FieldIO.paste(text) }

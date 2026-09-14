@@ -61,7 +61,8 @@ struct GobView: View {
                            t: time ?? (reduceMotion ? 0 : now.timeIntervalSinceReferenceDate),
                            look: look(), lookY: lookY(), anticipating: anticipating, extras: size >= 40,
                            keyAges: mood == .typing ? pet.keyTimes.map { now.timeIntervalSince($0) } : [],
-                           heat: mood == .typing ? pet.typingHeat(at: now) : 0, boot: boot)
+                           heat: mood == .typing ? pet.typingHeat(at: now) : 0, boot: boot,
+                           typed: mood == .typing ? pet.typedCount : 0)
                     .draw(in: &g, size: canvasSize)
             }
         }
@@ -143,6 +144,8 @@ private struct GobPainter {
     let heat: Double
     /// 0–1 CRT power-on, or nil.
     let boot: Double?
+    /// Key presses in this typing burst: one made-up character on the screen each.
+    var typed: Int = 0
 
     /// How fresh the latest key press is: 1 right at the press, 0 after 0.15 s.
     private var keyPulse: CGFloat {
@@ -406,6 +409,14 @@ private struct GobPainter {
             drawMatrix(&rain, screen: screen, s: s)
             // Eyes squint through the code.
             drawEyes(&c, center: CGPoint(x: screen.midX, y: face.eyeY), face: face, line: line, color: .white.opacity(0.92))
+        } else if mood == .typing {
+            // Typing along with the user: eyes on the text, characters filling the screen.
+            var glow = c
+            if s >= 40 { glow.addFilter(.shadow(color: ink.opacity(0.8), radius: s * 0.02)) }
+            drawEyes(&glow, center: CGPoint(x: screen.midX, y: screen.minY + screen.height * 0.3),
+                     face: Face(eyeY: screen.minY + screen.height * 0.3, eyeDX: face.eyeDX, eyeR: face.eyeR * 0.85),
+                     line: line, color: ink)
+            drawTyped(&glow, screen: screen, s: s)
         } else if mood == .listening {
             var glow = c
             if s >= 40 { glow.addFilter(.shadow(color: ink.opacity(0.8), radius: s * 0.02)) }
@@ -469,6 +480,48 @@ private struct GobPainter {
             if s >= 40 { text.addFilter(.shadow(color: ink, radius: s * 0.03)) }
             text.draw(Text("Hi!").font(.system(size: screen.height * 0.36, weight: .heavy, design: .monospaced)).foregroundColor(ink),
                       at: CGPoint(x: screen.midX, y: screen.midY))
+        }
+    }
+
+    /// One made-up character per key press, a few lines that scroll, and a
+    /// blinking cursor. The real keys are never known: characters come from
+    /// the press count. Tiny sizes draw blocks instead of letters.
+    private func drawTyped(_ c: inout GraphicsContext, screen: CGRect, s: CGFloat) {
+        let big = s >= 40
+        let cols = big ? 7 : 5
+        let rows = big ? 3 : 2
+        let area = CGRect(x: screen.minX + screen.width * 0.12, y: screen.minY + screen.height * 0.5,
+                          width: screen.width * 0.76, height: screen.height * 0.4)
+        let cellW = area.width / CGFloat(cols)
+        let cellH = area.height / CGFloat(rows)
+        let glyphs = Array("abcdefghijklmnopqrstuvwxyz{}()=;<>/+*")
+        let total = max(0, typed)
+        let cursorRow = total / cols
+        let firstRow = max(0, cursorRow - rows + 1)
+        for row in firstRow...cursorRow {
+            let y = area.minY + (CGFloat(row - firstRow) + 0.5) * cellH
+            for col in 0..<(row == cursorRow ? total % cols : cols) {
+                let index = row * cols + col
+                var rng = SplitMix64(seed: UInt64(index + 1) &* 0x9E37_79B9_7F4A_7C15)
+                let r = rng.next()
+                if r % 7 == 0 { continue } // a space now and then
+                let x = area.minX + (CGFloat(col) + 0.5) * cellW
+                let color = index == total - 1 && keyPulse > 0 ? Color.white : ink
+                if big {
+                    c.draw(Text(String(glyphs[Int(r % UInt64(glyphs.count))]))
+                            .font(.system(size: cellH * 0.95, weight: .heavy, design: .monospaced)).foregroundColor(color),
+                           at: CGPoint(x: x, y: y))
+                } else {
+                    c.fill(Path(CGRect(x: x - cellW * 0.35, y: y - cellH * 0.22, width: cellW * 0.7, height: cellH * 0.44)),
+                           with: .color(color))
+                }
+            }
+        }
+        // The cursor: solid while keys land, blinking in the pauses.
+        if keyPulse > 0 || Int(t * 2.5) % 2 == 0 {
+            let x = area.minX + (CGFloat(total % cols) + 0.5) * cellW
+            let y = area.minY + (CGFloat(cursorRow - firstRow) + 0.5) * cellH
+            c.fill(Path(CGRect(x: x - cellW * 0.3, y: y - cellH * 0.36, width: cellW * 0.6, height: cellH * 0.72)), with: .color(ink))
         }
     }
 

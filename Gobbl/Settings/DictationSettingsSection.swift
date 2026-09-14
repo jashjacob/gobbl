@@ -7,7 +7,7 @@ struct DictationSettingsSection: View {
     @AppStorage("dictationStyle") private var style = DictationStyle.light.rawValue
     @AppStorage("dictationLanguage") private var language = "auto"
     @AppStorage("dictationWords") private var words = ""
-    @State private var choice = Dictation.ModelChoice.turbo
+    @State private var choice = Dictation.ModelChoice.small
 
     private static let languages: [(String, String)] = [
         ("auto", "Detect automatically"), ("en", "English"), ("hi", "Hindi"), ("ta", "Tamil"), ("te", "Telugu"),

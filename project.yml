@@ -99,8 +99,10 @@ targets:
         COMBINE_HIDPI_IMAGES: YES
       configs:
         Debug:
-          # Ad-hoc for local runs; releases use Developer ID.
-          CODE_SIGN_IDENTITY: "-"
+          # Signed with the team's Developer ID even locally: macOS ties the
+          # Accessibility grant to the signature, and an ad-hoc one changes on
+          # every build, so each rebuild silently lost the permission.
+          CODE_SIGN_IDENTITY: "Developer ID Application"
         Release:
           CODE_SIGN_IDENTITY: "Developer ID Application"
           # Notarization requires a secure timestamp on every signature and
