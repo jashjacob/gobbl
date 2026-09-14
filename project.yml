@@ -1,0 +1,93 @@
+name: Gobbl
+options:
+  bundleIdPrefix: com.xeve
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+packages:
+  GobblCore:
+    path: Packages/GobblCore
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.6.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "0.1.0"
+targets:
+  Gobbl:
+    type: application
+    platform: macOS
+    sources:
+      - path: Gobbl
+    dependencies:
+      - package: GobblCore
+      - package: Sparkle
+        product: Sparkle
+    info:
+      path: Gobbl/Info.plist
+      properties:
+        CFBundleDisplayName: Gobbl
+        CFBundleName: Gobbl
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.productivity
+        LSMinimumSystemVersion: "14.0"
+        # Lives in the notch and the menu bar: no Dock icon.
+        LSUIElement: true
+        NSHumanReadableCopyright: "© 2026 Xeve"
+        NSCalendarsFullAccessUsageDescription: "Gobbl shows your next meeting in the notch, and Gob nudges you five minutes before it starts."
+        NSCalendarsUsageDescription: "Gobbl shows your next meeting in the notch, and Gob nudges you five minutes before it starts."
+        # Sparkle auto-updates. SUFeedURL is compiled into every shipped binary,
+        # so it points at dl.xeve.io (a Cloudflare Worker we control) rather
+        # than at a storage host directly.
+        SUFeedURL: https://dl.xeve.io/gobbl/appcast.xml
+        # Gobbl's own EdDSA key (Keychain account "gobbl"), not TidyBug's or xeve's.
+        SUPublicEDKey: "xXarbkI/vjzFvGzY6YEajuOoj5TEefgMN+02v4knWIs="
+        SUEnableAutomaticChecks: true
+        SUAllowsAutomaticUpdates: true
+        SUScheduledCheckInterval: 86400
+    postCompileScripts:
+      - name: Bundle MediaRemote adapter
+        basedOnDependencyAnalysis: false
+        script: |
+          set -e
+          "$SRCROOT/scripts/build-mediaremote.sh" "$DERIVED_FILE_DIR/mediaremote"
+          R="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH"
+          mkdir -p "$R"
+          rm -rf "$R/MediaRemoteAdapter.framework"
+          cp -R "$DERIVED_FILE_DIR/mediaremote/MediaRemoteAdapter.framework" "$R/"
+          cp "$SRCROOT/Vendor/mediaremote-adapter/bin/mediaremote-adapter.pl" "$R/"
+    settings:
+      base:
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        PRODUCT_BUNDLE_IDENTIFIER: com.xeve.gobbl
+        PRODUCT_NAME: Gobbl
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_APP_SANDBOX: NO
+        ENABLE_HARDENED_RUNTIME: YES
+        CODE_SIGN_STYLE: Manual
+        PROVISIONING_PROFILE_SPECIFIER: ""
+        DEVELOPMENT_TEAM: KD8GRYUXWZ
+        COMBINE_HIDPI_IMAGES: YES
+      configs:
+        Debug:
+          # Ad-hoc for local runs; releases use Developer ID.
+          CODE_SIGN_IDENTITY: "-"
+        Release:
+          CODE_SIGN_IDENTITY: "Developer ID Application"
+          # Notarization requires a secure timestamp on every signature and
+          # rejects the get-task-allow debugging entitlement.
+          OTHER_CODE_SIGN_FLAGS: "--timestamp"
+          CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+          ONLY_ACTIVE_ARCH: NO
+schemes:
+  Gobbl:
+    build:
+      targets:
+        Gobbl: all
+    run:
+      config: Debug
+    archive:
+      config: Release

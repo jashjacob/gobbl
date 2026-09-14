@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Core tests
+        run: scripts/ci-test.sh
+
+      - name: Build app (unsigned)
+        run: |
+          brew install xcodegen
+          xcodegen generate
+          xcodebuild -project Gobbl.xcodeproj -scheme Gobbl -configuration Debug \
+            -derivedDataPath build/DD CODE_SIGNING_ALLOWED=NO build

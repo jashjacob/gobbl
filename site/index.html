@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gobbl — your notch has a pet</title>
+<meta name="description" content="Gobbl turns your MacBook's notch into a home for a tiny pet that gobbles files, keeps your clipboard, plays your music and more. Free and open source.">
+<link rel="icon" href="/img/icon.png?v=__V__">
+<link rel="apple-touch-icon" href="/img/icon.png?v=__V__">
+<meta property="og:title" content="Gobbl — your notch has a pet">
+<meta property="og:description" content="A tiny pet lives in your Mac's notch. It gobbles files, keeps your clipboard, dances to your music. Free and open source.">
+<meta property="og:image" content="https://gobbl.xeve.io/img/og.png?v=__V__">
+<meta property="og:url" content="https://gobbl.xeve.io">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Gobbl","operatingSystem":"macOS 14 or later",
+ "applicationCategory":"UtilitiesApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},
+ "url":"https://gobbl.xeve.io","author":{"@type":"Organization","name":"Xeve","url":"https://xeve.io"}}
+</script>
+<style>
+  :root {
+    --bg: #0a0a0c; --surface: #131418; --raised: #1b1d22; --border: rgba(255,255,255,.08);
+    --text: #eef0f2; --muted: #9aa0a8; --faint: #62666f; --lime: #a6f25c; --gold: #f5c542;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
+  .brand { display: flex; gap: 10px; align-items: center; font-weight: 800; letter-spacing: .02em; text-decoration: none; }
+  .brand img { width: 30px; height: 30px; }
+  nav .links { display: flex; gap: 22px; font-size: 14px; color: var(--muted); }
+  nav .links a { text-decoration: none; }
+  nav .links a:hover { color: var(--text); }
+
+  /* Hero: a fake menu bar with a working notch and Gob inside it */
+  .hero { text-align: center; padding: 30px 0 70px; }
+  .screen { position: relative; margin: 0 auto 56px; max-width: 760px; height: 250px; border-radius: 22px 22px 0 0;
+            background: radial-gradient(120% 90% at 50% 0%, #2a3b1f 0%, #121418 55%, #0a0a0c 100%); border: 1px solid var(--border); border-bottom: 0; overflow: hidden; }
+  .menubar { height: 34px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; font-size: 13px; color: rgba(255,255,255,.75); background: rgba(0,0,0,.25); backdrop-filter: blur(10px); }
+  .menubar span { margin-right: 16px; }
+  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 320px; height: 34px; background: #000;
+           border-radius: 0 0 16px 16px; transition: width .45s cubic-bezier(.3,1.4,.5,1), height .45s cubic-bezier(.3,1.4,.5,1), border-radius .3s; cursor: pointer; z-index: 2; }
+  .notch.open { width: 520px; height: 190px; border-radius: 0 0 30px 30px; }
+  .notch canvas { position: absolute; left: 22px; top: 3px; width: 28px; height: 28px; transition: all .45s cubic-bezier(.3,1.4,.5,1); }
+  .notch.open canvas { left: 34px; top: 52px; width: 110px; height: 110px; }
+  .notch .panel { position: absolute; left: 170px; right: 24px; top: 52px; bottom: 22px; opacity: 0; transition: opacity .2s; display: grid; gap: 10px; text-align: left; }
+  .notch.open .panel { opacity: 1; transition-delay: .2s; }
+  .tile { background: rgba(255,255,255,.07); border-radius: 14px; padding: 10px 14px; font-size: 13px; color: var(--muted); }
+  .tile b { color: var(--text); display: block; font-size: 13.5px; }
+  .hint { position: absolute; bottom: 18px; left: 0; right: 0; font-size: 13px; color: rgba(255,255,255,.45); }
+  h1 { font-size: clamp(44px, 8vw, 84px); line-height: 1; letter-spacing: -.035em; margin: 0 0 18px; font-weight: 850; }
+  h1 em { font-style: normal; color: var(--lime); }
+  .lede { font-size: clamp(17px, 2.2vw, 21px); color: var(--muted); max-width: 640px; margin: 0 auto 30px; }
+  .cta { display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px; border-radius: 999px; font-weight: 700; text-decoration: none; font-size: 16px; transition: transform .15s; }
+  .btn:hover { transform: translateY(-2px); }
+  .btn.primary { background: var(--lime); color: #0a0a0c; }
+  .btn.ghost { border: 1px solid var(--border); background: var(--surface); }
+  .fine { margin-top: 14px; font-size: 13px; color: var(--faint); }
+
+  section { padding: 70px 0; border-top: 1px solid var(--border); }
+  h2 { font-size: clamp(30px, 4.5vw, 44px); letter-spacing: -.025em; margin: 0 0 12px; line-height: 1.1; }
+  .sub { color: var(--muted); margin: 0 0 36px; max-width: 620px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 22px; }
+  .card .ico { font-size: 24px; margin-bottom: 10px; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+  /* Egg hatcher */
+  .hatch { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: center; }
+  .eggbox { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; height: 340px; display: grid; place-items: center; position: relative; cursor: pointer; user-select: none; }
+  .eggbox canvas { width: 220px; height: 220px; }
+  .result { position: absolute; bottom: 22px; left: 0; right: 0; text-align: center; font-weight: 800; font-size: 20px; }
+  .chip { display: inline-block; margin-left: 8px; font-size: 11px; letter-spacing: .12em; padding: 4px 10px; border-radius: 999px; border: 1px solid currentColor; vertical-align: middle; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  td { padding: 9px 0; border-bottom: 1px solid var(--border); }
+  td:last-child { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 10px; vertical-align: -1px; }
+
+  .faq details { border-bottom: 1px solid var(--border); padding: 16px 0; }
+  .faq summary { cursor: pointer; font-weight: 650; list-style: none; }
+  .faq summary::after { content: "+"; float: right; color: var(--faint); }
+  .faq details[open] summary::after { content: "–"; }
+  .faq p { color: var(--muted); margin: 10px 0 0; }
+  footer { padding: 40px 0 60px; color: var(--faint); font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-top: 1px solid var(--border); }
+  @media (max-width: 720px) {
+    .hatch { grid-template-columns: 1fr; }
+    .notch.open { width: 92%; }
+    .notch .panel { display: none; }
+    nav .links a:not(.gh) { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="/"><img src="/img/icon.png?v=__V__" alt="">Gobbl</a>
+    <div class="links">
+      <a href="#features">Features</a>
+      <a href="#hatch">Hatch an egg</a>
+      <a href="#faq">FAQ</a>
+      <a class="gh" href="https://github.com/xeveio/gobbl">GitHub</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="screen" aria-hidden="true">
+      <div class="menubar"><div><span></span><span>Finder</span><span>File</span><span>Edit</span><span>View</span></div><div>Mon 9:41</div></div>
+      <div class="notch" id="notch">
+        <canvas id="gob" width="220" height="220"></canvas>
+        <div class="panel">
+          <div class="tile"><b>♪ Midnight City</b>M83 · Gob is dancing</div>
+          <div class="tile"><b>📎 3 files on the shelf</b>Drag them out anywhere</div>
+          <div class="tile"><b>📅 Standup in 4 min</b>Join →</div>
+        </div>
+      </div>
+      <div class="hint">Hover the notch. Click Gob.</div>
+    </div>
+    <h1>Your notch has <em>a pet.</em></h1>
+    <p class="lede">Gobbl moves a tiny creature into your MacBook's notch. It gobbles the files you drop, keeps your clipboard, dances to your music and nudges you before meetings.</p>
+    <div class="cta">
+      <a class="btn primary" href="/download">Download for Mac <small data-version>v0.1</small></a>
+      <a class="btn ghost" href="https://github.com/xeveio/gobbl">★ Star on GitHub</a>
+    </div>
+    <div class="fine">Free &amp; open source · macOS 14 or later · Works on Macs without a notch too</div>
+  </header>
+
+  <section id="features">
+    <h2>Everything the notch should do.</h2>
+    <p class="sub">A drag-and-drop shelf, a clipboard, a music player, and more. All on your Mac, nothing sent anywhere.</p>
+    <div class="grid">
+      <div class="card"><div class="ico">📥</div><h3>File shelf</h3><p>Drop files on the notch, drag them out later. AirDrop, share, Quick Look.</p></div>
+      <div class="card"><div class="ico">🪄</div><h3>File tools</h3><p>Convert and compress images, PDFs and video. Remove backgrounds. Copy text from any image.</p></div>
+      <div class="card"><div class="ico">📋</div><h3>Clipboard history</h3><p>⇧⌘Space opens everything you copied, searchable, with pins. Passwords are never saved.</p></div>
+      <div class="card"><div class="ico">🎵</div><h3>Now playing</h3><p>Artwork and controls for Spotify, Music, YouTube and more. Gob dances along.</p></div>
+      <div class="card"><div class="ico">🔊</div><h3>Volume &amp; brightness</h3><p>Sleek readouts in the notch instead of the big system popups. Caps Lock too.</p></div>
+      <div class="card"><div class="ico">📅</div><h3>Next meeting</h3><p>Your next event with a one-click Join, and a nudge five minutes before.</p></div>
+      <div class="card"><div class="ico">⏱️</div><h3>Focus timer</h3><p>Pomodoro in the notch. Gob throws a tiny party when you finish.</p></div>
+      <div class="card"><div class="ico">🔋</div><h3>Battery &amp; awake</h3><p>Charging and low-battery alerts, and keep-awake in one click.</p></div>
+    </div>
+  </section>
+
+  <section id="hatch">
+    <div class="hatch">
+      <div>
+        <h2>Every Gobbl hatches different.</h2>
+        <p class="sub">Your pet hatches from an egg on first launch. Eight species, from common Mochi to legendary Cosmo, and 1 in 100 hatch shiny. Feed it files and it levels up and evolves. Then show it off with its pet card.</p>
+        <table id="odds"></table>
+      </div>
+      <div class="eggbox" id="eggbox" title="Click to hatch">
+        <canvas id="egg" width="440" height="440"></canvas>
+        <div class="result" id="result">Click the egg</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq">
+    <h2>Questions</h2>
+    <details><summary>Is it really free?</summary><p>Yes. Gobbl is MIT-licensed and open source, by <a href="https://xeve.io">Xeve</a>. No account, no subscription, no ads.</p></details>
+    <details><summary>Does it drain my battery?</summary><p>No. At rest Gobbl uses about 0% CPU: Gob only redraws to blink, and nothing polls in the background except a cheap clipboard check.</p></details>
+    <details><summary>My Mac doesn't have a notch.</summary><p>Gobbl shows a small pill at the top of the screen instead, on any display you like.</p></details>
+    <details><summary>What does it collect?</summary><p>Nothing. Clipboard history and the shelf live only on your Mac. Permissions (Accessibility, Calendar) are optional and asked only when you turn a feature on.</p></details>
+    <details><summary>Can I make my own pet?</summary><p>Custom skins are coming. Star the repo to follow along.</p></details>
+  </section>
+
+  <footer>
+    <span>© 2026 <a href="https://xeve.io">Xeve</a> · Made with love for the notch</span>
+    <span><a href="https://github.com/xeveio/gobbl">GitHub</a> · <a href="https://dl.xeve.io/gobbl/appcast.xml">Updates feed</a></span>
+  </footer>
+</div>
+
+<script>
+// Species table mirrors GobblCore/Mascot/PetGenome.swift.
+const SPECIES = [
+  ["Mochi", .93, 20], ["Sprout", .30, 18], ["Ember", .04, 16], ["Frost", .55, 16],
+  ["Bubble", .48, 14], ["Sunny", .13, 10], ["Plum", .78, 5], ["Cosmo", .68, 1]];
+const rarity = w => w >= 14 ? "common" : w >= 10 ? "uncommon" : w >= 5 ? "rare" : "legendary";
+const hsl = (h, s, l) => `hsl(${h * 360}, ${s}%, ${l}%)`;
+
+// A port of GobPainter: gumdrop body, antenna, eyes that follow the pointer.
+function drawGob(ctx, s, t, o) {
+  ctx.clearRect(0, 0, s, s);
+  const mood = o.mood;
+  let squash = Math.sin(t * 2.2) * .025, dy = 0, tilt = 0;
+  if (mood === "dance") { squash = Math.sin(t * 8) * .07; tilt = Math.sin(t * 4) * .12; }
+  if (mood === "love") squash = Math.sin(t * 5) * .04;
+  if (mood === "party") { dy = -Math.abs(Math.sin(t * 7)) * s * .1; }
+  const bw = s * .84 * (1 + squash), bh = s * .66 * (1 - squash);
+  const bx = s / 2 - bw / 2, by = s * .96 - bh + dy;
+  ctx.save();
+  ctx.translate(s / 2, s * .96 + dy); ctx.rotate(tilt); ctx.translate(-s / 2, -(s * .96 + dy));
+  // antenna
+  const tipX = s / 2 + s * .06 + Math.sin(t * 3) * s * .04, tipY = by - s * .15;
+  ctx.strokeStyle = hsl(o.hue, 70, 40); ctx.lineWidth = s * .03; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(s / 2, by + 2); ctx.quadraticCurveTo(s / 2 - s * .03, by - s * .08, tipX, tipY); ctx.stroke();
+  ctx.fillStyle = hsl(o.hue, 90, 78); ctx.beginPath(); ctx.arc(tipX, tipY, s * .045, 0, 7); ctx.fill();
+  // body
+  const g = ctx.createLinearGradient(0, by, 0, by + bh);
+  g.addColorStop(0, hsl(o.hue, 95, 75)); g.addColorStop(1, hsl(o.hue, 65, 48));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, [bw * .5, bw * .5, bh * .45, bh * .45]); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,.35)"; ctx.beginPath(); ctx.ellipse(bx + bw * .29, by + bh * .18, bw * .13, bh * .08, 0, 0, 7); ctx.fill();
+  if (o.shiny) for (let i = 0; i < 3; i++) {
+    const p = (t * .7 + i / 3) % 1, a = i * 2.1 + .6, r = s * .06 * Math.sin(p * Math.PI);
+    ctx.fillStyle = "#fff"; ctx.font = `${r * 2.4}px sans-serif`; ctx.fillText("✦", s / 2 + Math.cos(a) * bw * .55, by + bh / 2 + Math.sin(a) * bh * .6);
+  }
+  // eyes
+  const ey = by + bh * .42, edx = bw * .19, er = s * .075, blink = (t % 4.3) < .13;
+  ctx.fillStyle = ctx.strokeStyle = "#16161a"; ctx.lineWidth = Math.max(1.5, s * .035);
+  for (const side of [-1, 1]) {
+    const ex = s / 2 + side * edx;
+    if (mood === "love" || mood === "party" || mood === "dance") {
+      ctx.beginPath(); ctx.moveTo(ex - er, ey + er * .3); ctx.quadraticCurveTo(ex, ey - er * 1.2, ex + er, ey + er * .3); ctx.stroke();
+    } else if (blink) {
+      ctx.beginPath(); ctx.moveTo(ex - er, ey); ctx.lineTo(ex + er, ey); ctx.stroke();
+    } else {
+      const px = ex + o.look * er * .45, py = ey + o.lookY * er * .3;
+      ctx.fillStyle = "#16161a"; ctx.beginPath(); ctx.ellipse(px, py, er * .75, er, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(px - er * .2, py - er * .4, er * .28, 0, 7); ctx.fill();
+    }
+    ctx.fillStyle = "rgba(255,111,165,.35)"; ctx.beginPath(); ctx.ellipse(s / 2 + side * edx * 1.55, ey + er * 1.45, er, er * .55, 0, 0, 7); ctx.fill();
+  }
+  // mouth
+  const my = by + bh * .68, wide = mood ? .13 : .08;
+  ctx.strokeStyle = "#16161a"; ctx.beginPath(); ctx.moveTo(s / 2 - bw * wide, my - bh * .02);
+  ctx.quadraticCurveTo(s / 2, my + bh * (wide > .1 ? .14 : .08), s / 2 + bw * wide, my - bh * .02); ctx.stroke();
+  ctx.restore();
+  // hearts / notes
+  if ((mood === "love" || mood === "dance") && s > 60) for (let i = 0; i < 2; i++) {
+    const p = (t * .6 + i * .5) % 1;
+    ctx.globalAlpha = 1 - p; ctx.fillStyle = mood === "love" ? "#ff6fa5" : "#a6f25c";
+    ctx.font = `900 ${s * .15 * (.7 + p * .5)}px sans-serif`;
+    ctx.fillText(mood === "love" ? "♥" : "♪", bx + bw - s * .04 + p * s * .08, by + s * .05 - p * s * .28);
+    ctx.globalAlpha = 1;
+  }
+}
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const notch = document.getElementById("notch"), gob = document.getElementById("gob"), gctx = gob.getContext("2d");
+const hero = { hue: .30, mood: null, look: 0, lookY: 0, shiny: false, until: 0 };
+addEventListener("pointermove", e => {
+  const r = gob.getBoundingClientRect();
+  hero.look = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / 300));
+  hero.lookY = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / 300));
+});
+notch.addEventListener("pointerenter", () => notch.classList.add("open"));
+notch.addEventListener("pointerleave", () => notch.classList.remove("open"));
+notch.addEventListener("click", () => { notch.classList.add("open"); hero.mood = "love"; hero.until = performance.now() + 1600; });
+
+// Egg hatcher: same weights and shiny odds as the app.
+const eggbox = document.getElementById("eggbox"), egg = document.getElementById("egg"), ectx = egg.getContext("2d"), result = document.getElementById("result");
+const state = { phase: "egg", crackAt: 0, pet: null };
+document.getElementById("odds").innerHTML = SPECIES.map(([n, h, w]) =>
+  `<tr><td><span class="dot" style="background:${hsl(h, 90, 65)}"></span>${n} <span style="color:var(--faint)">· ${rarity(w)}</span></td><td>${w}%</td></tr>`).join("") +
+  `<tr><td>✦ Shiny, any species</td><td>1%</td></tr>`;
+function roll() {
+  let r = Math.random() * 100;
+  for (const [n, h, w] of SPECIES) { if (r < w) return { name: n, hue: h, weight: w, shiny: Math.random() < .01 }; r -= w; }
+  return { name: "Mochi", hue: .93, weight: 20, shiny: false };
+}
+eggbox.addEventListener("click", () => {
+  if (state.phase === "egg") { state.phase = "crack"; state.crackAt = performance.now(); result.textContent = "…"; }
+  else if (state.phase === "pet") { state.phase = "egg"; result.textContent = "Click the egg"; }
+});
+function drawEgg(t, cracking) {
+  const s = 440, w = 260, h = 320, x = (s - w) / 2, y = (s - h) / 2;
+  ectx.clearRect(0, 0, s, s);
+  ectx.save(); ectx.translate(s / 2, y + h);
+  ectx.rotate(cracking ? Math.sin(t * 38) * .14 : Math.sin(t * 9) * .08 * Math.max(0, Math.sin(t * 1.3)));
+  ectx.translate(-s / 2, -(y + h));
+  const g = ectx.createLinearGradient(x, y, x + w, y + h); g.addColorStop(0, "#fff6e6"); g.addColorStop(1, "#e9d9be");
+  ectx.fillStyle = g; ectx.beginPath(); ectx.ellipse(s / 2, y + h * .56, w / 2, h * .5, 0, 0, 7);
+  ectx.ellipse(s / 2, y + h * .38, w * .42, h * .38, 0, 0, 7); ectx.fill();
+  ectx.fillStyle = "#e58a6b";
+  for (const [px, py, r] of [[.3, .35, .07], [.62, .25, .05], [.68, .6, .08], [.36, .72, .05], [.5, .5, .04]]) {
+    ectx.beginPath(); ectx.arc(x + w * px, y + h * py, w * r, 0, 7); ectx.fill();
+  }
+  if (cracking) {
+    ectx.strokeStyle = "#6b5a40"; ectx.lineWidth = 5; ectx.lineJoin = "round"; ectx.beginPath(); ectx.moveTo(x + w * .08, y + h * .48);
+    for (let i = 0, px = .18; px <= .92; i++, px += .1) ectx.lineTo(x + w * px, y + h * (i % 2 ? .52 : .42));
+    ectx.stroke();
+  }
+  ectx.restore();
+}
+
+let visible = true;
+new IntersectionObserver(es => es.forEach(e => visible = e.isIntersecting || visible)).observe(eggbox);
+function frame(now) {
+  const t = reduce ? 0 : now / 1000;
+  if (hero.until && now > hero.until) { hero.mood = null; hero.until = 0; }
+  drawGob(gctx, 220, t, hero);
+  if (state.phase === "egg" || state.phase === "crack") {
+    drawEgg(t, state.phase === "crack");
+    if (state.phase === "crack" && now - state.crackAt > 1300) {
+      state.pet = roll(); state.phase = "pet";
+      const tier = state.pet.shiny ? "shiny" : rarity(state.pet.weight);
+      const color = { common: "#b8bcc6", uncommon: "#a6f25c", rare: "#5b9cf6", legendary: "#f5c542", shiny: "#f5c542" }[tier];
+      result.innerHTML = `It's a ${state.pet.shiny ? "shiny " : ""}${state.pet.name}! <span class="chip" style="color:${color}">${tier.toUpperCase()}</span>`;
+    }
+  } else {
+    drawGob(ectx, 440, t, { hue: state.pet.hue, shiny: state.pet.shiny, mood: "party", look: hero.look, lookY: hero.lookY });
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
