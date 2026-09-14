@@ -65,8 +65,24 @@ export const home = {
 </div></div>
 
 <nav class="fnav" aria-label="Feature sections"><div>
-  <a href="#notch">Notch</a><a href="#pet">Pet</a><a href="#agents">AI agents</a><a href="#key">Gobbl key</a><a href="#dictation">Dictation</a><a href="#chat">Chat</a><a href="#memory">Memory</a><a href="#mcp">MCP</a><a href="#privacy">Privacy</a><a href="#compare">Compare</a>
+  <a href="#screens">Screens</a><a href="#notch">Notch</a><a href="#pet">Pet</a><a href="#agents">AI agents</a><a href="#key">Gobbl key</a><a href="#dictation">Dictation</a><a href="#chat">Chat</a><a href="#memory">Memory</a><a href="#mcp">MCP</a><a href="#privacy">Privacy</a><a href="#compare">Compare</a>
 </div></nav>
+
+<section id="screens">
+  <div class="wrap center">
+    <div class="kicker reveal">${ic("monitor")}What you get</div>
+    <h2 class="reveal" style="--i:1">This is Gobbl, in your notch.</h2>
+    <p class="sub reveal" style="--i:2">Real screenshots of the app. Closed, Gob sits beside the camera; hover the notch and it opens into these panels.</p>
+    <figure class="shot-closed reveal" style="--i:3"><picture><source srcset="/img/notch/collapsed.webp" type="image/webp"><img src="/img/notch/collapsed.png" width="714" height="76" alt="Gobbl closed in the MacBook notch: the pet on the left and status on the right" loading="lazy" decoding="async"></picture><figcaption>Closed: Gob on the left, status on the right.</figcaption></figure>
+    <div class="shots">
+      <figure class="reveal" style="--i:0"><picture><source srcset="/img/notch/home.webp" type="image/webp"><img src="/img/notch/home.png" width="1140" height="460" alt="Gobbl's Home panel open in the MacBook notch: the pet, a playing track with controls, and a design review with a Join button" loading="lazy" decoding="async"></picture><figcaption><b>Home</b>Gob, what&rsquo;s playing and your next meeting, with a Join button.</figcaption></figure>
+      <figure class="reveal" style="--i:1"><picture><source srcset="/img/notch/chat.webp" type="image/webp"><img src="/img/notch/chat.png" width="1140" height="460" alt="Gobbl's Chat panel: a question about the day, an answer, and a reminder being set" loading="lazy" decoding="async"></picture><figcaption><b>Chat</b>Ask about your day, or set a reminder in plain English.</figcaption></figure>
+      <figure class="reveal" style="--i:2"><picture><source srcset="/img/notch/shelf.webp" type="image/webp"><img src="/img/notch/shelf.png" width="1140" height="460" alt="Gobbl's Shelf panel holding four files with AirDrop, Share and Clear buttons" loading="lazy" decoding="async"></picture><figcaption><b>Shelf</b>Drop files on the notch, then drag them out, AirDrop or share.</figcaption></figure>
+      <figure class="reveal" style="--i:3"><picture><source srcset="/img/notch/agents.webp" type="image/webp"><img src="/img/notch/agents.png" width="1140" height="460" alt="Gobbl's Agents panel: one Claude Code session needing permission, a finished Codex task and one working" loading="lazy" decoding="async"></picture><figcaption><b>AI agents</b>Claude Code and Codex at a glance, including permission requests.</figcaption></figure>
+      <figure class="reveal" style="--i:4"><picture><source srcset="/img/notch/tools.webp" type="image/webp"><img src="/img/notch/tools.png" width="1140" height="460" alt="Gobbl's Tools panel with a 25-minute focus timer and six quick tool buttons" loading="lazy" decoding="async"></picture><figcaption><b>Quick tools</b>A focus timer, keep-awake, mic mute, a colour picker and more.</figcaption></figure>
+    </div>
+  </div>
+</section>
 
 <section id="notch">
   <div class="wrap">
@@ -275,13 +291,22 @@ export const home = {
     <canvas width="340" height="340" class="reveal" role="img" aria-label="A candy-coloured Gob wearing a party hat"></canvas>
     <h2 class="reveal" style="--i:1">Give your notch<br>something to do.</h2>
     <div class="cta reveal" style="--i:2">
-      <a class="btn primary magnetic" href="/download">${ic("download")}Download for Mac <small>&middot; coming soon</small></a>
+      <a class="btn primary magnetic" href="/download">${ic("download")}Download for Mac <small data-version>&middot; coming soon</small></a>
       <a class="btn ghost magnetic" href="${GH}">${ic("github")}Star on GitHub</a>
     </div>
   </div>
 </section>`,
   css: DEMO_CSS + `
 .band{background:linear-gradient(180deg,transparent,var(--bg2) 12%,var(--bg2) 88%,transparent)}
+#screens .shot-closed{margin:0 auto 44px;max-width:714px}
+#screens img{display:block;width:100%;height:auto;border-radius:0 0 26px 26px;box-shadow:0 30px 70px -28px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.04)}
+#screens .shot-closed img{border-radius:0 0 16px 16px}
+#screens .shots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px 28px;text-align:left}
+#screens .shots figure:first-child{grid-column:1/-1;width:100%;max-width:760px;justify-self:center}
+#screens figure{margin:0}
+#screens figcaption{margin-top:12px;color:var(--muted);font-size:15px;line-height:1.5}
+#screens figcaption b{color:#f2f2f2;font-weight:600;margin-right:8px}
+@media (max-width:760px){#screens .shots{grid-template-columns:1fr}}
 .muted{color:var(--muted)}
 .narrow{max-width:860px}
 .glow{position:absolute;left:50%;top:40px;width:760px;height:520px;margin-left:-380px;border-radius:50%;background:#a6f25c;opacity:.09;filter:blur(110px);pointer-events:none;animation:drift 24s ease-in-out infinite alternate}

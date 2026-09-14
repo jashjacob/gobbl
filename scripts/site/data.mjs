@@ -45,7 +45,7 @@ export const FAQ = {
   General: [
     ["Is Gobbl free?", `Yes. Gobbl is free and open source under the MIT license, made by <a href="https://xeve.io">Xeve</a>. The AI features (writing with the Gobbl key, chat, briefs, Polish with AI, Memory's to-dos) are free during the beta and will become a paid plan later. The notch, the pet, the shelf, the clipboard and on-device dictation don't use the AI service at all.`],
     ["Which Macs does Gobbl work on?", `Any Mac running macOS 14 Sonoma or later. Macs without a notch, and external displays, get a small pill at the top of the screen instead. Dictation needs a Mac with Apple silicon. There is no Windows or Linux version.`],
-    ["When can I download it?", `The first signed, notarized release is coming soon. Star <a href="${GH}">the GitHub repo</a> to hear about it, or build it from source today.`],
+    ["When can I download it?", `Now. <a href="/download">Download Gobbl</a> for macOS 14 or later: it's signed and notarized by Apple, and it updates itself. Every build is also on <a href="${GH}/releases">GitHub releases</a>, and you can build it from source.`],
     ["Do I need an account?", `No. There's no sign-up. To stop abuse of the free AI service, the app does a one-time Cloudflare Turnstile check the first time you use an AI feature.`],
     ["Does it drain my battery?", `No. At rest Gobbl sits around 0% CPU: Gob only redraws to blink, and nothing polls in the background except a cheap clipboard check.`],
     ["Is Gobbl open source?", `Yes, all of it, under the MIT license on <a href="${GH}">GitHub</a>. Gobbl doesn't reuse code from GPL notch apps; third-party code it does use is listed in the repo.`]
