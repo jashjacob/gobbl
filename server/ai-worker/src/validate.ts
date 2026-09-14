@@ -1,9 +1,25 @@
-import { CHAT_MAX_MESSAGES, CHAT_MESSAGE_CHARS, MAX_INPUT_CHARS, NEARBY_TEXT_CHARS, SHORT_FIELD_CHARS } from "./config";
+import {
+  BRIEF_TODOS_MAX,
+  CHAT_MAX_MESSAGES,
+  CHAT_MESSAGE_CHARS,
+  DIGEST_MAX_SEGMENTS,
+  DIGEST_TOTAL_CHARS,
+  EXTRACT_KNOWN_MAX,
+  EXTRACT_MAX_ITEMS,
+  EXTRACT_TEXT_CHARS,
+  MAX_INPUT_CHARS,
+  MEMORY_MAX_ITEMS,
+  MEMORY_TOTAL_CHARS,
+  NEARBY_TEXT_CHARS,
+  SHORT_FIELD_CHARS,
+} from "./config";
 
 export const WRITE_MODES = ["instruction", "rewrite", "draft", "answer"] as const;
 export const CLEANUP_STYLES = ["light", "polish"] as const;
 export const TONES = ["neutral", "friendly", "formal", "casual", "concise", "confident", "warm", "professional"] as const;
 export const BRIEF_KINDS = ["morning", "evening"] as const;
+export const CAPTURE_KINDS = ["text", "message", "mail"] as const;
+export const DAY_PARTS = ["morning", "afternoon", "evening"] as const;
 
 export interface AppContext {
   app: string;
@@ -46,16 +62,61 @@ export interface DayContext {
   focus?: { running?: boolean; completedToday?: number };
 }
 
+/** Recalled snippets the app attaches to chat/brief, e.g. { source: "WhatsApp · Samar · Sat 6 PM", text: "…" }. */
+export interface MemoryItem {
+  source: string;
+  text: string;
+}
+
 export interface ChatRequest {
   messages: { role: "user" | "assistant"; content: string }[];
   context: DayContext;
+  memory: MemoryItem[];
   locale?: string;
 }
 
 export interface BriefRequest {
   kind: (typeof BRIEF_KINDS)[number];
   context: DayContext;
+  memory: MemoryItem[];
+  todos: { title: string; due?: string }[];
   yesterday?: string;
+  locale?: string;
+}
+
+export interface CaptureItem {
+  ref: string;
+  app: string;
+  window?: string;
+  chat?: string;
+  url_domain?: string;
+  kind: (typeof CAPTURE_KINDS)[number];
+  sender?: string;
+  fromMe?: boolean;
+  time?: string;
+  text: string;
+}
+
+export interface ExtractRequest {
+  batch: CaptureItem[];
+  known: { people: string[]; projects: string[] };
+  now: string;
+  timezone?: string;
+  locale?: string;
+}
+
+export interface DigestSegment {
+  app: string;
+  window?: string;
+  chat?: string;
+  url_domain?: string;
+  minutes: number;
+  summary: string;
+}
+
+export interface DigestRequest {
+  day: string;
+  parts: { part: (typeof DAY_PARTS)[number]; segments: DigestSegment[] }[];
   locale?: string;
 }
 
@@ -224,7 +285,13 @@ export function validateChat(body: unknown): Validated<ChatRequest> {
   while (msgs.length && msgs[0].role !== "user") total -= msgs.shift()!.content.length;
   const loc = locale(body.locale);
   if (loc === false) return bad("invalid_locale");
-  return { ok: true, value: { messages: msgs, context: parseDayContext(body.context), locale: loc }, inputChars: total };
+  const ctx = isObj(body.context) ? body.context : {};
+  const memory = parseMemory(ctx.memory);
+  return {
+    ok: true,
+    value: { messages: msgs, context: parseDayContext(ctx), memory, locale: loc },
+    inputChars: total + memoryChars(memory),
+  };
 }
 
 export function validateBrief(body: unknown): Validated<BriefRequest> {
@@ -235,9 +302,167 @@ export function validateBrief(body: unknown): Validated<BriefRequest> {
   if (loc === false) return bad("invalid_locale");
   const ctx = isObj(body.context) ? body.context : {};
   const yesterday = short(body.yesterday ?? ctx.yesterday, 1000);
+  const memory = parseMemory(ctx.memory);
+  const todos = list(ctx.todos, BRIEF_TODOS_MAX, (o) => {
+    const title = short(o.title, FIELD);
+    return title ? { title, due: short(o.due, 40) } : undefined;
+  });
   return {
     ok: true,
-    value: { kind: body.kind as BriefRequest["kind"], context: parseDayContext(ctx), yesterday, locale: loc },
-    inputChars: 2000 + (yesterday?.length ?? 0),
+    value: { kind: body.kind as BriefRequest["kind"], context: parseDayContext(ctx), memory, todos, yesterday, locale: loc },
+    inputChars: 2000 + (yesterday?.length ?? 0) + memoryChars(memory) + todos.reduce((n, t) => n + t.title.length + 20, 0),
   };
+}
+
+// ---------------------------------------------------------------- memory
+
+const MEMORY_SOURCE_CHARS = 80;
+const MEMORY_TEXT_CHARS = 600;
+/** A memory cut shorter than this by the total cap is dropped rather than kept as a stub. */
+const MEMORY_MIN_TAIL = 40;
+
+export function memoryChars(m: MemoryItem[]): number {
+  return m.reduce((n, i) => n + i.source.length + i.text.length, 0);
+}
+
+/**
+ * Lenient like parseDayContext: malformed entries are dropped, fields truncated, at most
+ * MEMORY_MAX_ITEMS kept, and the list is cut once source + text reach MEMORY_TOTAL_CHARS
+ * (the item that crosses the line is truncated to fit).
+ */
+export function parseMemory(v: unknown): MemoryItem[] {
+  const items = list(v, MEMORY_MAX_ITEMS, (o) => {
+    const text = short(o.text, MEMORY_TEXT_CHARS);
+    return text?.trim() ? { source: short(o.source, MEMORY_SOURCE_CHARS)?.trim() || "memory", text: text.trim() } : undefined;
+  });
+  const out: MemoryItem[] = [];
+  let budget = MEMORY_TOTAL_CHARS;
+  for (const m of items) {
+    const room = budget - m.source.length;
+    if (room < Math.min(MEMORY_MIN_TAIL, m.text.length)) break;
+    const text = m.text.length > room ? m.text.slice(0, room - 1) + "…" : m.text;
+    out.push({ source: m.source, text });
+    budget -= m.source.length + text.length;
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------- extract
+
+/** Refs round-trip to the client verbatim, so they are rejected (not truncated) when malformed. */
+const REF_RE = /^[^\u0000-\u001f<>]{1,40}$/;
+
+function isoTime(v: unknown): string | undefined {
+  const s = short(v, 40);
+  return s && !Number.isNaN(Date.parse(s)) ? s : undefined;
+}
+
+function names(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  const out: string[] = [];
+  for (const n of v) {
+    if (out.length >= EXTRACT_KNOWN_MAX) break;
+    const s = short(n, 80)?.trim();
+    if (s) out.push(s);
+  }
+  return out;
+}
+
+export function validateExtract(body: unknown): Validated<ExtractRequest> {
+  if (!isObj(body)) return bad("invalid_body");
+  if (!Array.isArray(body.batch) || body.batch.length === 0) return bad("invalid_batch");
+  if (body.batch.length > EXTRACT_MAX_ITEMS) return tooLarge;
+  const now = isoTime(body.now);
+  if (!now) return bad("invalid_now");
+  const loc = locale(body.locale);
+  if (loc === false) return bad("invalid_locale");
+
+  const batch: CaptureItem[] = [];
+  const refs = new Set<string>();
+  let textChars = 0;
+  let metaChars = 0;
+  for (const it of body.batch) {
+    if (!isObj(it)) return bad("invalid_batch");
+    const { ref, app, kind, text } = it;
+    if (typeof ref !== "string" || !REF_RE.test(ref) || refs.has(ref)) return bad("invalid_ref");
+    if (typeof app !== "string" || typeof text !== "string") return bad("invalid_batch");
+    if (typeof kind !== "string" || !(CAPTURE_KINDS as readonly string[]).includes(kind)) return bad("invalid_kind");
+    if (!optStr(it.window) || !optStr(it.chat) || !optStr(it.url_domain) || !optStr(it.sender) || !optStr(it.time))
+      return bad("invalid_batch");
+    if (it.fromMe !== undefined && it.fromMe !== null && typeof it.fromMe !== "boolean") return bad("invalid_batch");
+    refs.add(ref);
+    textChars += text.length;
+    if (!text.trim()) continue; // nothing to read; still counted as a known ref
+    const item: CaptureItem = {
+      ref,
+      app: short(app, 80) ?? "unknown",
+      window: short(it.window),
+      chat: short(it.chat, 120),
+      url_domain: short(it.url_domain, 120),
+      kind: kind as CaptureItem["kind"],
+      sender: short(it.sender, 120),
+      fromMe: typeof it.fromMe === "boolean" ? it.fromMe : undefined,
+      time: short(it.time, 40),
+      text,
+    };
+    metaChars += item.app.length + (item.window?.length ?? 0) + (item.chat?.length ?? 0) + (item.sender?.length ?? 0) + 60;
+    batch.push(item);
+  }
+  if (textChars > EXTRACT_TEXT_CHARS) return tooLarge;
+  if (batch.length === 0) return bad("empty_input");
+
+  const known = isObj(body.known) ? body.known : {};
+  const people = names(known.people);
+  const projects = names(known.projects);
+  const knownChars = [...people, ...projects].reduce((n, s) => n + s.length + 2, 0);
+  return {
+    ok: true,
+    value: { batch, known: { people, projects }, now, timezone: short(body.timezone, 60), locale: loc },
+    inputChars: textChars + metaChars + knownChars,
+  };
+}
+
+// ---------------------------------------------------------------- digest
+
+const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+export function validateDigest(body: unknown): Validated<DigestRequest> {
+  if (!isObj(body)) return bad("invalid_body");
+  if (typeof body.day !== "string" || !DAY_RE.test(body.day)) return bad("invalid_day");
+  if (!Array.isArray(body.parts) || body.parts.length === 0 || body.parts.length > DAY_PARTS.length) return bad("invalid_parts");
+  const loc = locale(body.locale);
+  if (loc === false) return bad("invalid_locale");
+
+  const parts: DigestRequest["parts"] = [];
+  const seen = new Set<string>();
+  let chars = 0;
+  for (const p of body.parts) {
+    if (!isObj(p) || typeof p.part !== "string" || !(DAY_PARTS as readonly string[]).includes(p.part)) return bad("invalid_parts");
+    if (seen.has(p.part)) return bad("invalid_parts");
+    seen.add(p.part);
+    if (!Array.isArray(p.segments)) return bad("invalid_parts");
+    if (p.segments.length > DIGEST_MAX_SEGMENTS) return tooLarge;
+    const segments: DigestSegment[] = [];
+    for (const g of p.segments) {
+      if (!isObj(g) || typeof g.app !== "string" || typeof g.summary !== "string") return bad("invalid_segment");
+      if (typeof g.minutes !== "number" || !Number.isFinite(g.minutes) || g.minutes < 0) return bad("invalid_segment");
+      if (!optStr(g.window) || !optStr(g.chat) || !optStr(g.url_domain)) return bad("invalid_segment");
+      for (const f of [g.app, g.window, g.chat, g.url_domain, g.summary]) if (typeof f === "string") chars += f.length;
+      const app = short(g.app, 80);
+      if (!app) continue;
+      segments.push({
+        app,
+        window: short(g.window),
+        chat: short(g.chat, 120),
+        url_domain: short(g.url_domain, 120),
+        minutes: Math.min(1440, Math.round(g.minutes)),
+        summary: g.summary.slice(0, 300),
+      });
+    }
+    if (segments.length) parts.push({ part: p.part as DigestRequest["parts"][number]["part"], segments });
+  }
+  if (chars > DIGEST_TOTAL_CHARS) return tooLarge;
+  if (parts.length === 0) return bad("empty_input");
+  parts.sort((a, b) => DAY_PARTS.indexOf(a.part) - DAY_PARTS.indexOf(b.part));
+  return { ok: true, value: { day: body.day, parts, locale: loc }, inputChars: chars };
 }

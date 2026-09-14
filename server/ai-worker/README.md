@@ -21,7 +21,8 @@ src/quota.ts       pure quota math (reserve / settle / UTC-midnight reset)
 src/durable.ts     InstallQuota + GlobalBudget Durable Objects
 src/validate.ts    request validation and caps
 src/prompts.ts     server-side system prompts
-src/openrouter.ts  upstream request
+src/openrouter.ts  upstream request (streaming, and non-streaming JSON with one fallback retry)
+src/structured.ts  validation/clamping of the model's JSON for extract + digest
 src/sse.ts         OpenRouter SSE → Gobbl SSE translation
 migrations/        D1 schema (installs, usage_daily)
 test/              vitest unit tests (plain Node; no Workers runtime needed)
@@ -65,7 +66,7 @@ Required secrets:
 | `OPENROUTER_API_KEY` | OpenRouter key. Give it its own credit limit in the OpenRouter dashboard as a last-line backstop. |
 | `TURNSTILE_SECRET` | Secret key of the Turnstile widget used by the verify page. |
 
-Vars (in `wrangler.toml`): `DAILY_ACTIONS` (40), `DAILY_USD_CAP` (0.05), `GLOBAL_DAILY_USD` (20),
+Vars (in `wrangler.toml`): `DAILY_ACTIONS` (40), `DAILY_BACKGROUND` (16, per-install extract/digest calls a day), `DAILY_USD_CAP` (0.05), `GLOBAL_DAILY_USD` (20),
 `REGISTRATIONS_PER_PREFIX_PER_DAY` (20), `MODEL`, `FALLBACK_MODEL` (both must be in the allowlist, else defaults are used).
 Never set `DEV_SKIP_TURNSTILE` in production.
 

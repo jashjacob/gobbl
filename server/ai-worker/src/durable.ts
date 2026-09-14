@@ -5,6 +5,7 @@ import {
   type GlobalState,
   type InstallLimits,
   type InstallState,
+  type QuotaClass,
   remainingInstall,
   reserveGlobal,
   reserveInstall,
@@ -26,15 +27,23 @@ export class InstallQuota extends DurableObject<Env> {
     return seen;
   }
 
-  async reserve(limits: InstallLimits, estUsd: number, nowMs: number) {
-    const r = reserveInstall(await this.ctx.storage.get<InstallState>("state"), limits, estUsd, nowMs);
+  // `cls` defaults to "user" so calls from a Worker version deployed before the background class still work.
+  async reserve(limits: InstallLimits, estUsd: number, nowMs: number, cls: QuotaClass = "user") {
+    const r = reserveInstall(await this.ctx.storage.get<InstallState>("state"), limits, estUsd, nowMs, cls);
     if (r.ok) await this.ctx.storage.put("state", r.state);
     return r.ok
       ? { ok: true as const, day: r.day, resetsAt: r.resetsAt }
       : { ok: false as const, reason: r.reason, resetsAt: r.resetsAt };
   }
 
-  async settle(day: string, reservedUsd: number, actualUsd: number, refundAction: boolean, nowMs: number) {
+  async settle(
+    day: string,
+    reservedUsd: number,
+    actualUsd: number,
+    refundAction: boolean,
+    nowMs: number,
+    cls: QuotaClass = "user",
+  ) {
     const s = settleInstall(
       await this.ctx.storage.get<InstallState>("state"),
       day,
@@ -42,6 +51,7 @@ export class InstallQuota extends DurableObject<Env> {
       actualUsd,
       refundAction,
       nowMs,
+      cls,
     );
     await this.ctx.storage.put("state", s);
   }
@@ -53,8 +63,8 @@ export class InstallQuota extends DurableObject<Env> {
 
 /** Single instance ("global"): daily $ circuit breaker across all installs. */
 export class GlobalBudget extends DurableObject<Env> {
-  async reserve(capUsd: number, estUsd: number, nowMs: number) {
-    const r = reserveGlobal(await this.ctx.storage.get<GlobalState>("state"), capUsd, estUsd, nowMs);
+  async reserve(capUsd: number, estUsd: number, nowMs: number, cls: QuotaClass = "user") {
+    const r = reserveGlobal(await this.ctx.storage.get<GlobalState>("state"), capUsd, estUsd, nowMs, cls);
     if (r.ok) await this.ctx.storage.put("state", r.state);
     return r.ok ? { ok: true as const, day: r.day } : { ok: false as const };
   }

@@ -12,6 +12,7 @@ export interface Env {
   // Vars
   DEV_SKIP_TURNSTILE?: string;
   DAILY_ACTIONS?: string;
+  DAILY_BACKGROUND?: string;
   DAILY_USD_CAP?: string;
   GLOBAL_DAILY_USD?: string;
   REGISTRATIONS_PER_PREFIX_PER_DAY?: string;
@@ -45,7 +46,7 @@ export const DEFAULT_FALLBACK_MODEL = "openai/gpt-4.1-nano";
 export const PRICE_IN_PER_TOKEN = 0.15 / 1_000_000;
 export const PRICE_OUT_PER_TOKEN = 0.6 / 1_000_000;
 
-export const MAX_TOKENS = { write: 800, edit: 1200, cleanup: 1200, chat: 500, brief: 400 } as const;
+export const MAX_TOKENS = { write: 800, edit: 1200, cleanup: 1200, chat: 500, brief: 400, extract: 900, digest: 600 } as const;
 export const CHAT_MAX_MESSAGES = 12;
 export const CHAT_MESSAGE_CHARS = 4_000;
 export const DAY_CONTEXT_CHARS = 2_000;
@@ -53,6 +54,18 @@ export const MAX_INPUT_CHARS = 12_000;
 export const MAX_BODY_BYTES = 64 * 1024;
 export const NEARBY_TEXT_CHARS = 3_000;
 export const SHORT_FIELD_CHARS = 200;
+export const MEMORY_MAX_ITEMS = 12;
+export const MEMORY_TOTAL_CHARS = 3_000;
+export const BRIEF_TODOS_MAX = 10;
+export const EXTRACT_MAX_ITEMS = 120;
+export const EXTRACT_TEXT_CHARS = 6_000;
+export const EXTRACT_KNOWN_MAX = 200;
+export const DIGEST_MAX_SEGMENTS = 40;
+export const DIGEST_TOTAL_CHARS = 8_000;
+/** Background calls (extract, digest) pause once global spend reaches this share of GLOBAL_DAILY_USD. */
+export const BACKGROUND_GLOBAL_SHARE = 0.8;
+/** Non-streaming upstream calls give up after this long. */
+export const JSON_CALL_TIMEOUT_MS = 30_000;
 
 function num(v: string | undefined, dflt: number): number {
   const n = v === undefined ? NaN : Number(v);
@@ -62,6 +75,7 @@ function num(v: string | undefined, dflt: number): number {
 export function limitsFrom(env: Partial<Env>) {
   return {
     dailyActions: Math.floor(num(env.DAILY_ACTIONS, 40)),
+    dailyBackground: Math.floor(num(env.DAILY_BACKGROUND, 16)),
     dailyUsd: num(env.DAILY_USD_CAP, 0.05),
     globalDailyUsd: num(env.GLOBAL_DAILY_USD, 20),
     registrationsPerPrefixPerDay: Math.floor(num(env.REGISTRATIONS_PER_PREFIX_PER_DAY, 20)),

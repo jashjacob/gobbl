@@ -1,7 +1,9 @@
 import { ReplayGuard, isValidPublicKey, verifySignedRequest } from "./auth";
 import { type Env, MAX_BODY_BYTES, TURNSTILE_URL, estimateCostUsd, limitsFrom, modelsFrom } from "./config";
-import { buildOpenRouterBody, callOpenRouter } from "./openrouter";
-import { TASK_ROUTES } from "./routes";
+import type { InstallQuota } from "./durable";
+import { buildOpenRouterBody, callOpenRouter, runJsonTask } from "./openrouter";
+import type { QuotaClass } from "./quota";
+import { JSON_ROUTES, TASK_ROUTES } from "./routes";
 import { type StreamResult, translateStream } from "./sse";
 import { ipPrefix, json, randomId, sha256hex } from "./util";
 
@@ -22,7 +24,8 @@ export default {
         case "GET /v1/quota":
           return await signed(request, env, ctx, url.pathname);
         default:
-          if (request.method === "POST" && url.pathname in TASK_ROUTES) return await signed(request, env, ctx, url.pathname);
+          if (request.method === "POST" && (Object.hasOwn(TASK_ROUTES, url.pathname) || Object.hasOwn(JSON_ROUTES, url.pathname)))
+            return await signed(request, env, ctx, url.pathname);
           return json({ error: "not_found" }, 404);
       }
     } catch (err) {
@@ -140,37 +143,64 @@ async function signed(request: Request, env: Env, ctx: ExecutionContext, path: s
     return json({ error: "invalid_body" }, 400);
   }
 
+  const run = { env, ctx, quota, installId, nowMs };
+  return Object.hasOwn(JSON_ROUTES, path) ? jsonTask(run, path, body) : streamTask(run, path, body);
+}
+
+interface Run {
+  env: Env;
+  ctx: ExecutionContext;
+  quota: DurableObjectStub<InstallQuota>;
+  installId: string;
+  nowMs: number;
+}
+
+type Settle = (actualUsd: number, refund: boolean) => void;
+
+/**
+ * Reserve the estimate against the global budget, then the install's quota for this class.
+ * Returns the error response, or a settle function that must be called exactly once.
+ */
+async function reserve({ env, ctx, quota, installId, nowMs }: Run, cls: QuotaClass, est: number): Promise<Response | Settle> {
+  const limits = limitsFrom(env);
+  const global = env.GLOBAL_BUDGET.get(env.GLOBAL_BUDGET.idFromName("global"));
+  const g = await global.reserve(limits.globalDailyUsd, est, nowMs, cls);
+  if (!g.ok)
+    return json(cls === "background" ? { error: "paused", reason: "background" } : { error: "paused" }, 503, { "retry-after": "3600" });
+  const q = await quota.reserve(limits, est, nowMs, cls);
+  if (!q.ok) {
+    ctx.waitUntil(global.settle(g.day, est, 0, nowMs));
+    return json({ error: "quota", reason: q.reason, resetsAt: q.resetsAt }, 429);
+  }
+  return (actualUsd, refund) => {
+    const t = Date.now();
+    ctx.waitUntil(
+      Promise.allSettled([
+        quota.settle(q.day, est, actualUsd, refund, t, cls),
+        global.settle(g.day, est, actualUsd, t),
+        refund
+          ? Promise.resolve()
+          : env.DB.prepare(
+              // Background calls add spend only; `actions` stays the count of user actions.
+              `INSERT INTO usage_daily (install_id, day, actions, usd) VALUES (?, ?, ?, ?)
+               ON CONFLICT (install_id, day) DO UPDATE SET actions = actions + excluded.actions, usd = usd + excluded.usd`,
+            )
+              .bind(installId, q.day, cls === "user" ? 1 : 0, actualUsd)
+              .run(),
+      ]).then((rs) => rs.forEach((r) => r.status === "rejected" && console.error("settle failed", r.reason))),
+    );
+  };
+}
+
+async function streamTask(run: Run, path: string, body: unknown): Promise<Response> {
+  const { env } = run;
   const prepared = TASK_ROUTES[path](body);
   if (!prepared.ok) return json({ error: prepared.error }, prepared.status);
   const { messages, inputChars, maxTokens } = prepared;
 
   const est = estimateCostUsd(inputChars, maxTokens);
-  const global = env.GLOBAL_BUDGET.get(env.GLOBAL_BUDGET.idFromName("global"));
-  const g = await global.reserve(limits.globalDailyUsd, est, nowMs);
-  if (!g.ok) return json({ error: "paused" }, 503, { "retry-after": "3600" });
-  const q = await quota.reserve(limits, est, nowMs);
-  if (!q.ok) {
-    ctx.waitUntil(global.settle(g.day, est, 0, nowMs));
-    return json({ error: "quota", reason: q.reason, resetsAt: q.resetsAt }, 429);
-  }
-
-  const settle = (actualUsd: number, refundAction: boolean) => {
-    const t = Date.now();
-    ctx.waitUntil(
-      Promise.allSettled([
-        quota.settle(q.day, est, actualUsd, refundAction, t),
-        global.settle(g.day, est, actualUsd, t),
-        refundAction
-          ? Promise.resolve()
-          : env.DB.prepare(
-              `INSERT INTO usage_daily (install_id, day, actions, usd) VALUES (?, ?, 1, ?)
-               ON CONFLICT (install_id, day) DO UPDATE SET actions = actions + 1, usd = usd + excluded.usd`,
-            )
-              .bind(installId, q.day, actualUsd)
-              .run(),
-      ]).then((rs) => rs.forEach((r) => r.status === "rejected" && console.error("settle failed", r.reason))),
-    );
-  };
+  const settle = await reserve(run, "user", est);
+  if (settle instanceof Response) return settle;
 
   let upstream: Response;
   try {
@@ -199,4 +229,23 @@ async function signed(request: Request, env: Env, ctx: ExecutionContext, path: s
       "x-accel-buffering": "no",
     },
   });
+}
+
+async function jsonTask(run: Run, path: string, body: unknown): Promise<Response> {
+  const { env } = run;
+  const prepared = JSON_ROUTES[path](body);
+  if (!prepared.ok) return json({ error: prepared.error }, prepared.status);
+  const { messages, inputChars, maxTokens, parse, empty } = prepared;
+
+  const est = estimateCostUsd(inputChars, maxTokens);
+  const settle = await reserve(run, "background", est);
+  if (settle instanceof Response) return settle;
+
+  const r = await runJsonTask(env.OPENROUTER_API_KEY, messages, modelsFrom(env), maxTokens, parse, est);
+  if (r.kind === "upstream") {
+    settle(0, true);
+    return json({ error: "upstream", status: r.status }, r.status === 429 ? 503 : 502);
+  }
+  settle(r.costUsd, false);
+  return r.kind === "ok" ? json({ ...r.value, degraded: false }) : json({ ...empty, degraded: true });
 }
