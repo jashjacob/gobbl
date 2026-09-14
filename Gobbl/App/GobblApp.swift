@@ -57,6 +57,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }) {
                 hotKeys.append(clipboard)
             }
+            GobblKey.shared.apply()
+            Dictation.shared.warmUp()
+            ReminderStore.shared.start()
+            Routines.shared.start()
+            // ⌃⌥G: the same as tapping the Gobbl key, for keyboards without a right ⌥.
+            if let write = HotKey(keyCode: kVK_ANSI_G, modifiers: controlKey | optionKey, id: 2, action: {
+                WriteAction.run()
+            }) {
+                hotKeys.append(write)
+            }
 
             let args = CommandLine.arguments
             #if DEBUG

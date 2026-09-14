@@ -3,17 +3,24 @@ import GobblCore
 import SwiftUI
 
 enum NotchTab: String, CaseIterable, Identifiable {
-    case home, shelf, clipboard, agents, tools
+    case home, chat, shelf, clipboard, agents, tools
+    /// Edit mode (double-tap the Gobbl key). Not in the tab bar.
+    case edit
 
     var id: String { rawValue }
+
+    /// The tabs shown in the bar.
+    static let bar: [NotchTab] = [.home, .chat, .shelf, .clipboard, .agents, .tools]
 
     var symbol: String {
         switch self {
         case .home: "house.fill"
+        case .chat: "bubble.left.fill"
         case .shelf: "tray.full.fill"
         case .clipboard: "doc.on.clipboard.fill"
         case .agents: "sparkles"
         case .tools: "timer"
+        case .edit: "pencil.and.scribble"
         }
     }
 

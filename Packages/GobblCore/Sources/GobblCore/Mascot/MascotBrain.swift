@@ -10,6 +10,8 @@ public enum Mood: String, Codable, CaseIterable, Sendable {
     case thinking
     /// The user is typing somewhere: Gob bounces along, keycaps pop off the screen.
     case typing
+    /// The user is dictating: a waveform on the screen.
+    case listening
     /// The Mac's CPU is pegged.
     case sweaty
 }
@@ -38,6 +40,10 @@ public enum MascotSignal: Equatable, Sendable {
     case cursorNear(Bool)
     case cpuLoad(Double)
     case agentActivity(AgentActivity)
+    /// Gobbl's own AI is writing for the user (the Gobbl key): the thinking face.
+    case assistantBusy(Bool)
+    /// The Gobbl key is held and Gobbl is listening.
+    case dictating(Bool)
 }
 
 /// Lifetime stats: what the pet card shows off, and what levels Gob up and unlocks hats.
@@ -137,6 +143,8 @@ public struct MascotBrain: Equatable, Sendable {
     public private(set) var cursorNear = false
     public private(set) var cpuHot = false
     public private(set) var agentActivity = AgentActivity.idle
+    public private(set) var assistantBusy = false
+    public private(set) var dictating = false
     public private(set) var reaction: Mood?
     public private(set) var reactionUntil = Date.distantPast
 
@@ -209,6 +217,15 @@ public struct MascotBrain: Equatable, Sendable {
             cpuHot = load >= Self.hotCPU
         case .agentActivity(let activity):
             agentActivity = activity
+        case .assistantBusy(let busy):
+            assistantBusy = busy
+            if busy { idleSeconds = 0 }
+        case .dictating(let on):
+            dictating = on
+            if on {
+                idleSeconds = 0
+                reaction = nil
+            }
         }
         guard stats.level > before else { return false }
         react(.celebrating, for: 3, now: now)
@@ -217,6 +234,8 @@ public struct MascotBrain: Equatable, Sendable {
 
     public func mood(at now: Date = Date()) -> Mood {
         if let reaction, now < reactionUntil { return reaction }
+        if dictating { return .listening }
+        if assistantBusy { return .thinking }
         switch agentActivity {
         case .coding: return .working
         case .thinking: return .thinking

@@ -34,4 +34,9 @@ final class HUDModel {
             self?.current = nil
         }
     }
+
+    func dismiss() {
+        hideTask?.cancel()
+        current = nil
+    }
 }

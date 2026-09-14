@@ -406,6 +406,11 @@ private struct GobPainter {
             drawMatrix(&rain, screen: screen, s: s)
             // Eyes squint through the code.
             drawEyes(&c, center: CGPoint(x: screen.midX, y: face.eyeY), face: face, line: line, color: .white.opacity(0.92))
+        } else if mood == .listening {
+            var glow = c
+            if s >= 40 { glow.addFilter(.shadow(color: ink.opacity(0.8), radius: s * 0.02)) }
+            drawEyes(&glow, center: CGPoint(x: screen.midX, y: face.eyeY), face: face, line: line, color: ink)
+            drawWaveform(&glow, screen: screen, s: s)
         } else {
             var glow = c
             glow.opacity = fade
@@ -464,6 +469,25 @@ private struct GobPainter {
             if s >= 40 { text.addFilter(.shadow(color: ink, radius: s * 0.03)) }
             text.draw(Text("Hi!").font(.system(size: screen.height * 0.36, weight: .heavy, design: .monospaced)).foregroundColor(ink),
                       at: CGPoint(x: screen.midX, y: screen.midY))
+        }
+    }
+
+    /// Where the mouth would be: bars that follow the microphone level.
+    private func drawWaveform(_ c: inout GraphicsContext, screen: CGRect, s: CGFloat) {
+        let bars = s >= 40 ? 9 : 5
+        let level = CGFloat(max(0.08, min(1, MicLevel.value)))
+        let span = screen.width * 0.56
+        let step = span / CGFloat(bars)
+        let midY = screen.minY + screen.height * 0.74
+        let maxH = screen.height * 0.3
+        for i in 0..<bars {
+            // Taller in the middle, each bar wobbling at its own rate.
+            let centre = 1 - abs(CGFloat(i) - CGFloat(bars - 1) / 2) / CGFloat(bars)
+            let wobble = 0.55 + 0.45 * CGFloat(abs(sin(t * (6 + Double(i) * 1.7) + Double(i))))
+            let h = max(step * 0.5, maxH * level * centre * wobble)
+            let x = screen.midX - span / 2 + (CGFloat(i) + 0.5) * step
+            c.fill(Path(roundedRect: CGRect(x: x - step * 0.22, y: midY - h / 2, width: step * 0.44, height: h), cornerRadius: step * 0.22),
+                   with: .color(ink))
         }
     }
 

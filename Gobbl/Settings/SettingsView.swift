@@ -157,6 +157,12 @@ struct SettingsView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
 
+            AISettingsSection()
+
+            DictationSettingsSection()
+
+            RoutinesSettingsSection()
+
             AgentsSettingsSection()
 
             Section("Calendar") {

@@ -79,10 +79,12 @@ struct NotchView: View {
     private var panel: some View {
         switch state.tab {
         case .home: HomePanel(state: state)
+        case .chat: ChatPanel()
         case .shelf: ShelfPanel(dropTargeted: state.dropTargeted)
         case .clipboard: ClipboardPanel(state: state)
         case .agents: AgentsPanel()
         case .tools: ToolsPanel()
+        case .edit: EditPanel()
         }
     }
 
@@ -249,7 +251,7 @@ private struct TabBar: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            ForEach(NotchTab.allCases) { tab in
+            ForEach(NotchTab.bar) { tab in
                 Button {
                     selection = tab
                 } label: {
@@ -258,6 +260,11 @@ private struct TabBar: View {
                         .foregroundStyle(selection == tab ? Palette.text : Palette.textTertiary)
                         .frame(width: 30, height: 22)
                         .background(Capsule().fill(selection == tab ? Palette.wellHover : .clear))
+                        .overlay(alignment: .topTrailing) {
+                            if tab == .chat && ChatModel.shared.unread {
+                                Circle().fill(Palette.accent).frame(width: 5, height: 5).offset(x: -5, y: 3)
+                            }
+                        }
                         .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
