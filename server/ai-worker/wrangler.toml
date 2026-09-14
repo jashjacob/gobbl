@@ -1,0 +1,61 @@
+name = "gobbl-ai"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+# nodejs_compat is NOT required: everything uses WebCrypto / fetch / streams.
+
+# Deployed to the Xeve account (the one holding the xeve.io zone): set
+# CLOUDFLARE_ACCOUNT_ID when running wrangler.
+
+routes = [{ pattern = "ai.xeve.io", custom_domain = true }]
+
+workers_dev = true
+
+[observability]
+enabled = true
+
+[vars]
+DAILY_ACTIONS = "40"
+DAILY_USD_CAP = "0.05"
+# About $10 a month across every user: the beta's hard ceiling.
+GLOBAL_DAILY_USD = "0.35"
+REGISTRATIONS_PER_PREFIX_PER_DAY = "20"
+MODEL = "google/gemini-2.5-flash-lite"
+FALLBACK_MODEL = "openai/gpt-4.1-nano"
+# DEV_SKIP_TURNSTILE = "1"   # local only — put it in .dev.vars, never here for prod
+
+# Secrets (wrangler secret put): OPENROUTER_API_KEY, TURNSTILE_SECRET
+
+[[d1_databases]]
+binding = "DB"
+database_name = "gobbl-ai"
+database_id = "fe85e592-73b9-4aff-8b89-4af33e76f366"
+migrations_dir = "migrations"
+
+[[kv_namespaces]]
+binding = "REVOKED"
+id = "6a516819931e4880bd324d8a23de5668"
+
+[[durable_objects.bindings]]
+name = "INSTALL_QUOTA"
+class_name = "InstallQuota"
+
+[[durable_objects.bindings]]
+name = "GLOBAL_BUDGET"
+class_name = "GlobalBudget"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["InstallQuota", "GlobalBudget"]
+
+# Burst limit per install: 10 requests / 10 s.
+[[ratelimits]]
+name = "BURST_LIMITER"
+namespace_id = "1001"
+simple = { limit = 10, period = 10 }
+
+# Registration throttle per IP prefix (/24 v4, /64 v6): 3 / 60 s.
+# A daily per-prefix cap is additionally enforced via D1 (REGISTRATIONS_PER_PREFIX_PER_DAY).
+[[ratelimits]]
+name = "REGISTER_LIMITER"
+namespace_id = "1002"
+simple = { limit = 3, period = 60 }

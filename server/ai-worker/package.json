@@ -1,0 +1,22 @@
+{
+  "name": "gobbl-ai-worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Task-shaped AI proxy for Gobbl (OpenRouter behind per-install quotas and a global budget breaker)",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "db:migrate:local": "wrangler d1 migrations apply gobbl-ai --local",
+    "db:migrate:remote": "wrangler d1 migrations apply gobbl-ai --remote"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260911.1",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.0",
+    "wrangler": "^4.30.0"
+  }
+}
