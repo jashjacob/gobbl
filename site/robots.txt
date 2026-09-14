@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+Disallow: /verify
+
+# AI crawlers are welcome; see /llms.txt for a summary.
+User-agent: GPTBot
+Allow: /
+Disallow: /verify
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /verify
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /verify
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://gobbl.xeve.io/sitemap.xml

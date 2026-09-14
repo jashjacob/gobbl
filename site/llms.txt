@@ -1,0 +1,52 @@
+# Gobbl
+
+> Gobbl is a free, open-source (MIT) notch app for Mac, made by Xeve (https://xeve.io). It lives in the MacBook notch with a pet mascot, Gob: a small retro computer with a face on its screen, in three models (Classic, Compact, Candy). It runs on macOS 14 or later. Macs without a notch get a pill at the top of the screen instead. There is no Windows or Linux version.
+
+Key facts:
+- Price: free. The AI features (writing, chat, briefs, Polish with AI, Memory to-dos) are free during the beta and will become a paid plan later.
+- Open source: https://github.com/xeveio/gobbl (MIT license). No account, and no analytics in the app.
+- Notch basics:
+  - drag-and-drop file shelf with file tools (convert, compress, remove background, copy text, zip);
+  - clipboard history on Shift-Command-Space;
+  - Now Playing with synced lyrics;
+  - volume, brightness and Caps Lock HUDs;
+  - calendar with Join links;
+  - focus timer, keep-awake and quick tools.
+- The pet: moods, eyes that follow the cursor, types along with you, Matrix rain while AI coding agents work, unboxing, 11 hats, streaks and levels, shareable .gobskin skins and 6-second clips.
+- AI agents: Claude Code and Codex status in the notch. Claude Code permission requests can be allowed or denied from the notch (it falls back to the terminal after 30 seconds).
+- Gobbl key (right Option): tap to write or rewrite in any text field; double-tap for edit mode with versions (shorter, friendlier, and more); hold to dictate; type /g plus a question to get an answer.
+- Dictation:
+  - on-device Whisper, and audio never leaves the Mac;
+  - about 0.5 s per sentence on Apple silicon;
+  - Verbatim, Light and Polish with AI clean-up;
+  - custom words, language lock and hands-free mode;
+  - no word cap and no account;
+  - needs Apple silicon.
+- Chat: reminders in plain English, a morning brief and an evening wrap, pre-meeting briefs 10 minutes before meetings with people Gobbl knows, and at most 3 gentle nudges a day.
+- Memory (opt-in beta):
+  - reads on-screen text through macOS Accessibility, never screenshots, and stores it on the Mac only;
+  - masks secrets, and skips password fields, private windows and banking sites;
+  - finds to-dos that tick themselves off when proof appears (with Undo);
+  - a Memory window with to-dos, a timeline with day digests, and people, project, organisation and topic cards;
+  - search by meaning on-device (Apple sentence embeddings), and a memory chat with cited sources;
+  - pause and forget controls.
+- MCP connector (available, part of the Memory beta): one switch ("Connect AI apps automatically") registers the gobbl-mcp helper with Claude Code, Claude Desktop, Codex (also covers the ChatGPT desktop app), Cursor, VS Code, Windsurf, Gemini CLI, LM Studio and Zed. Read tools: search_memory, get_day, list_todos, who_is, get_person, get_project, recent_activity. Via the running app: get_clipboard, add_reminder, mark_todo_done. Answers cite sources; each call is logged on the Mac by tool name and time only.
+- Privacy: local first. AI requests go through Xeve's service to a provider that doesn't keep data, and every request is logged on the Mac.
+
+## Pages
+- [Home](https://gobbl.xeve.io/): overview with interactive demos
+- [Features](https://gobbl.xeve.io/features): every feature
+- [Offline dictation for Mac](https://gobbl.xeve.io/dictation): free on-device Whisper dictation
+- [Memory](https://gobbl.xeve.io/memory): opt-in screen memory and automatic to-dos
+- [Privacy](https://gobbl.xeve.io/privacy): what stays on the Mac and what is sent
+- [FAQ](https://gobbl.xeve.io/faq)
+
+## Comparisons
+- [All comparisons](https://gobbl.xeve.io/compare/)
+- [Gobbl vs Wispr Flow](https://gobbl.xeve.io/compare/wispr-flow)
+- [Gobbl vs Droppy](https://gobbl.xeve.io/compare/droppy)
+- [Gobbl vs NotchNook](https://gobbl.xeve.io/compare/notchnook)
+- [Gobbl vs Goldfish](https://gobbl.xeve.io/compare/goldfish)
+
+## Download
+- [Releases on GitHub](https://github.com/xeveio/gobbl/releases)
