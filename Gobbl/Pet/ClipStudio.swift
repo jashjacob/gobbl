@@ -56,7 +56,8 @@ enum ClipStudio {
                 if t < 4.5 { return Beat(mood: .love, hand: 1 + 0.1 * sin(t * 12)) }
                 return Beat(mood: .happy)
             case .agent:
-                if t < 3.2 { return Beat(mood: .working, chip: "Claude Code is working…") }
+                if t < 1.6 { return Beat(mood: .thinking, chip: "Claude is thinking…") }
+                if t < 3.6 { return Beat(mood: .working, chip: "Claude is coding…") }
                 return Beat(mood: .celebrating, chip: "✓  Task done")
             case .levelUp:
                 if t < 1 { return Beat(mood: .idle) }

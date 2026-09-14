@@ -136,7 +136,8 @@ struct NotchView: View {
                 .padding(.leading, inset)
         } else {
             GobView(mood: pet.mood, genome: pet.genome, stage: pet.stats.stage, size: g.headerHeight - 4, hat: pet.hat,
-                    anticipating: state.dropTargeted, lively: false, look: { pet.look })
+                    anticipating: state.dropTargeted, lively: false, tracking: pet.lookActive,
+                    look: { pet.look }, lookY: { pet.lookY })
                 .padding(.leading, g.hasNotch ? 12 : 0)
         }
     }

@@ -4,8 +4,12 @@ import Foundation
 /// Rive state machine later — each case maps to one state).
 public enum Mood: String, Codable, CaseIterable, Sendable {
     case idle, curious, happy, love, eating, burping, dancing, sleepy, sleeping, alert, celebrating, dizzy
-    /// An AI agent (Claude Code, Codex) is busy.
+    /// An AI agent (Claude Code, Codex) is running tools: Matrix rain on the screen.
     case working
+    /// An AI agent is reasoning: eyes up, eyebrow raised, a thought bubble.
+    case thinking
+    /// The user is typing somewhere: Gob bounces along, keycaps pop off the screen.
+    case typing
     /// The Mac's CPU is pegged.
     case sweaty
 }
@@ -25,13 +29,15 @@ public enum MascotSignal: Equatable, Sendable {
     case milestone
     case agentDone
     case agentNeedsInput
+    /// A key was pressed somewhere (which key is never known or stored).
+    case keyPressed
     // Ongoing conditions → the resting mood.
     case musicPlaying(Bool)
     case battery(level: Double, charging: Bool)
     case userIdle(TimeInterval)
     case cursorNear(Bool)
     case cpuLoad(Double)
-    case agentsWorking(Bool)
+    case agentActivity(AgentActivity)
 }
 
 /// Lifetime stats: what the pet card shows off, and what levels Gob up and unlocks hats.
@@ -112,7 +118,7 @@ public struct MascotStats: Codable, Equatable, Sendable {
 /// Gob's state machine. A value type with an explicit clock so it can be
 /// unit-tested; the app feeds it signals and asks for the mood to draw.
 ///
-/// Priority: a live reaction beats working (an agent is busy), which beats
+/// Priority: a live reaction beats an agent's coding/thinking, which beats
 /// sleeping, dancing, sweaty, sleepy, then curious. Gob never dies and never
 /// nags: needs only change how it looks.
 public struct MascotBrain: Equatable, Sendable {
@@ -130,7 +136,7 @@ public struct MascotBrain: Equatable, Sendable {
     public private(set) var idleSeconds: TimeInterval = 0
     public private(set) var cursorNear = false
     public private(set) var cpuHot = false
-    public private(set) var agentsBusy = false
+    public private(set) var agentActivity = AgentActivity.idle
     public private(set) var reaction: Mood?
     public private(set) var reactionUntil = Date.distantPast
 
@@ -182,6 +188,11 @@ public struct MascotBrain: Equatable, Sendable {
             react(.celebrating, for: 2.5, now: now)
         case .agentNeedsInput:
             react(.alert, for: 6, now: now)
+        case .keyPressed:
+            idleSeconds = 0
+            // Don't cut short a meaningful reaction (eating, an alert, a celebration).
+            if let reaction, now < reactionUntil, reaction != .typing { break }
+            react(.typing, for: 0.8, now: now, playful: true)
         case .musicPlaying(let on):
             if on && !musicPlaying {
                 stats.songs += 1
@@ -196,8 +207,8 @@ public struct MascotBrain: Equatable, Sendable {
             cursorNear = near
         case .cpuLoad(let load):
             cpuHot = load >= Self.hotCPU
-        case .agentsWorking(let busy):
-            agentsBusy = busy
+        case .agentActivity(let activity):
+            agentActivity = activity
         }
         guard stats.level > before else { return false }
         react(.celebrating, for: 3, now: now)
@@ -206,7 +217,11 @@ public struct MascotBrain: Equatable, Sendable {
 
     public func mood(at now: Date = Date()) -> Mood {
         if let reaction, now < reactionUntil { return reaction }
-        if agentsBusy { return .working }
+        switch agentActivity {
+        case .coding: return .working
+        case .thinking: return .thinking
+        case .idle: break
+        }
         if idleSeconds >= Self.sleepAfter { return .sleeping }
         if musicPlaying && !quiet { return .dancing }
         if cpuHot { return .sweaty }

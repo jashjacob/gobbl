@@ -44,12 +44,14 @@ import Testing
         var b = MascotBrain()
         b.handle(.userIdle(MascotBrain.sleepAfter * 2), now: t0)
         b.handle(.musicPlaying(true), now: t0)
-        b.handle(.agentsWorking(true), now: t0)
+        b.handle(.agentActivity(.thinking), now: t0)
+        #expect(b.mood(at: t0) == .thinking)
+        b.handle(.agentActivity(.coding), now: t0)
         #expect(b.mood(at: t0) == .working)
         b.handle(.agentDone, now: t0)
         #expect(b.mood(at: t0) == .celebrating)
         #expect(b.stats.agentTasks == 1)
-        b.handle(.agentsWorking(false), now: t0)
+        b.handle(.agentActivity(.idle), now: t0)
         #expect(b.mood(at: t0.addingTimeInterval(10)) == .sleeping)
     }
 
@@ -58,6 +60,20 @@ import Testing
         b.quiet = true
         b.handle(.agentNeedsInput, now: t0)
         #expect(b.mood(at: t0) == .alert)
+    }
+
+    @Test func typingReactsButNeverInterruptsOtherReactions() {
+        var b = MascotBrain()
+        b.handle(.keyPressed, now: t0)
+        #expect(b.mood(at: t0) == .typing)
+        #expect(b.mood(at: t0.addingTimeInterval(1)) == .idle)
+        b.handle(.filesDropped(1), now: t0)
+        b.handle(.keyPressed, now: t0.addingTimeInterval(0.1))
+        #expect(b.mood(at: t0.addingTimeInterval(0.2)) == .eating)
+        var q = MascotBrain()
+        q.quiet = true
+        q.handle(.keyPressed, now: t0)
+        #expect(q.mood(at: t0) == .idle)
     }
 
     @Test func hotCPUMakesGobSweat() {

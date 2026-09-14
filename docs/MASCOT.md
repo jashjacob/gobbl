@@ -8,11 +8,16 @@ inputs, so the renderer can be swapped without touching the rest of the app.
 
 ## The character
 
-A round, squishy **gumdrop** (wider than tall, flat-ish bottom), two big glossy
-black eyes with a white glint, blush cheeks, a small stretchy mouth, and a
-thin **antenna with a bobble**. No arms (reactions are all squash, stretch,
-bounce and face). Friendly, a bit greedy, never scary. It must read at
-**24 pt** (the collapsed notch) and look great at **84–230 pt**.
+Gob is a **little computer with a face on its screen** — the original blob was
+retired on 2026-09-14. Three eras (`PetCharacter`): **Classic** (late-70s
+keyboard base with a boxy monitor), **Compact** (mid-80s all-in-one with a
+floppy slot) and **Candy** (late-90s rounded, candy-coloured shell with a CD
+slot). The face is glowing lime phosphor: pixel eyes, blush, a small mouth.
+It eats files through its slot. No arms (reactions are squash, bounce and
+face). Friendly, a bit greedy, never scary. It must read at **24 pt** (the
+collapsed notch) and look great at **84–230 pt**. Agent states: **thinking**
+= eyes up, eyebrow raised, "…" bubble; **coding** = Matrix rain fills the
+screen with eyes squinting through; **typing** = a hop per key, keycaps pop off.
 
 ### Second character: Retro
 
@@ -20,7 +25,7 @@ bounce and face). Friendly, a bit greedy, never scary. It must read at
 species, a recessed CRT with a glowing lime pixel face (same moods), vents,
 a floppy slot it eats files through (a disk slides in while it's eating), a
 drive light that blinks while it's busy, and two small feet. Users pick
-Blob or Retro after hatching, in Settings, or from Gob's right-click menu.
+a model after unboxing (first run: a shipping box opens and the screen powers on), in Settings, or from Gob's right-click menu.
 
 **Keep it generic, not Apple's.** The 1984 Macintosh's shape, the "Happy Mac"
 face and the handwritten "hello" are Apple trade dress and trademarks. Never

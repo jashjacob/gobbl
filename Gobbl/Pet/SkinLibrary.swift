@@ -122,18 +122,17 @@ struct SkinEditor: View {
             Text("Make a Skin").font(.headline)
             HStack(spacing: 18) {
                 ForEach(PetCharacter.allCases) { character in
-                    GobView(mood: .happy, genome: pet.genome, stage: pet.stats.stage, size: 96, hat: pet.hat,
+                    GobView(mood: .happy, genome: pet.genome, stage: pet.stats.stage, size: 88, hat: pet.hat,
                             character: character, skin: skin)
-                        .padding(8)
+                        .padding(6)
                         .background(RoundedRectangle(cornerRadius: 14).fill(.black))
                 }
             }
             Form {
                 TextField("Name", text: $name)
-                ColorPicker("Body top", selection: $top, supportsOpacity: false)
-                ColorPicker("Body bottom", selection: $bottom, supportsOpacity: false)
-                ColorPicker("Face (blob)", selection: $face, supportsOpacity: false)
-                ColorPicker("Screen glow (retro)", selection: $glow, supportsOpacity: false)
+                ColorPicker("Case top", selection: $top, supportsOpacity: false)
+                ColorPicker("Case bottom", selection: $bottom, supportsOpacity: false)
+                ColorPicker("Screen glow", selection: $glow, supportsOpacity: false)
                 ColorPicker("Cheeks", selection: $cheeks, supportsOpacity: false)
             }
             .formStyle(.grouped)
@@ -147,7 +146,7 @@ struct SkinEditor: View {
             }
         }
         .padding(20)
-        .frame(width: 420)
+        .frame(width: 440)
     }
 
     private func save(share: Bool) {

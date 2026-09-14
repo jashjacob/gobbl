@@ -30,18 +30,27 @@ V=$(cat site/img/*.png 2>/dev/null | shasum | cut -c1-10)
 perl -pi -e "s/__V__/$V/g" "$OUT/index.html"
 
 DMG=$(ls -t build/release/Gobbl-*.dmg 2>/dev/null | head -1 || true)
+# Only ever ship a notarized, stapled image from the website (a --skip-notarize dry run isn't).
+if [ -n "$DMG" ] && ! xcrun stapler validate -q "$DMG" 2>/dev/null; then
+  echo "Skipping $DMG: not notarized/stapled"
+  DMG=""
+fi
 if [ -n "$DMG" ]; then
   VERSION=$(basename "$DMG" .dmg | sed 's/^Gobbl-//')
-  # Only ever ship a notarized, stapled image from the website.
-  xcrun stapler validate -q "$DMG" || { echo "ERROR: $DMG is not stapled — run scripts/release.sh first"; exit 1; }
   mkdir -p "$OUT/download"
   cp "$DMG" "$OUT/download/"
   printf '/download /download/%s 302\n' "$(basename "$DMG")" > "$OUT/_redirects"
   perl -pi -e "s#(data-version>)[^<]*#\${1}v$VERSION#g" "$OUT/index.html"
   echo "Bundling $(basename "$DMG")"
 else
-  printf '/download https://dl.xeve.io/gobbl/Gobbl-latest.dmg 302\n' > "$OUT/_redirects"
-  echo "No local DMG; /download → dl.xeve.io"
+  # Before the first release /download goes to GitHub; after it, to the Sparkle channel's latest DMG.
+  if curl -fsIo /dev/null --max-time 10 https://dl.xeve.io/gobbl/Gobbl-latest.dmg; then
+    printf '/download https://dl.xeve.io/gobbl/Gobbl-latest.dmg 302\n' > "$OUT/_redirects"
+    echo "No local DMG; /download → dl.xeve.io"
+  else
+    printf '/download https://github.com/xeveio/gobbl 302\n' > "$OUT/_redirects"
+    echo "No release yet; /download → GitHub"
+  fi
 fi
 
 cat > "$OUT/_headers" <<'HEADERS'

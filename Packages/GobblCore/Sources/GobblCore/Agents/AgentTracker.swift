@@ -13,6 +13,8 @@ public struct AgentEvent: Equatable, Sendable {
         case sessionStart
         case promptSubmitted
         case toolUse(String)
+        /// A tool returned; the model is reasoning about what's next.
+        case toolFinished
         /// Claude wants to use a tool; with approvals on, Gobbl can answer.
         case permissionRequest(tool: String, detail: String?)
         /// A "needs you" notification: a permission prompt or a question.
@@ -52,7 +54,8 @@ public struct AgentEvent: Equatable, Sendable {
             switch event {
             case "SessionStart": kind = .sessionStart
             case "UserPromptSubmit": kind = .promptSubmitted
-            case "PreToolUse", "PostToolUse": kind = .toolUse(str("tool_name") ?? "tool")
+            case "PreToolUse": kind = .toolUse(str("tool_name") ?? "tool")
+            case "PostToolUse": kind = .toolFinished
             case "PermissionRequest":
                 kind = .permissionRequest(tool: str("tool_name") ?? "a tool", detail: Self.detail(o["tool_input"]))
             case "Notification":
@@ -125,6 +128,17 @@ public struct AgentTracker: Equatable, Sendable {
 
     public var anyWorking: Bool { sessions.contains(where: \.isWorking) }
 
+    /// Coding if any session is running a tool, thinking if any is reasoning.
+    public var activity: AgentActivity {
+        var thinking = false
+        for s in sessions {
+            guard case .working(let tool) = s.state else { continue }
+            if tool != nil { return .coding }
+            thinking = true
+        }
+        return thinking ? .thinking : .idle
+    }
+
     @discardableResult
     public mutating func apply(_ e: AgentEvent, now: Date = Date(), hostApp: String? = nil) -> Effect {
         if e.kind == .sessionEnd {
@@ -148,6 +162,8 @@ public struct AgentTracker: Equatable, Sendable {
         case .toolUse(let tool):
             s.state = .working(tool: tool)
             effect = wasWorking ? .none : .startedWorking
+        case .toolFinished:
+            s.state = .working(tool: nil)
         case .permissionRequest(let tool, _):
             s.state = .waiting("Wants to use \(tool)")
             effect = .needsYou("Wants to use \(tool)")

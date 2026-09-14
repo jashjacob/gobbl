@@ -15,50 +15,86 @@ func color(_ hex: UInt32, _ alpha: CGFloat = 1) -> CGColor {
             blue: CGFloat(hex & 0xFF) / 255, alpha: alpha)
 }
 
-/// Gob, centred at `c` with body width `w`, in a y-up context.
+/// Gob as the Compact computer (centred at `c`, case width `w`), in a y-up
+/// context: pastel case, CRT with a glowing lime face, floppy slot, feet.
 func drawGob(_ ctx: CGContext, center c: CGPoint, width w: CGFloat, lookUp: Bool = true) {
-    let h = w * 0.78
+    let h = w * 1.14
     let body = CGRect(x: c.x - w / 2, y: c.y - h / 2, width: w, height: h)
-    // Antenna
-    ctx.setStrokeColor(color(0x5FAE2E))
-    ctx.setLineWidth(w * 0.035)
-    ctx.setLineCap(.round)
-    ctx.move(to: CGPoint(x: c.x, y: body.maxY - 2))
-    ctx.addQuadCurve(to: CGPoint(x: c.x + w * 0.08, y: body.maxY + w * 0.17), control: CGPoint(x: c.x - w * 0.03, y: body.maxY + w * 0.1))
-    ctx.strokePath()
-    let r = w * 0.055
-    ctx.setFillColor(color(0xC8FF8A))
-    ctx.fillEllipse(in: CGRect(x: c.x + w * 0.08 - r, y: body.maxY + w * 0.17 - r, width: r * 2, height: r * 2))
-    // Body
-    let path = CGPath(roundedRect: body, cornerWidth: w * 0.5, cornerHeight: h * 0.62, transform: nil)
+    let sRGB = CGColorSpace(name: CGColorSpace.sRGB)!
+    // Feet
+    ctx.setFillColor(color(0xB9AE98))
+    for side: CGFloat in [-1, 1] {
+        ctx.addPath(CGPath(roundedRect: CGRect(x: c.x + side * w * 0.3 - w * 0.1, y: body.minY - w * 0.045, width: w * 0.2, height: w * 0.07),
+                           cornerWidth: w * 0.03, cornerHeight: w * 0.03, transform: nil))
+        ctx.fillPath()
+    }
+    // Case
+    let shell = CGPath(roundedRect: body, cornerWidth: w * 0.13, cornerHeight: w * 0.13, transform: nil)
     ctx.saveGState()
-    ctx.addPath(path)
+    ctx.addPath(shell)
     ctx.clip()
-    let gradient = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB),
-                              colors: [color(0xC6FF8E), color(0x6CC23A)] as CFArray, locations: [0, 1])!
-    ctx.drawLinearGradient(gradient, start: CGPoint(x: c.x, y: body.maxY), end: CGPoint(x: c.x, y: body.minY), options: [])
-    ctx.setFillColor(color(0xFFFFFF, 0.35))
-    ctx.fillEllipse(in: CGRect(x: body.minX + w * 0.16, y: body.maxY - h * 0.28, width: w * 0.26, height: h * 0.16))
+    let caseGradient = CGGradient(colorsSpace: sRGB, colors: [color(0xF6EFE3), color(0xD4C8B2)] as CFArray, locations: [0, 1])!
+    ctx.drawLinearGradient(caseGradient, start: CGPoint(x: c.x, y: body.maxY), end: CGPoint(x: c.x, y: body.minY), options: [])
     ctx.restoreGState()
-    // Eyes
-    let eyeY = body.minY + h * 0.56, dx = w * 0.19, er = w * 0.085
+    ctx.addPath(shell)
+    ctx.setStrokeColor(color(0xFFFFFF, 0.45))
+    ctx.setLineWidth(w * 0.012)
+    ctx.strokePath()
+    // Recessed CRT
+    let sw = w * 0.74, sh = h * 0.52
+    let screen = CGRect(x: c.x - sw / 2, y: body.maxY - h * 0.09 - sh, width: sw, height: sh)
+    ctx.addPath(CGPath(roundedRect: screen.insetBy(dx: -w * 0.035, dy: -w * 0.035), cornerWidth: w * 0.1, cornerHeight: w * 0.1, transform: nil))
+    ctx.setFillColor(color(0xA89D86, 0.7))
+    ctx.fillPath()
+    let crt = CGPath(roundedRect: screen, cornerWidth: w * 0.08, cornerHeight: w * 0.08, transform: nil)
+    ctx.saveGState()
+    ctx.addPath(crt)
+    ctx.clip()
+    let crtGradient = CGGradient(colorsSpace: sRGB, colors: [color(0x1F3A28), color(0x0A120D)] as CFArray, locations: [0, 1])!
+    ctx.drawRadialGradient(crtGradient, startCenter: CGPoint(x: screen.midX, y: screen.midY), startRadius: 0,
+                           endCenter: CGPoint(x: screen.midX, y: screen.midY), endRadius: sw * 0.7, options: [])
+    // Scanlines
+    ctx.setFillColor(color(0x000000, 0.2))
+    var y = screen.minY
+    while y < screen.maxY { ctx.fill(CGRect(x: screen.minX, y: y, width: sw, height: w * 0.006)); y += w * 0.022 }
+    ctx.restoreGState()
+    // Glowing face
+    let lime = color(0xA6F25C)
+    let eyeY = screen.minY + sh * 0.6, dx = sw * 0.2, er = sw * 0.075
+    ctx.saveGState()
+    ctx.setShadow(offset: .zero, blur: w * 0.05, color: lime)
+    ctx.setFillColor(lime)
     for side: CGFloat in [-1, 1] {
         let ex = c.x + side * dx
-        ctx.setFillColor(color(0x16161A))
-        ctx.fillEllipse(in: CGRect(x: ex - er * 0.75, y: eyeY - er, width: er * 1.5, height: er * 2))
-        ctx.setFillColor(color(0xFFFFFF))
-        let g = er * 0.55
-        ctx.fillEllipse(in: CGRect(x: ex - er * 0.45, y: eyeY + (lookUp ? er * 0.25 : 0), width: g, height: g))
-        // Cheeks
-        ctx.setFillColor(color(0xFF6FA5, 0.4))
-        ctx.fillEllipse(in: CGRect(x: c.x + side * dx * 1.6 - er, y: eyeY - er * 1.9, width: er * 2, height: er * 1.1))
+        let ey = eyeY + (lookUp ? er * 0.3 : 0)
+        ctx.addPath(CGPath(roundedRect: CGRect(x: ex - er * 0.75, y: ey - er, width: er * 1.5, height: er * 2),
+                           cornerWidth: er * 0.35, cornerHeight: er * 0.35, transform: nil))
+        ctx.fillPath()
     }
-    // Smile
-    ctx.setStrokeColor(color(0x16161A))
-    ctx.setLineWidth(w * 0.035)
-    ctx.move(to: CGPoint(x: c.x - w * 0.1, y: body.minY + h * 0.3))
-    ctx.addQuadCurve(to: CGPoint(x: c.x + w * 0.1, y: body.minY + h * 0.3), control: CGPoint(x: c.x, y: body.minY + h * 0.18))
+    ctx.setStrokeColor(lime)
+    ctx.setLineWidth(w * 0.03)
+    ctx.setLineCap(.round)
+    let my = screen.minY + sh * 0.27
+    ctx.move(to: CGPoint(x: c.x - sw * 0.12, y: my + sh * 0.02))
+    ctx.addQuadCurve(to: CGPoint(x: c.x + sw * 0.12, y: my + sh * 0.02), control: CGPoint(x: c.x, y: my - sh * 0.12))
     ctx.strokePath()
+    ctx.restoreGState()
+    ctx.setFillColor(color(0xFF6FA5, 0.35))
+    for side: CGFloat in [-1, 1] {
+        ctx.fillEllipse(in: CGRect(x: c.x + side * dx * 1.6 - er, y: eyeY - er * 2.1, width: er * 2, height: er * 0.9))
+    }
+    // Chin: vents, floppy slot, drive light
+    let slotY = body.minY + h * 0.2
+    ctx.setFillColor(color(0x000000, 0.55))
+    ctx.addPath(CGPath(roundedRect: CGRect(x: c.x - w * 0.02, y: slotY, width: w * 0.34, height: w * 0.04),
+                       cornerWidth: w * 0.02, cornerHeight: w * 0.02, transform: nil))
+    ctx.fillPath()
+    ctx.setFillColor(color(0x8F846E, 0.6))
+    for i in 0..<3 {
+        ctx.fill(CGRect(x: body.minX + w * 0.13 + CGFloat(i) * w * 0.05, y: slotY - h * 0.03, width: w * 0.02, height: h * 0.09))
+    }
+    ctx.setFillColor(lime)
+    ctx.fill(CGRect(x: c.x + w * 0.25, y: slotY - h * 0.05, width: w * 0.05, height: w * 0.02))
 }
 
 func bitmap(_ w: Int, _ h: Int, _ draw: (CGContext) -> Void) -> Data {
@@ -100,7 +136,7 @@ func icon(_ ctx: CGContext, size s: CGFloat) {
     ctx.setFillColor(color(0x000000))
     ctx.fillPath()
     ctx.fill(CGRect(x: notch.minX, y: notch.midY, width: notch.width, height: notch.height))
-    drawGob(ctx, center: CGPoint(x: 512, y: 520), width: 460)
+    drawGob(ctx, center: CGPoint(x: 512, y: 490), width: 380)
     ctx.restoreGState()
     // Hairline edge
     ctx.addPath(squircle)

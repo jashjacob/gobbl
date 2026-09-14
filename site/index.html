@@ -4,323 +4,866 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gobbl — your notch has a pet</title>
-<meta name="description" content="Gobbl turns your MacBook's notch into a home for a tiny pet that gobbles files, keeps your clipboard, plays your music and more. Free and open source.">
+<meta name="description" content="Gobbl turns your MacBook's notch into a home for a tiny pet that eats your files, keeps your clipboard, dances to your music and cheers on your AI agents. Free and open source.">
 <link rel="icon" href="/img/icon.png?v=__V__">
 <link rel="apple-touch-icon" href="/img/icon.png?v=__V__">
+<meta name="theme-color" content="#08080a">
+<!-- Google Analytics (Xeve property, shared with xeve.io). The website only: the Gobbl app has no analytics. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-21SSB74NQD"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-21SSB74NQD');</script>
 <meta property="og:title" content="Gobbl — your notch has a pet">
-<meta property="og:description" content="A tiny pet lives in your Mac's notch. It gobbles files, keeps your clipboard, dances to your music. Free and open source.">
+<meta property="og:description" content="A tiny pet lives in your Mac's notch. It eats your files, keeps your clipboard, dances to your music and cheers on your AI agents. Free and open source.">
 <meta property="og:image" content="https://gobbl.xeve.io/img/og.png?v=__V__">
 <meta property="og:url" content="https://gobbl.xeve.io">
 <meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Gobbl","operatingSystem":"macOS 14 or later",
  "applicationCategory":"UtilitiesApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},
- "url":"https://gobbl.xeve.io","author":{"@type":"Organization","name":"Xeve","url":"https://xeve.io"}}
+ "url":"https://gobbl.xeve.io","license":"https://github.com/xeveio/gobbl/blob/main/LICENSE",
+ "author":{"@type":"Organization","name":"Xeve","url":"https://xeve.io"}}
 </script>
 <style>
-  :root {
-    --bg: #0a0a0c; --surface: #131418; --raised: #1b1d22; --border: rgba(255,255,255,.08);
-    --text: #eef0f2; --muted: #9aa0a8; --faint: #62666f; --lime: #a6f25c; --gold: #f5c542;
-  }
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-  a { color: inherit; }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
-  nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
-  .brand { display: flex; gap: 10px; align-items: center; font-weight: 800; letter-spacing: .02em; text-decoration: none; }
-  .brand img { width: 30px; height: 30px; }
-  nav .links { display: flex; gap: 22px; font-size: 14px; color: var(--muted); }
-  nav .links a { text-decoration: none; }
-  nav .links a:hover { color: var(--text); }
+:root{
+  --bg:#08080a; --bg2:#0f1013; --surface:#131418; --raised:#1a1c21; --line:rgba(255,255,255,.08);
+  --text:#f2f3f5; --muted:#9aa0a8; --faint:#5f646d; --lime:#a6f25c; --lime2:#6fd39b; --pink:#ff6fa5; --gold:#f5c542; --blue:#5b9cf6;
+  --ease:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.3,1.5,.5,1);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+::selection{background:var(--lime);color:#000}
 
-  /* Hero: a fake menu bar with a working notch and Gob inside it */
-  .hero { text-align: center; padding: 30px 0 70px; }
-  .screen { position: relative; margin: 0 auto 56px; max-width: 760px; height: 250px; border-radius: 22px 22px 0 0;
-            background: radial-gradient(120% 90% at 50% 0%, #2a3b1f 0%, #121418 55%, #0a0a0c 100%); border: 1px solid var(--border); border-bottom: 0; overflow: hidden; }
-  .menubar { height: 34px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; font-size: 13px; color: rgba(255,255,255,.75); background: rgba(0,0,0,.25); backdrop-filter: blur(10px); }
-  .menubar span { margin-right: 16px; }
-  .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 320px; height: 34px; background: #000;
-           border-radius: 0 0 16px 16px; transition: width .45s cubic-bezier(.3,1.4,.5,1), height .45s cubic-bezier(.3,1.4,.5,1), border-radius .3s; cursor: pointer; z-index: 2; }
-  .notch.open { width: 520px; height: 190px; border-radius: 0 0 30px 30px; }
-  .notch canvas { position: absolute; left: 22px; top: 3px; width: 28px; height: 28px; transition: all .45s cubic-bezier(.3,1.4,.5,1); }
-  .notch.open canvas { left: 34px; top: 52px; width: 110px; height: 110px; }
-  .notch .panel { position: absolute; left: 170px; right: 24px; top: 52px; bottom: 22px; opacity: 0; transition: opacity .2s; display: grid; gap: 10px; text-align: left; }
-  .notch.open .panel { opacity: 1; transition-delay: .2s; }
-  .tile { background: rgba(255,255,255,.07); border-radius: 14px; padding: 10px 14px; font-size: 13px; color: var(--muted); }
-  .tile b { color: var(--text); display: block; font-size: 13.5px; }
-  .hint { position: absolute; bottom: 18px; left: 0; right: 0; font-size: 13px; color: rgba(255,255,255,.45); }
-  h1 { font-size: clamp(44px, 8vw, 84px); line-height: 1; letter-spacing: -.035em; margin: 0 0 18px; font-weight: 850; }
-  h1 em { font-style: normal; color: var(--lime); }
-  .lede { font-size: clamp(17px, 2.2vw, 21px); color: var(--muted); max-width: 640px; margin: 0 auto 30px; }
-  .cta { display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-  .btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 24px; border-radius: 999px; font-weight: 700; text-decoration: none; font-size: 16px; transition: transform .15s; }
-  .btn:hover { transform: translateY(-2px); }
-  .btn.primary { background: var(--lime); color: #0a0a0c; }
-  .btn.ghost { border: 1px solid var(--border); background: var(--surface); }
-  .fine { margin-top: 14px; font-size: 13px; color: var(--faint); }
+/* progress + nav */
+#progress{position:fixed;top:0;left:0;height:2px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--lime),var(--pink));z-index:60}
+nav{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:26px;padding:10px 12px 10px 18px;border-radius:999px;
+  background:rgba(18,19,23,.55);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--line);transition:padding .3s var(--ease),background .3s}
+nav.small{padding:6px 8px 6px 14px;background:rgba(18,19,23,.8)}
+nav .brand{display:flex;gap:9px;align-items:center;font-weight:800;letter-spacing:.01em}
+nav .brand img{width:26px;height:26px}
+nav .links{display:flex;gap:20px;font-size:14px;color:var(--muted)}
+nav .links a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:999px;font-weight:700;font-size:15.5px;transition:transform .25s var(--spring),box-shadow .3s,background .2s;will-change:transform;white-space:nowrap}
+.btn.small{padding:8px 14px;font-size:13.5px}
+.btn.primary{background:var(--lime);color:#07120a;box-shadow:0 0 0 0 rgba(166,242,92,.5),0 10px 30px -10px rgba(166,242,92,.55)}
+.btn.primary:hover{box-shadow:0 0 0 6px rgba(166,242,92,.14),0 14px 40px -10px rgba(166,242,92,.7)}
+.btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--line)}
+.btn.ghost:hover{background:rgba(255,255,255,.1)}
+.btn small{opacity:.65;font-weight:600}
 
-  section { padding: 70px 0; border-top: 1px solid var(--border); }
-  h2 { font-size: clamp(30px, 4.5vw, 44px); letter-spacing: -.025em; margin: 0 0 12px; line-height: 1.1; }
-  .sub { color: var(--muted); margin: 0 0 36px; max-width: 620px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 22px; }
-  .card .ico { font-size: 24px; margin-bottom: 10px; }
-  .card h3 { margin: 0 0 6px; font-size: 17px; }
-  .card p { margin: 0; color: var(--muted); font-size: 14.5px; }
+/* ambient */
+.glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;pointer-events:none;animation:drift 18s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(60px,-40px) scale(1.15)}}
 
-  /* Egg hatcher */
-  .hatch { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: center; }
-  .eggbox { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; height: 340px; display: grid; place-items: center; position: relative; cursor: pointer; user-select: none; }
-  .eggbox canvas { width: 220px; height: 220px; }
-  .result { position: absolute; bottom: 22px; left: 0; right: 0; text-align: center; font-weight: 800; font-size: 20px; }
-  .chip { display: inline-block; margin-left: 8px; font-size: 11px; letter-spacing: .12em; padding: 4px 10px; border-radius: 999px; border: 1px solid currentColor; vertical-align: middle; }
-  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
-  td { padding: 9px 0; border-bottom: 1px solid var(--border); }
-  td:last-child { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 10px; vertical-align: -1px; }
+/* hero */
+.hero{position:relative;min-height:min(100vh,980px);padding:130px 0 40px;text-align:center;overflow:hidden}
+.eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:13px;font-weight:600;color:var(--lime);padding:6px 12px;border-radius:999px;background:rgba(166,242,92,.08);border:1px solid rgba(166,242,92,.2);margin-bottom:22px}
+.eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 12px var(--lime);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.3}}
+h1{font-size:clamp(46px,8.4vw,104px);line-height:.95;letter-spacing:-.045em;margin:0 0 22px;font-weight:850}
+h1 .w{display:inline-block;opacity:0;transform:translateY(40px) rotate(4deg);filter:blur(8px);animation:rise .9s var(--ease) forwards;animation-delay:calc(var(--i)*90ms + 150ms)}
+h1 .grad{background:linear-gradient(100deg,var(--lime),#e8ff9e 40%,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+@keyframes rise{to{opacity:1;transform:none;filter:none}}
+.lede{font-size:clamp(17px,2.1vw,21px);color:var(--muted);max-width:660px;margin:0 auto 32px;opacity:0;animation:rise .9s var(--ease) .75s forwards}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;opacity:0;animation:rise .9s var(--ease) .9s forwards}
+.fine{margin-top:14px;font-size:13px;color:var(--faint);opacity:0;animation:rise .9s var(--ease) 1s forwards}
 
-  .faq details { border-bottom: 1px solid var(--border); padding: 16px 0; }
-  .faq summary { cursor: pointer; font-weight: 650; list-style: none; }
-  .faq summary::after { content: "+"; float: right; color: var(--faint); }
-  .faq details[open] summary::after { content: "–"; }
-  .faq p { color: var(--muted); margin: 10px 0 0; }
-  footer { padding: 40px 0 60px; color: var(--faint); font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-top: 1px solid var(--border); }
-  @media (max-width: 720px) {
-    .hatch { grid-template-columns: 1fr; }
-    .notch.open { width: 92%; }
-    .notch .panel { display: none; }
-    nav .links a:not(.gh) { display: none; }
-  }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* the Mac */
+.mac{position:relative;margin:60px auto 0;width:min(980px,100%);aspect-ratio:16/9.2;border-radius:26px 26px 10px 10px;padding:14px 14px 0;background:linear-gradient(#2b2e35,#1b1d22);box-shadow:0 60px 120px -40px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.07) inset;opacity:0;transform:perspective(1600px) rotateX(18deg) translateY(60px) scale(.94);animation:macIn 1.4s var(--ease) 1.05s forwards}
+@keyframes macIn{to{opacity:1;transform:perspective(1600px) rotateX(0) translateY(0) scale(1)}}
+.mac::after{content:"";position:absolute;left:-7%;right:-7%;bottom:-18px;height:18px;border-radius:0 0 30px 30px;background:linear-gradient(#c5c8ce,#8b8f97);box-shadow:0 20px 40px rgba(0,0,0,.6)}
+.screen{position:relative;height:100%;border-radius:14px 14px 0 0;overflow:hidden;background:radial-gradient(120% 90% at 20% 110%,#ff6fa5 0%,transparent 45%),radial-gradient(110% 90% at 90% 100%,#5b9cf6 0%,transparent 50%),linear-gradient(160deg,#2b2350,#141527 60%,#0d0e18)}
+.menubar{position:absolute;top:0;left:0;right:0;height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:12.5px;color:rgba(255,255,255,.82);background:rgba(10,10,20,.25);backdrop-filter:blur(14px)}
+.menubar b{margin-right:16px}.menubar span{margin-right:16px;opacity:.85}
+.desk-icons{position:absolute;right:26px;top:60px;display:grid;gap:18px;justify-items:center}
+.file{width:54px;text-align:center;font-size:10.5px;color:#fff;text-shadow:0 1px 3px #000}
+.file .doc{width:40px;height:50px;margin:0 auto 5px;border-radius:5px;position:relative;background:linear-gradient(#fff,#dfe3ea);box-shadow:0 4px 10px rgba(0,0,0,.35)}
+.file .doc::after{content:attr(data-ext);position:absolute;bottom:6px;left:0;right:0;font-size:8.5px;font-weight:800;color:var(--c,#e0443b)}
+.flyer{position:absolute;left:0;top:0;z-index:5;opacity:0;transition:transform 1.1s var(--ease),opacity .4s;pointer-events:none}
+.cursor{position:absolute;z-index:9;width:22px;height:22px;left:0;top:0;transform:translate(560px,330px);transition:transform 1s var(--ease);pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+.cursor.click{animation:click .3s}
+@keyframes click{50%{scale:.8}}
+
+/* the notch */
+.notch{position:absolute;top:0;left:50%;translate:-50% 0;z-index:4;width:250px;height:30px;background:#000;border-radius:0 0 16px 16px;
+  transition:width .55s var(--spring),height .55s var(--spring),border-radius .4s var(--ease),box-shadow .4s;overflow:hidden}
+.notch.open{width:min(600px,86%);height:clamp(170px,40%,235px);border-radius:0 0 30px 30px;box-shadow:0 30px 60px -10px rgba(0,0,0,.7)}
+.notch.drop{box-shadow:0 0 0 2px var(--lime),0 0 40px rgba(166,242,92,.35)}
+.notch .mini{position:absolute;left:14px;top:3px;width:24px;height:24px;transition:all .5s var(--spring)}
+.notch.open .mini{left:22px;top:46px;width:min(120px,24%);height:min(120px,24%);aspect-ratio:1}
+.notch .wing{position:absolute;right:16px;top:7px;font-size:11px;font-weight:700;color:var(--muted);display:flex;gap:5px;align-items:center;transition:opacity .2s}
+.notch.open .wing{opacity:0}
+.notch .tabs{position:absolute;left:20px;top:8px;display:flex;gap:6px;opacity:0;transition:opacity .3s .15s}
+.notch.open .tabs{opacity:1}
+.notch .tabs i{width:22px;height:14px;border-radius:7px;background:rgba(255,255,255,.1)}
+.notch .tabs i.on{background:rgba(255,255,255,.28)}
+.panel{position:absolute;left:calc(min(120px,24%) + 44px);right:18px;top:44px;bottom:16px;opacity:0;transform:translateY(12px);transition:opacity .35s,transform .45s var(--ease);pointer-events:none;text-align:left;font-size:12px}
+.notch.open .panel.on{opacity:1;transform:none;transition-delay:.12s}
+.tile-row{display:flex;gap:8px;height:100%}
+.tile{flex:1;border-radius:14px;background:rgba(255,255,255,.07);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#dfe2e6;font-size:10.5px;animation:pop .5s var(--spring) both;animation-delay:calc(var(--i)*80ms)}
+.tile .sq{width:34px;height:40px;border-radius:6px;background:var(--c)}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.music{display:flex;gap:12px;height:100%;align-items:center;background:rgba(255,255,255,.06);border-radius:14px;padding:10px}
+.art{width:64px;height:64px;border-radius:10px;background:conic-gradient(from 30deg,#ff6fa5,#5b9cf6,#a6f25c,#ff6fa5);animation:spin 8s linear infinite;flex:none}
+@keyframes spin{to{filter:hue-rotate(360deg)}}
+.music b{display:block;font-size:13px;color:#fff}.music small{color:var(--muted)}
+.bar{height:3px;border-radius:3px;background:rgba(255,255,255,.14);margin:8px 0 6px;overflow:hidden}
+.bar i{display:block;height:100%;width:30%;background:#fff;animation:prog 9s linear infinite}
+@keyframes prog{to{width:100%}}
+.eq{display:flex;gap:3px;align-items:flex-end;height:14px}
+.eq i{width:3px;background:var(--lime);border-radius:2px;animation:eq .8s ease-in-out infinite alternate;animation-delay:calc(var(--i)*-.2s)}
+@keyframes eq{from{height:3px}to{height:14px}}
+.agent{height:100%;border-radius:14px;padding:11px 13px;background:rgba(245,197,66,.08);border:1px solid rgba(245,197,66,.35);display:flex;flex-direction:column;gap:7px}
+.agent b{font-size:12.5px;color:#fff}.agent code{font:11px ui-monospace,SFMono-Regular,Menlo,monospace;background:rgba(255,255,255,.07);padding:6px 8px;border-radius:7px;color:#e9ecef}
+.agent .btns{display:flex;gap:6px;margin-top:auto}
+.pill{padding:5px 11px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(255,255,255,.09);transition:transform .2s}
+.pill.go{background:var(--lime);color:#000}
+.pill.pressed{transform:scale(.88)}
+.done{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;color:var(--lime);font-size:14px;opacity:0;transition:opacity .3s}
+.agent.ok .done{opacity:1}.agent.ok>*:not(.done){opacity:.1}
+.clip{display:flex;flex-direction:column;gap:6px;height:100%}
+.clip .search{height:24px;border-radius:12px;background:rgba(255,255,255,.07);padding:0 10px;display:flex;align-items:center;color:var(--faint);font-size:11px}
+.clip .row{display:flex;gap:8px;align-items:center;padding:5px 8px;border-radius:9px;background:rgba(255,255,255,.04);color:#dfe2e6;font-size:11px;animation:pop .45s var(--ease) both;animation-delay:calc(var(--i)*70ms)}
+.clip .row i{width:18px;height:18px;border-radius:5px;background:var(--c);flex:none}
+.tools{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;height:100%}
+.tools div{border-radius:12px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:#dfe2e6;font-size:10.5px}
+.tools .big{grid-row:span 2;font:600 26px ui-rounded,-apple-system,sans-serif;color:#fff}
+
+/* marquee */
+.marquee{border-block:1px solid var(--line);overflow:hidden;padding:18px 0;background:var(--bg2);-webkit-mask:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+.marquee .track{display:flex;gap:44px;width:max-content;animation:scroll 38s linear infinite;font-weight:700;color:var(--muted);font-size:17px}
+.marquee .track span{display:flex;gap:10px;align-items:center}
+.marquee .track b{color:var(--lime)}
+@keyframes scroll{to{transform:translateX(-50%)}}
+
+section{position:relative;padding:130px 0}
+.kicker{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--lime);margin-bottom:14px}
+h2{font-size:clamp(34px,5.4vw,64px);letter-spacing:-.035em;line-height:1.02;margin:0 0 18px;font-weight:820}
+.sub{color:var(--muted);font-size:clamp(16px,1.8vw,19px);max-width:620px;margin:0 0 40px}
+
+/* reveal: only hidden once the script is running, so content never stays invisible */
+.js .reveal{opacity:0;transform:translateY(40px);transition:opacity .9s var(--ease),transform .9s var(--ease);transition-delay:calc(var(--i,0)*90ms)}
+.js .reveal.in{opacity:1;transform:none}
+.js .reveal.left{transform:translateX(-60px)}.js .reveal.right{transform:translateX(60px)}
+.js .reveal.left.in,.js .reveal.right.in{transform:none}
+
+/* story */
+.story{display:grid;grid-template-columns:1.15fr 1fr;gap:60px;align-items:start}
+.sticky{position:sticky;top:15vh}
+.sticky .mac{animation:none;opacity:1;transform:none;margin:0}
+.steps{display:flex;flex-direction:column;gap:min(32vh,320px);padding:min(18vh,170px) 0 min(30vh,300px)}
+.step{opacity:.25;transition:opacity .5s,transform .5s var(--ease);transform:translateX(20px)}
+.step.active{opacity:1;transform:none}
+.step .n{font:700 13px ui-monospace,Menlo,monospace;color:var(--lime)}
+.step h3{font-size:clamp(26px,3vw,36px);letter-spacing:-.02em;margin:6px 0 10px;line-height:1.1}
+.step p{color:var(--muted);margin:0;font-size:17px}
+
+/* bento */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.card{position:relative;grid-column:span 2;border-radius:22px;padding:26px;background:linear-gradient(180deg,var(--raised),var(--surface));border:1px solid var(--line);overflow:hidden;transform-style:preserve-3d;transition:transform .35s var(--ease),border-color .3s}
+.card:hover{border-color:rgba(166,242,92,.35)}
+.card.wide{grid-column:span 3}.card.tall{grid-row:span 2}
+.card .ico{font-size:28px;margin-bottom:14px;display:inline-block;transition:transform .5s var(--spring)}
+.card:hover .ico{transform:scale(1.25) rotate(-8deg)}
+.card h3{margin:0 0 6px;font-size:19px;letter-spacing:-.01em}
+.card p{margin:0;color:var(--muted);font-size:15px}
+.card::before{content:"";position:absolute;inset:0;background:radial-gradient(400px circle at var(--mx,50%) var(--my,50%),rgba(166,242,92,.12),transparent 40%);opacity:0;transition:opacity .3s}
+.card:hover::before{opacity:1}
+
+/* agents */
+.agents{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+.term{border-radius:18px;background:#0b0c0f;border:1px solid var(--line);box-shadow:0 40px 80px -30px #000;overflow:hidden;font:13.5px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace}
+.term .bar{height:34px;margin:0;border-radius:0;background:#16171b;display:flex;align-items:center;gap:7px;padding:0 14px}
+.term .bar i{width:11px;height:11px;border-radius:50%;background:#ff5f57;animation:none}.term .bar i:nth-child(2){background:#febc2e}.term .bar i:nth-child(3){background:#28c840}
+.term pre{margin:0;padding:18px 20px;min-height:250px;white-space:pre-wrap;color:#cfd3d8}
+.term .p{color:var(--lime)}.term .d{color:var(--faint)}.term .y{color:var(--gold)}
+.caret{display:inline-block;width:8px;height:15px;background:var(--lime);vertical-align:-2px;animation:pulse 1s steps(1) infinite}
+.agent-pet{display:grid;place-items:center;gap:10px;text-align:center}
+.agent-pet canvas{width:220px;height:220px}
+.status{font-weight:700;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--line);transition:all .3s}
+.status.work{color:var(--lime)}.status.need{color:var(--gold);border-color:rgba(245,197,66,.4)}.status.ok{background:var(--lime);color:#000}
+
+/* playground */
+.play{display:grid;grid-template-columns:1fr 1.05fr;gap:40px;align-items:center}
+.stage{position:relative;aspect-ratio:1;border-radius:30px;background:radial-gradient(circle at 50% 45%,var(--stage,rgba(166,242,92,.2)),transparent 60%),var(--surface);border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;cursor:pointer}
+.stage canvas{width:78%;height:78%}
+.stage .tag{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-weight:800;font-size:20px}
+.stage .hint{position:absolute;top:18px;left:0;right:0;text-align:center;font-size:13px;color:var(--faint)}
+.controls{display:flex;flex-direction:column;gap:22px}
+.ctl h4{margin:0 0 10px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+.seg{display:inline-flex;padding:4px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.seg button{padding:9px 18px;border-radius:999px;font-weight:700;color:var(--muted);transition:all .25s var(--ease)}
+.seg button.on{background:var(--lime);color:#000}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 13px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-weight:600;font-size:14px;transition:all .2s}
+.chip:hover{transform:translateY(-2px)}
+.chip.on{border-color:var(--lime);color:var(--lime);background:rgba(166,242,92,.07)}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid transparent;transition:transform .2s var(--spring)}
+.sw:hover{transform:scale(1.15)}.sw.on{border-color:#fff}
+.colors{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.colors label{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+input[type=color]{width:34px;height:34px;border:0;border-radius:50%;padding:0;background:none;cursor:pointer}
+input[type=color]::-webkit-color-swatch-wrapper{padding:0}input[type=color]::-webkit-color-swatch{border:2px solid rgba(255,255,255,.3);border-radius:50%}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.stat{border-radius:22px;padding:28px;background:var(--surface);border:1px solid var(--line)}
+.stat b{display:block;font-size:clamp(38px,5vw,58px);letter-spacing:-.04em;font-weight:850;background:linear-gradient(var(--text),#9aa0a8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat span{color:var(--muted)}
+
+/* faq + final */
+.faq details{border-bottom:1px solid var(--line);padding:20px 0}
+.faq summary{cursor:pointer;font-weight:650;font-size:18px;list-style:none;display:flex;justify-content:space-between}
+.faq summary::after{content:"+";color:var(--faint);transition:transform .3s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq p{color:var(--muted);margin:12px 0 0;max-width:720px}
+.final{text-align:center;overflow:hidden}
+.final canvas{width:180px;height:180px;margin-bottom:10px}
+footer{padding:40px 0 60px;color:var(--faint);font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid var(--line)}
+footer a:hover{color:var(--text)}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:70}
+
+@media (max-width:900px){
+  nav .links{display:none}
+  .story,.agents,.play{grid-template-columns:1fr}
+  .sticky{position:relative;top:0}
+  .steps{gap:40px;padding:30px 0}
+  .step{opacity:1;transform:none}
+  .bento{grid-template-columns:1fr 1fr}.card,.card.wide{grid-column:span 2}
+  .stats{grid-template-columns:1fr 1fr}
+  .notch.open{width:92%}
+  .panel{left:calc(min(120px,24%) + 30px)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  h1 .w,.lede,.cta,.fine,.mac{opacity:1;transform:none;filter:none}
+  .reveal{opacity:1;transform:none}
+  .cursor,.flyer{display:none}
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <nav>
-    <a class="brand" href="/"><img src="/img/icon.png?v=__V__" alt="">Gobbl</a>
-    <div class="links">
-      <a href="#features">Features</a>
-      <a href="#hatch">Hatch an egg</a>
-      <a href="#faq">FAQ</a>
-      <a class="gh" href="https://github.com/xeveio/gobbl">GitHub</a>
-    </div>
-  </nav>
+<div id="progress"></div>
+<canvas id="confetti"></canvas>
 
-  <header class="hero">
-    <div class="screen" aria-hidden="true">
-      <div class="menubar"><div><span></span><span>Finder</span><span>File</span><span>Edit</span><span>View</span></div><div>Mon 9:41</div></div>
-      <div class="notch" id="notch">
-        <canvas id="gob" width="220" height="220"></canvas>
-        <div class="panel">
-          <div class="tile"><b>♪ Midnight City</b>M83 · Gob is dancing</div>
-          <div class="tile"><b>📎 3 files on the shelf</b>Drag them out anywhere</div>
-          <div class="tile"><b>📅 Standup in 4 min</b>Join →</div>
+<nav id="nav">
+  <a class="brand" href="#"><img src="/img/icon.png?v=__V__" alt="">Gobbl</a>
+  <div class="links"><a href="#story">Features</a><a href="#agents">AI agents</a><a href="#play">Your pet</a><a href="#faq">FAQ</a></div>
+  <a class="btn primary small magnetic" href="https://github.com/xeveio/gobbl">★ Star on GitHub</a>
+</nav>
+
+<header class="hero">
+  <div class="glow" style="width:520px;height:520px;background:#a6f25c;left:-160px;top:80px;opacity:.18"></div>
+  <div class="glow" style="width:480px;height:480px;background:#ff6fa5;right:-140px;top:220px;opacity:.16;animation-delay:-6s"></div>
+  <div class="wrap">
+    <div class="eyebrow"><i></i>Free &amp; open source · for Mac</div>
+    <h1><span class="w" style="--i:0">Your</span> <span class="w" style="--i:1">notch</span> <span class="w" style="--i:2">has</span> <span class="w grad" style="--i:3">a</span> <span class="w grad" style="--i:4">pet.</span></h1>
+    <p class="lede">Gobbl moves a tiny creature into your MacBook's notch. It eats the files you drop, keeps your clipboard, dances to your music, and cheers when your AI agent finishes.</p>
+    <div class="cta">
+      <a class="btn primary magnetic" href="https://github.com/xeveio/gobbl">★ Star on GitHub</a>
+      <a class="btn ghost magnetic" href="/download">Download for Mac <small data-version>· coming soon</small></a>
+    </div>
+    <div class="fine">macOS 14+ · works on Macs without a notch too · near-zero CPU at rest</div>
+
+    <div class="mac" id="heroMac" aria-hidden="true">
+      <div class="screen">
+        <div class="menubar"><div><b></b><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Go</span></div><div>Mon 9:41</div></div>
+        <div class="desk-icons">
+          <div class="file" data-f="1"><div class="doc" data-ext="PDF"></div>Pitch.pdf</div>
+          <div class="file"><div class="doc" data-ext="PNG" style="--c:#3b82f6"></div>Shot.png</div>
+        </div>
+        <div class="notch" data-notch>
+          <canvas class="mini" width="240" height="240"></canvas>
+          <div class="wing"><span class="eq"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></span></div>
+          <div class="tabs"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+          <div class="panel" data-panel="shelf"><div class="tile-row"><div class="tile" style="--i:0"><div class="sq" style="--c:linear-gradient(#ff8b7f,#e0443b)"></div>Pitch.pdf</div><div class="tile" style="--i:1"><div class="sq" style="--c:linear-gradient(#8fb8ff,#3b82f6)"></div>Shot.png</div><div class="tile" style="--i:2"><div class="sq" style="--c:linear-gradient(#ffe08a,#f59e0b)"></div>Notes.zip</div></div></div>
+          <div class="panel" data-panel="music"><div class="music"><div class="art"></div><div style="flex:1"><b>Midnight City</b><small>Gob is dancing</small><div class="bar"><i></i></div><div class="eq"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i></div></div></div></div>
+          <div class="panel" data-panel="agent"><div class="agent"><b>✳ Claude Code wants to use Bash</b><code>npm test --silent</code><div class="btns"><span class="pill go">✓ Allow</span><span class="pill">Deny</span><span class="pill">Ask in terminal</span></div><div class="done">✓ Allowed. Tests pass</div></div></div>
+          <div class="panel" data-panel="clip"><div class="clip"><div class="search">🔍 Search clipboard</div><div class="row" style="--i:0"><i style="--c:#5b9cf6"></i>https://gobbl.xeve.io</div><div class="row" style="--i:1"><i style="--c:#a6f25c"></i>Meeting notes: ship Friday 🚀</div><div class="row" style="--i:2"><i style="--c:#ff6fa5"></i>#FF6FA5</div></div></div>
+          <div class="panel" data-panel="tools"><div class="tools"><div class="big">25:00<small style="font-size:10px;color:#9aa0a8">Focus</small></div><div>☕ Awake</div><div>🎙 Mute</div><div>🎨 Color</div><div>🔤 Screen text</div></div></div>
+        </div>
+        <div class="flyer" id="flyer"><div class="file"><div class="doc" data-ext="PDF"></div></div></div>
+        <svg class="cursor" id="cursor" viewBox="0 0 24 24"><path d="M4 2l15 8.5-6.6 1.4L16 20l-2.7 1.2-3.5-8L5 17z" fill="#fff" stroke="#000" stroke-width="1.2"/></svg>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="marquee" aria-hidden="true"><div class="track" id="marquee">
+  <span><b>✦</b> Drop files on the notch</span><span><b>✦</b> ⇧⌘Space clipboard</span><span><b>✦</b> Music from any app</span><span><b>✦</b> Claude Code &amp; Codex</span><span><b>✦</b> Volume &amp; brightness HUDs</span><span><b>✦</b> Next meeting + Join</span><span><b>✦</b> Focus timer</span><span><b>✦</b> OCR &amp; background removal</span><span><b>✦</b> 11 hats</span><span><b>✦</b> Shareable skins</span>
+</div></div>
+
+<section id="story">
+  <div class="wrap story">
+    <div class="sticky reveal left">
+      <div class="mac" id="storyMac" aria-hidden="true">
+        <div class="screen">
+          <div class="menubar"><div><b></b><b>Gobbl</b></div><div>9:41</div></div>
+          <div class="notch open" data-notch>
+            <canvas class="mini" width="240" height="240"></canvas>
+            <div class="tabs"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+            <div class="panel on" data-panel="shelf"><div class="tile-row"><div class="tile" style="--i:0"><div class="sq" style="--c:linear-gradient(#ff8b7f,#e0443b)"></div>Pitch.pdf</div><div class="tile" style="--i:1"><div class="sq" style="--c:linear-gradient(#8fb8ff,#3b82f6)"></div>Shot.png</div><div class="tile" style="--i:2"><div class="sq" style="--c:linear-gradient(#ffe08a,#f59e0b)"></div>Notes.zip</div></div></div>
+            <div class="panel" data-panel="clip"><div class="clip"><div class="search">🔍 Search clipboard</div><div class="row" style="--i:0"><i style="--c:#5b9cf6"></i>https://gobbl.xeve.io</div><div class="row" style="--i:1"><i style="--c:#a6f25c"></i>Meeting notes: ship Friday 🚀</div><div class="row" style="--i:2"><i style="--c:#ff6fa5"></i>#FF6FA5</div></div></div>
+            <div class="panel" data-panel="music"><div class="music"><div class="art"></div><div style="flex:1"><b>Midnight City</b><small>Gob is dancing</small><div class="bar"><i></i></div><div class="eq"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i></div></div></div></div>
+            <div class="panel" data-panel="agent"><div class="agent"><b>✳ Claude Code wants to use Bash</b><code>npm test --silent</code><div class="btns"><span class="pill go">✓ Allow</span><span class="pill">Deny</span><span class="pill">Ask in terminal</span></div><div class="done">✓ Allowed</div></div></div>
+            <div class="panel" data-panel="tools"><div class="tools"><div class="big">25:00<small style="font-size:10px;color:#9aa0a8">Focus</small></div><div>☕ Awake</div><div>🎙 Mute</div><div>🎨 Color</div><div>🔤 Screen text</div></div></div>
+          </div>
         </div>
       </div>
-      <div class="hint">Hover the notch. Click Gob.</div>
     </div>
-    <h1>Your notch has <em>a pet.</em></h1>
-    <p class="lede">Gobbl moves a tiny creature into your MacBook's notch. It gobbles the files you drop, keeps your clipboard, dances to your music and nudges you before meetings.</p>
-    <div class="cta">
-      <a class="btn primary" href="/download">Download for Mac <small data-version>v0.1</small></a>
-      <a class="btn ghost" href="https://github.com/xeveio/gobbl">★ Star on GitHub</a>
+    <div class="steps">
+      <div class="step" data-show="shelf" data-mood="eating"><div class="n">01 · Shelf</div><h3>Drop it on the notch. Gob eats it.</h3><p>Park files in the notch and drag them out anywhere. Right-click to convert, compress, remove a background, copy the text, or zip. All on your Mac.</p></div>
+      <div class="step" data-show="clip" data-mood="curious"><div class="n">02 · Clipboard</div><h3>Everything you copied, one shortcut away.</h3><p>⇧⌘Space opens a searchable history with pins. Password-manager copies are never saved.</p></div>
+      <div class="step" data-show="music" data-mood="dance"><div class="n">03 · Music</div><h3>Now playing, from any app.</h3><p>Spotify, Music, YouTube in Chrome: artwork, controls, synced lyrics and output switching. Gob dances along.</p></div>
+      <div class="step" data-show="agent" data-mood="alert"><div class="n">04 · AI agents</div><h3>Approve Claude without leaving what you're doing.</h3><p>Gob works along with Claude Code and Codex, and Allow / Deny prompts appear right in the notch.</p></div>
+      <div class="step" data-show="tools" data-mood="happy"><div class="n">05 · Tools</div><h3>The little things, one click each.</h3><p>Focus timer, keep-awake, mic mute, color picker, copy text from anywhere on screen, and volume &amp; brightness in the notch.</p></div>
     </div>
-    <div class="fine">Free &amp; open source · macOS 14 or later · Works on Macs without a notch too</div>
-  </header>
+  </div>
+</section>
 
-  <section id="features">
-    <h2>Everything the notch should do.</h2>
-    <p class="sub">A drag-and-drop shelf, a clipboard, a music player, and more. All on your Mac, nothing sent anywhere.</p>
-    <div class="grid">
-      <div class="card"><div class="ico">📥</div><h3>File shelf</h3><p>Drop files on the notch, drag them out later. AirDrop, share, Quick Look.</p></div>
-      <div class="card"><div class="ico">🪄</div><h3>File tools</h3><p>Convert and compress images, PDFs and video. Remove backgrounds. Copy text from any image.</p></div>
-      <div class="card"><div class="ico">📋</div><h3>Clipboard history</h3><p>⇧⌘Space opens everything you copied, searchable, with pins. Passwords are never saved.</p></div>
-      <div class="card"><div class="ico">🎵</div><h3>Now playing</h3><p>Artwork and controls for Spotify, Music, YouTube and more. Gob dances along.</p></div>
-      <div class="card"><div class="ico">🔊</div><h3>Volume &amp; brightness</h3><p>Sleek readouts in the notch instead of the big system popups. Caps Lock too.</p></div>
-      <div class="card"><div class="ico">📅</div><h3>Next meeting</h3><p>Your next event with a one-click Join, and a nudge five minutes before.</p></div>
-      <div class="card"><div class="ico">⏱️</div><h3>Focus timer</h3><p>Pomodoro in the notch. Gob throws a tiny party when you finish.</p></div>
-      <div class="card"><div class="ico">🔋</div><h3>Battery &amp; awake</h3><p>Charging and low-battery alerts, and keep-awake in one click.</p></div>
-      <div class="card"><div class="ico">✳️</div><h3>Cheers on your AI agent</h3><p>Connect Claude Code or Codex. Gob works along, celebrates when a task finishes, and lets you Allow or Deny prompts from the notch.</p></div>
-      <div class="card"><div class="ico">🎬</div><h3>Clips in one click</h3><p>Render a 6-second clip of your pet as MP4 and GIF, or record your real notch. Made for sharing.</p></div>
-      <div class="card"><div class="ico">🧺</div><h3>Shake to drop</h3><p>Shake while dragging a file and a drop basket appears right under your pointer.</p></div>
-      <div class="card"><div class="ico">🛠️</div><h3>Little tools</h3><p>Mute your mic, pick a colour, copy text from anywhere on screen, switch sound output, see synced lyrics.</p></div>
+<section id="agents" style="background:linear-gradient(180deg,transparent,var(--bg2) 20%,var(--bg2) 80%,transparent)">
+  <div class="wrap">
+    <div class="kicker reveal">For people who ship with AI</div>
+    <h2 class="reveal" style="--i:1">It cheers when your<br>agent finishes.</h2>
+    <p class="sub reveal" style="--i:2">Connect Claude Code or Codex in one click. Gob gets to work when you send a prompt, waves when the agent needs you, and throws a tiny party when it's done.</p>
+    <div class="agents">
+      <div class="term reveal left"><div class="bar"><i></i><i></i><i></i></div><pre id="term"></pre></div>
+      <div class="agent-pet reveal right"><canvas id="agentPet" width="440" height="440"></canvas><div class="status" id="agentStatus">Waiting for a prompt…</div></div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section id="looks">
-    <h2>Blob or retro computer. Your colours.</h2>
-    <p class="sub">Hatch a squishy blob or a little 80s computer that eats files through its floppy slot. Earn 11 hats with streaks and seasons, then design a skin and share it: skins are tiny <code>.gobskin</code> files anyone can double-click to try.</p>
-    <div class="grid">
-      <div class="card"><div class="ico">🟢</div><h3>Two characters</h3><p>Same moods, same tricks. Switch any time.</p></div>
-      <div class="card"><div class="ico">🎩</div><h3>11 hats</h3><p>Party hat, beanie, headphones, halo, crown, plus seasonal ones for Halloween, Diwali and December.</p></div>
-      <div class="card"><div class="ico">🎨</div><h3>Skins you can share</h3><p>Pick colours, save, share. Drop someone's skin on your notch and Gob wears it.</p></div>
-      <div class="card"><div class="ico">🔥</div><h3>Daily streaks</h3><p>Use your Mac, keep your streak, unlock more. Gob never nags.</p></div>
-    </div>
-  </section>
-
-  <section id="hatch">
-    <div class="hatch">
-      <div>
-        <h2>Every Gobbl hatches different.</h2>
-        <p class="sub">Your pet hatches from an egg on first launch. Eight species, from common Mochi to legendary Cosmo, and 1 in 100 hatch shiny. Feed it files and it levels up and evolves. Then show it off with its pet card.</p>
-        <table id="odds"></table>
-      </div>
-      <div class="eggbox" id="eggbox" title="Click to hatch">
-        <canvas id="egg" width="440" height="440"></canvas>
-        <div class="result" id="result">Click the egg</div>
+<section id="play">
+  <div class="wrap">
+    <div class="kicker reveal">Make it yours</div>
+    <h2 class="reveal" style="--i:1">Every Gobbl ships different.</h2>
+    <p class="sub reveal" style="--i:2">A late-70s classic, a mid-80s compact or a late-90s candy computer, each with a face on its screen and a slot it eats your files through. It arrives in a box: eight colours, and 1 in 100 ship as a sparkly limited edition. 11 hats to earn. Try typing: it'll type along.</p>
+    <div class="play">
+      <div class="stage reveal left" id="stage"><div class="hint">Click to pet · move your mouse</div><canvas id="playPet" width="680" height="680"></canvas><div class="tag" id="playTag">Sprout</div></div>
+      <div class="controls reveal right">
+        <div class="ctl"><h4>Computer</h4><div class="seg" id="charSeg"><button data-c="classic">Classic ’77</button><button class="on" data-c="retro">Compact ’84</button><button data-c="candy">Candy ’98</button></div></div>
+        <div class="ctl"><h4>Species</h4><div class="chips" id="species"></div></div>
+        <div class="ctl"><h4>Hat</h4><div class="chips" id="hats"></div></div>
+        <div class="ctl"><h4>Design a skin</h4><div class="colors"><label><input type="color" id="cTop" value="#b8f28a">Top</label><label><input type="color" id="cBot" value="#5bb84a">Bottom</label><label><input type="color" id="cFace" value="#16161a">Face</label><button class="btn ghost small" id="saveSkin">⬇ Download .gobskin</button></div></div>
+        <div class="ctl"><button class="btn primary magnetic" id="hatch">📦 Open a mystery box</button></div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section id="faq" class="faq">
-    <h2>Questions</h2>
-    <details><summary>Is it really free?</summary><p>Yes. Gobbl is MIT-licensed and open source, by <a href="https://xeve.io">Xeve</a>. No account, no subscription, no ads.</p></details>
-    <details><summary>Does it drain my battery?</summary><p>No. At rest Gobbl uses about 0% CPU: Gob only redraws to blink, and nothing polls in the background except a cheap clipboard check.</p></details>
-    <details><summary>My Mac doesn't have a notch.</summary><p>Gobbl shows a small pill at the top of the screen instead, on any display you like.</p></details>
-    <details><summary>What does it collect?</summary><p>Nothing. Clipboard history and the shelf live only on your Mac. Permissions (Accessibility, Calendar) are optional and asked only when you turn a feature on.</p></details>
-    <details><summary>Can I make my own pet?</summary><p>Custom skins are coming. Star the repo to follow along.</p></details>
-  </section>
+<section id="looks">
+  <div class="wrap">
+    <div class="kicker reveal">And a lot more</div>
+    <h2 class="reveal" style="--i:1">Small app. Big notch.</h2>
+    <div class="bento">
+      <div class="card wide reveal" style="--i:0"><div class="ico">🎬</div><h3>Clips in one click</h3><p>Render a 6-second MP4 + GIF of your pet, or record your real notch. Made for sharing.</p></div>
+      <div class="card wide reveal" style="--i:1"><div class="ico">🧺</div><h3>Shake to drop</h3><p>Shake while dragging a file and a drop basket pops up right under your pointer.</p></div>
+      <div class="card reveal" style="--i:2"><div class="ico">🔊</div><h3>Sleek HUDs</h3><p>Volume, brightness, Caps Lock and battery in the notch instead of the big system popups.</p></div>
+      <div class="card reveal" style="--i:3"><div class="ico">📅</div><h3>Next meeting</h3><p>One-click Join, and a nudge from Gob five minutes before.</p></div>
+      <div class="card reveal" style="--i:4"><div class="ico">🔥</div><h3>Streaks &amp; hats</h3><p>Use your Mac, keep your streak, unlock hats. Seasonal ones for Halloween, Diwali and December.</p></div>
+      <div class="card wide reveal" style="--i:5"><div class="ico">🖥️</div><h3>Every screen</h3><p>A pill on Macs without a notch and on external displays. Hides for full-screen apps.</p></div>
+      <div class="card wide reveal" style="--i:6"><div class="ico">🔒</div><h3>Private by design</h3><p>The app has no account and no analytics. Clipboard and shelf stay on your Mac. Permissions only when you turn a feature on.</p></div>
+    </div>
+  </div>
+</section>
 
-  <footer>
-    <span>© 2026 <a href="https://xeve.io">Xeve</a> · Made with love for the notch</span>
-    <span><a href="https://github.com/xeveio/gobbl">GitHub</a> · <a href="https://dl.xeve.io/gobbl/appcast.xml">Updates feed</a></span>
-  </footer>
-</div>
+<section style="padding-top:40px">
+  <div class="wrap stats">
+    <div class="stat reveal" style="--i:0"><b data-count="0" data-suffix="%">0%</b><span>CPU while Gob rests</span></div>
+    <div class="stat reveal" style="--i:1"><b data-count="8">8</b><span>colours to unbox</span></div>
+    <div class="stat reveal" style="--i:2"><b data-count="11">11</b><span>hats to earn</span></div>
+    <div class="stat reveal" style="--i:3"><b data-count="0" data-prefix="$">$0</b><span>forever · MIT licensed</span></div>
+  </div>
+</section>
+
+<section id="faq" class="faq">
+  <div class="wrap">
+    <h2 class="reveal">Questions</h2>
+    <details class="reveal"><summary>Is it really free?</summary><p>Yes. Gobbl is MIT-licensed and open source, by <a href="https://xeve.io" style="color:var(--lime)">Xeve</a>. No account, no subscription, no ads.</p></details>
+    <details class="reveal"><summary>When can I download it?</summary><p>The first signed, notarized release is coming very soon. Star the repo to get notified, or build it yourself from the source today.</p></details>
+    <details class="reveal"><summary>Does it drain my battery?</summary><p>No. At rest Gobbl sits around 0% CPU: Gob only redraws to blink, and nothing polls in the background except a cheap clipboard check.</p></details>
+    <details class="reveal"><summary>My Mac doesn't have a notch.</summary><p>Gobbl shows a small pill at the top of the screen instead, on any display you like.</p></details>
+    <details class="reveal"><summary>How does the Claude Code link work?</summary><p>Clicking Connect adds a small hook to Claude Code's settings (backed up first). Events go to Gobbl over a private socket on your Mac. If Gobbl isn't running or you don't answer a prompt within 30 seconds, Claude simply asks in the terminal as usual.</p></details>
+  </div>
+</section>
+
+<section class="final">
+  <div class="glow" style="width:600px;height:600px;background:#a6f25c;left:50%;top:10%;margin-left:-300px;opacity:.14"></div>
+  <div class="wrap">
+    <canvas id="finalPet" width="360" height="360" class="reveal"></canvas>
+    <h2 class="reveal" style="--i:1">Give your notch<br>something to do.</h2>
+    <div class="cta reveal" style="--i:2;opacity:1;animation:none">
+      <a class="btn primary magnetic" href="https://github.com/xeveio/gobbl">★ Star on GitHub</a>
+      <a class="btn ghost magnetic" href="/download">Download for Mac <small>· coming soon</small></a>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><footer>
+  <span>© 2026 <a href="https://xeve.io">Xeve</a> · Made with love for the notch</span>
+  <span><a href="https://github.com/xeveio/gobbl">GitHub</a> · <a href="https://github.com/xeveio/gobbl/blob/main/LICENSE">MIT License</a></span>
+</footer></div>
 
 <script>
-// Species table mirrors GobblCore/Mascot/PetGenome.swift.
-const SPECIES = [
-  ["Mochi", .93, 20], ["Sprout", .30, 18], ["Ember", .04, 16], ["Frost", .55, 16],
-  ["Bubble", .48, 14], ["Sunny", .13, 10], ["Plum", .78, 5], ["Cosmo", .68, 1]];
-const rarity = w => w >= 14 ? "common" : w >= 10 ? "uncommon" : w >= 5 ? "rare" : "legendary";
-const hsl = (h, s, l) => `hsl(${h * 360}, ${s}%, ${l}%)`;
-
-// A port of GobPainter: gumdrop body, antenna, eyes that follow the pointer.
-function drawGob(ctx, s, t, o) {
-  ctx.clearRect(0, 0, s, s);
-  const mood = o.mood;
-  let squash = Math.sin(t * 2.2) * .025, dy = 0, tilt = 0;
-  if (mood === "dance") { squash = Math.sin(t * 8) * .07; tilt = Math.sin(t * 4) * .12; }
-  if (mood === "love") squash = Math.sin(t * 5) * .04;
-  if (mood === "party") { dy = -Math.abs(Math.sin(t * 7)) * s * .1; }
-  const bw = s * .84 * (1 + squash), bh = s * .66 * (1 - squash);
-  const bx = s / 2 - bw / 2, by = s * .96 - bh + dy;
-  ctx.save();
-  ctx.translate(s / 2, s * .96 + dy); ctx.rotate(tilt); ctx.translate(-s / 2, -(s * .96 + dy));
-  // antenna
-  const tipX = s / 2 + s * .06 + Math.sin(t * 3) * s * .04, tipY = by - s * .15;
-  ctx.strokeStyle = hsl(o.hue, 70, 40); ctx.lineWidth = s * .03; ctx.lineCap = "round";
-  ctx.beginPath(); ctx.moveTo(s / 2, by + 2); ctx.quadraticCurveTo(s / 2 - s * .03, by - s * .08, tipX, tipY); ctx.stroke();
-  ctx.fillStyle = hsl(o.hue, 90, 78); ctx.beginPath(); ctx.arc(tipX, tipY, s * .045, 0, 7); ctx.fill();
-  // body
-  const g = ctx.createLinearGradient(0, by, 0, by + bh);
-  g.addColorStop(0, hsl(o.hue, 95, 75)); g.addColorStop(1, hsl(o.hue, 65, 48));
-  ctx.fillStyle = g; ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, [bw * .5, bw * .5, bh * .45, bh * .45]); ctx.fill();
-  ctx.fillStyle = "rgba(255,255,255,.35)"; ctx.beginPath(); ctx.ellipse(bx + bw * .29, by + bh * .18, bw * .13, bh * .08, 0, 0, 7); ctx.fill();
-  if (o.shiny) for (let i = 0; i < 3; i++) {
-    const p = (t * .7 + i / 3) % 1, a = i * 2.1 + .6, r = s * .06 * Math.sin(p * Math.PI);
-    ctx.fillStyle = "#fff"; ctx.font = `${r * 2.4}px sans-serif`; ctx.fillText("✦", s / 2 + Math.cos(a) * bw * .55, by + bh / 2 + Math.sin(a) * bh * .6);
-  }
-  // eyes
-  const ey = by + bh * .42, edx = bw * .19, er = s * .075, blink = (t % 4.3) < .13;
-  ctx.fillStyle = ctx.strokeStyle = "#16161a"; ctx.lineWidth = Math.max(1.5, s * .035);
-  for (const side of [-1, 1]) {
-    const ex = s / 2 + side * edx;
-    if (mood === "love" || mood === "party" || mood === "dance") {
-      ctx.beginPath(); ctx.moveTo(ex - er, ey + er * .3); ctx.quadraticCurveTo(ex, ey - er * 1.2, ex + er, ey + er * .3); ctx.stroke();
-    } else if (blink) {
-      ctx.beginPath(); ctx.moveTo(ex - er, ey); ctx.lineTo(ex + er, ey); ctx.stroke();
-    } else {
-      const px = ex + o.look * er * .45, py = ey + o.lookY * er * .3;
-      ctx.fillStyle = "#16161a"; ctx.beginPath(); ctx.ellipse(px, py, er * .75, er, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(px - er * .2, py - er * .4, er * .28, 0, 7); ctx.fill();
-    }
-    ctx.fillStyle = "rgba(255,111,165,.35)"; ctx.beginPath(); ctx.ellipse(s / 2 + side * edx * 1.55, ey + er * 1.45, er, er * .55, 0, 0, 7); ctx.fill();
-  }
-  // mouth
-  const my = by + bh * .68, wide = mood ? .13 : .08;
-  ctx.strokeStyle = "#16161a"; ctx.beginPath(); ctx.moveTo(s / 2 - bw * wide, my - bh * .02);
-  ctx.quadraticCurveTo(s / 2, my + bh * (wide > .1 ? .14 : .08), s / 2 + bw * wide, my - bh * .02); ctx.stroke();
-  ctx.restore();
-  // hearts / notes
-  if ((mood === "love" || mood === "dance") && s > 60) for (let i = 0; i < 2; i++) {
-    const p = (t * .6 + i * .5) % 1;
-    ctx.globalAlpha = 1 - p; ctx.fillStyle = mood === "love" ? "#ff6fa5" : "#a6f25c";
-    ctx.font = `900 ${s * .15 * (.7 + p * .5)}px sans-serif`;
-    ctx.fillText(mood === "love" ? "♥" : "♪", bx + bw - s * .04 + p * s * .08, by + s * .05 - p * s * .28);
-    ctx.globalAlpha = 1;
-  }
-}
-
+(() => {
+document.documentElement.classList.add("js");
+// Conversion events for GA: which call to action people use.
+const track = (name, params) => { try { window.gtag && gtag("event", name, params || {}); } catch (_) {} };
+document.addEventListener("click", e => {
+  const a = e.target.closest("a"); if (!a) return;
+  const where = a.closest("nav") ? "nav" : a.closest(".hero") ? "hero" : a.closest(".final") ? "final" : "page";
+  if (a.href.includes("github.com/xeveio/gobbl")) track("github_click", { placement: where });
+  else if (a.getAttribute("href") === "/download") track("download_click", { placement: where });
+});
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const notch = document.getElementById("notch"), gob = document.getElementById("gob"), gctx = gob.getContext("2d");
-const hero = { hue: .30, mood: null, look: 0, lookY: 0, shiny: false, until: 0 };
-addEventListener("pointermove", e => {
-  const r = gob.getBoundingClientRect();
-  hero.look = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / 300));
-  hero.lookY = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / 300));
-});
-notch.addEventListener("pointerenter", () => notch.classList.add("open"));
-notch.addEventListener("pointerleave", () => notch.classList.remove("open"));
-notch.addEventListener("click", () => { notch.classList.add("open"); hero.mood = "love"; hero.until = performance.now() + 1600; });
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const hsl = (h, s, l) => `hsl(${h * 360},${s}%,${l}%)`;
+// Mirrors GobblCore/Mascot/PetGenome.swift.
+const SPECIES = [["Mochi",.93,20],["Sprout",.30,18],["Ember",.04,16],["Frost",.55,16],["Bubble",.48,14],["Sunny",.13,10],["Plum",.78,5],["Cosmo",.68,1]];
+const rarity = w => w >= 14 ? "common" : w >= 10 ? "uncommon" : w >= 5 ? "rare" : "legendary";
 
-// Egg hatcher: same weights and shiny odds as the app.
-const eggbox = document.getElementById("eggbox"), egg = document.getElementById("egg"), ectx = egg.getContext("2d"), result = document.getElementById("result");
-const state = { phase: "egg", crackAt: 0, pet: null };
-document.getElementById("odds").innerHTML = SPECIES.map(([n, h, w]) =>
-  `<tr><td><span class="dot" style="background:${hsl(h, 90, 65)}"></span>${n} <span style="color:var(--faint)">· ${rarity(w)}</span></td><td>${w}%</td></tr>`).join("") +
-  `<tr><td>✦ Shiny, any species</td><td>1%</td></tr>`;
-function roll() {
-  let r = Math.random() * 100;
-  for (const [n, h, w] of SPECIES) { if (r < w) return { name: n, hue: h, weight: w, shiny: Math.random() < .01 }; r -= w; }
-  return { name: "Mochi", hue: .93, weight: 20, shiny: false };
+/* ---------- pet renderer (a port of Gobbl/Pet/GobView.swift) ---------- */
+// Three computers — classic, retro (compact), candy — with a phosphor face on
+// the screen. "work" fills the screen with Matrix rain, "think" ponders,
+// "type" hops with each key press.
+const keyTimes = [];
+const GLYPHS = "01アイウエオカキクケコサシスセソタチツテトﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ";
+function rr(ctx, x, y, w, h, r, fill, stroke) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); if (fill) ctx.fill(); if (stroke) ctx.stroke(); }
+function palette(o) {
+  const h = o.hue ?? .3;
+  const d = { classic: [hsl(h, 30, 88), hsl(h, 22, 70)], retro: [hsl(h, 35, 93), hsl(h, 22, 78)], candy: [hsl(h, 100, 72), hsl(h, 80, 45)] }[o.char || "retro"];
+  return { light: o.top || d[0], dark: o.bottom || d[1] };
 }
-eggbox.addEventListener("click", () => {
-  if (state.phase === "egg") { state.phase = "crack"; state.crackAt = performance.now(); result.textContent = "…"; }
-  else if (state.phase === "pet") { state.phase = "egg"; result.textContent = "Click the egg"; }
-});
-function drawEgg(t, cracking) {
-  const s = 440, w = 260, h = 320, x = (s - w) / 2, y = (s - h) / 2;
-  ectx.clearRect(0, 0, s, s);
-  ectx.save(); ectx.translate(s / 2, y + h);
-  ectx.rotate(cracking ? Math.sin(t * 38) * .14 : Math.sin(t * 9) * .08 * Math.max(0, Math.sin(t * 1.3)));
-  ectx.translate(-s / 2, -(y + h));
-  const g = ectx.createLinearGradient(x, y, x + w, y + h); g.addColorStop(0, "#fff6e6"); g.addColorStop(1, "#e9d9be");
-  ectx.fillStyle = g; ectx.beginPath(); ectx.ellipse(s / 2, y + h * .56, w / 2, h * .5, 0, 0, 7);
-  ectx.ellipse(s / 2, y + h * .38, w * .42, h * .38, 0, 0, 7); ectx.fill();
-  ectx.fillStyle = "#e58a6b";
-  for (const [px, py, r] of [[.3, .35, .07], [.62, .25, .05], [.68, .6, .08], [.36, .72, .05], [.5, .5, .04]]) {
-    ectx.beginPath(); ectx.arc(x + w * px, y + h * py, w * r, 0, 7); ectx.fill();
+function grad(ctx, y0, y1, a, b) { const g = ctx.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, a); g.addColorStop(1, b); return g; }
+
+// A shipping box that shakes, then pops its flaps (k: 0–1).
+function drawBox(ctx, s, t, k) {
+  ctx.clearRect(0, 0, s, s);
+  const w = s * .62, h = s * .4, x = (s - w) / 2, y = s * .5, f = Math.max(0, (k - .7) / .3);
+  const shake = k < .7 ? Math.sin(t * 50) * .05 * (.3 + k) : 0;
+  ctx.save(); ctx.translate(s / 2, y + h); ctx.rotate(shake); ctx.translate(-s / 2, -(y + h));
+  ctx.fillStyle = "#a8743f";
+  for (const side of [-1, 1]) {
+    const outer = side < 0 ? x : x + w, inner = x + w / 2, lift = h * .55 * f, flare = w * .14 * f * side;
+    ctx.beginPath(); ctx.moveTo(outer, y); ctx.lineTo(inner, y); ctx.lineTo(inner + flare * .3, y - lift - 3); ctx.lineTo(outer + flare, y - lift * .9 - 3); ctx.closePath(); ctx.fill();
   }
-  if (cracking) {
-    ectx.strokeStyle = "#6b5a40"; ectx.lineWidth = 5; ectx.lineJoin = "round"; ectx.beginPath(); ectx.moveTo(x + w * .08, y + h * .48);
-    for (let i = 0, px = .18; px <= .92; i++, px += .1) ectx.lineTo(x + w * px, y + h * (i % 2 ? .52 : .42));
-    ectx.stroke();
-  }
-  ectx.restore();
+  ctx.fillStyle = grad(ctx, y, y + h, "#ddaa6a", "#c8914f"); rr(ctx, x, y, w, h, s * .015, true);
+  if (f < .05) { ctx.fillStyle = "rgba(233,207,148,.95)"; ctx.fillRect(x + w / 2 - s * .02, y - 2, s * .04, h * .42); }
+  ctx.fillStyle = "rgba(255,255,255,.92)"; rr(ctx, x + w * .1, y + h * .46, w * .42, h * .36, 4, true);
+  ctx.fillStyle = "#2a2d33"; ctx.font = `800 ${s * .05}px ui-rounded,-apple-system,sans-serif`; ctx.textAlign = "center"; ctx.fillText("gobbl", x + w * .31, y + h * .67);
+  ctx.save(); ctx.translate(x + w * .78, y + h * .66); ctx.rotate(-.2); ctx.strokeStyle = ctx.fillStyle = "rgba(210,70,60,.9)"; ctx.lineWidth = 2;
+  rr(ctx, -s * .09, -s * .03, s * .18, s * .06, 3, false, true); ctx.font = `900 ${s * .03}px sans-serif`; ctx.fillText("FRAGILE", 0, s * .011); ctx.restore();
+  ctx.textAlign = "start";
+  ctx.restore();
 }
 
-let visible = true;
-new IntersectionObserver(es => es.forEach(e => visible = e.isIntersecting || visible)).observe(eggbox);
-function frame(now) {
-  const t = reduce ? 0 : now / 1000;
-  if (hero.until && now > hero.until) { hero.mood = null; hero.until = 0; }
-  drawGob(gctx, 220, t, hero);
-  if (state.phase === "egg" || state.phase === "crack") {
-    drawEgg(t, state.phase === "crack");
-    if (state.phase === "crack" && now - state.crackAt > 1300) {
-      state.pet = roll(); state.phase = "pet";
-      const tier = state.pet.shiny ? "shiny" : rarity(state.pet.weight);
-      const color = { common: "#b8bcc6", uncommon: "#a6f25c", rare: "#5b9cf6", legendary: "#f5c542", shiny: "#f5c542" }[tier];
-      result.innerHTML = `It's a ${state.pet.shiny ? "shiny " : ""}${state.pet.name}! <span class="chip" style="color:${color}">${tier.toUpperCase()}</span>`;
-    }
+function drawPet(ctx, s, t, o) {
+  if (o.boxUntil && performance.now() < o.boxUntil) { drawBox(ctx, s, t, 1 - (o.boxUntil - performance.now()) / 1200); return; }
+  ctx.clearRect(0, 0, s, s);
+  const m = o.mood || "idle";
+  const now = performance.now();
+  const ages = keyTimes.map(k => (now - k) / 1000).filter(a => a < 2);
+  const pulse = m === "type" && ages.length ? Math.max(0, 1 - ages[ages.length - 1] / .15) : 0;
+  const heat = ages.length / 14;
+  let sq = Math.sin(t * 2.2) * .012, dx = 0, dy = 0, tilt = 0;
+  if (m === "dance") { sq = Math.sin(t * 8) * .035; dx = Math.sin(t * 4) * s * .05; tilt = Math.sin(t * 4) * .12; }
+  if (m === "eating") sq = Math.abs(Math.sin(t * 14)) * .05;
+  if (m === "party") { dy = -Math.abs(Math.sin(t * 7)) * s * .1; sq = Math.cos(t * 14) * .025; }
+  if (m === "love") sq = Math.sin(t * 5) * .02;
+  if (m === "alert") dx = Math.sin(t * 40) * s * .012;
+  if (m === "work") dy = -Math.abs(Math.sin(t * 12)) * s * .01;
+  if (m === "think") tilt = Math.sin(t * 1.4) * .05;
+  if (m === "type") { dy = -pulse * s * .035; sq = pulse * .03; tilt = (Math.min(1, heat) - .5) * .06; }
+  if (o.open) sq = -.035 + Math.sin(t * 9) * .01;
+  const bx = s / 2 + dx, by = s * .95 + dy;
+  ctx.save();
+  ctx.translate(bx, by); ctx.rotate(tilt); ctx.translate(-bx, -by);
+  const p = palette(o), ch = o.char || "retro";
+  const parts = ch === "classic" ? classic(ctx, s, t, o, m, sq, bx, by, p) : ch === "candy" ? candy(ctx, s, t, o, m, sq, bx, by, p) : compact(ctx, s, t, o, m, sq, bx, by, p);
+  screen(ctx, s, t, o, m, parts.screen);
+  if (o.hat) hat(ctx, s, t, o.hat, parts.body);
+  if (o.shiny) for (let i = 0; i < 3; i++) { const q = (t * .7 + i / 3) % 1, a = i * 2.1 + .6; ctx.fillStyle = "#fff"; ctx.font = `${s * .12 * Math.sin(q * Math.PI) + 1}px sans-serif`; ctx.fillText("✦", parts.body.x + parts.body.w / 2 + Math.cos(a) * parts.body.w * .6, parts.body.y + parts.body.h / 2 + Math.sin(a) * parts.body.h * .62); }
+  ctx.restore();
+  if (s > 60) extras(ctx, s, t, m, parts.body, ages, heat);
+}
+
+function disk(ctx, t, o, slot, size) {
+  const q = o.open ? 0 : (t * 1.4) % 1;
+  ctx.fillStyle = "#3e6be0"; rr(ctx, slot.x + slot.w / 2 - size / 2, slot.y + slot.h / 2 - size * (1 - q), size, size * (1 - q), size * .06, true);
+}
+function compact(ctx, s, t, o, m, sq, bx, by, p) {
+  const k = sq, w = s * .7 * (1 + k), h = s * .8 * (1 - k), x = bx - w / 2, y = by - s * .02 - h;
+  ctx.fillStyle = p.dark; for (const side of [-1, 1]) rr(ctx, bx + side * w * .3 - w * .1, y + h - s * .01, w * .2, s * .04, s * .02, true);
+  ctx.fillStyle = grad(ctx, y, y + h, p.light, p.dark); rr(ctx, x, y, w, h, w * .13, true);
+  ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = Math.max(.5, s * .008); rr(ctx, x, y, w, h, w * .13, false, true);
+  const sc = { x: x + w * .13, y: y + h * .09, w: w * .74, h: h * .52 };
+  ctx.fillStyle = "rgba(0,0,0,.2)"; rr(ctx, sc.x - w * .035, sc.y - w * .035, sc.w + w * .07, sc.h + w * .07, w * .1, true);
+  const slot = { x: bx - w * .02, y: y + h * .76, w: w * .34, h: Math.max(1.5, h * .035) };
+  if (m === "eating" || o.open) disk(ctx, t, o, slot, w * .22);
+  ctx.fillStyle = "rgba(0,0,0,.6)"; rr(ctx, slot.x, slot.y, slot.w, slot.h, slot.h / 2, true);
+  const busy = ["eating", "work", "think"].includes(m);
+  ctx.fillStyle = busy && Math.sin(t * 20) > -.3 ? "#a6f25c" : "rgba(0,0,0,.25)"; rr(ctx, slot.x + slot.w - w * .07, slot.y + slot.h + h * .035, w * .05, Math.max(1, h * .022), 2, true);
+  ctx.fillStyle = "rgba(0,0,0,.18)"; for (let i = 0; i < 3; i++) rr(ctx, x + w * .13 + i * w * .05, slot.y - h * .01, Math.max(1, w * .018), h * .08, 1, true);
+  return { body: { x, y, w, h }, screen: sc };
+}
+function classic(ctx, s, t, o, m, sq, bx, by, p) {
+  const kw = s * .92 * (1 + sq), kh = s * .22 * (1 - sq), kx = bx - kw / 2, ky = by - kh;
+  ctx.fillStyle = grad(ctx, ky, ky + kh, p.light, p.dark);
+  ctx.beginPath(); ctx.moveTo(kx + kw * .07, ky); ctx.lineTo(kx + kw * .93, ky); ctx.lineTo(kx + kw, ky + kh * .8); ctx.quadraticCurveTo(kx + kw, ky + kh, kx + kw * .96, ky + kh);
+  ctx.lineTo(kx + kw * .04, ky + kh); ctx.quadraticCurveTo(kx, ky + kh, kx, ky + kh * .8); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "rgba(0,0,0,.2)";
+  for (let r = 0; r < (s > 60 ? 3 : 2); r++) {
+    const yy = ky + kh * (.25 + r * .22), inset = kw * (.13 - r * .015);
+    if (s > 60) { const n = 10, gap = kw * .012, keyW = (kw - 2 * inset - (n - 1) * gap) / n; for (let i = 0; i < n; i++) rr(ctx, kx + inset + i * (keyW + gap), yy, keyW, kh * .14, keyW * .2, true); }
+    else ctx.fillRect(kx + inset, yy, kw - 2 * inset, Math.max(1, kh * .12));
+  }
+  const mw = s * .66 * (1 + sq), mh = s * .56 * (1 - sq), mx = bx - mw / 2, my = ky - mh + s * .015;
+  ctx.fillStyle = grad(ctx, my, my + mh, p.light, p.dark); rr(ctx, mx, my, mw, mh, mw * .07, true);
+  ctx.strokeStyle = "rgba(255,255,255,.3)"; ctx.lineWidth = Math.max(.5, s * .008); rr(ctx, mx, my, mw, mh, mw * .07, false, true);
+  const sc = { x: mx + mw * .1, y: my + mh * .1, w: mw * .8, h: mh * .7 };
+  ctx.fillStyle = "rgba(0,0,0,.2)"; rr(ctx, sc.x - mw * .03, sc.y - mw * .03, sc.w + mw * .06, sc.h + mw * .06, mw * .06, true);
+  const slot = { x: kx + kw * .7, y: ky + kh * .06, w: kw * .18, h: Math.max(1.2, kh * .08) };
+  if (m === "eating" || o.open) disk(ctx, t, o, slot, kw * .12);
+  ctx.fillStyle = "rgba(0,0,0,.55)"; rr(ctx, slot.x, slot.y, slot.w, slot.h, slot.h / 2, true);
+  return { body: { x: mx, y: my, w: mw, h: mh }, screen: sc };
+}
+function candy(ctx, s, t, o, m, sq, bx, by, p) {
+  const w = s * .8 * (1 + sq), h = s * .76 * (1 - sq), x = bx - w / 2, y = by - s * .05 - h, r = w * .2;
+  ctx.fillStyle = p.dark; ctx.globalAlpha = .85; ctx.beginPath(); ctx.ellipse(bx, by - s * .035, w * .24, s * .035, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+  const shell = new Path2D();
+  shell.moveTo(x + r, y); shell.lineTo(x + w - r, y); shell.quadraticCurveTo(x + w, y, x + w, y + r);
+  shell.lineTo(x + w - w * .02, y + h * .7); shell.quadraticCurveTo(x + w - w * .06, y + h, bx, y + h);
+  shell.quadraticCurveTo(x + w * .06, y + h, x + w * .02, y + h * .7); shell.lineTo(x, y + r); shell.quadraticCurveTo(x, y, x + r, y); shell.closePath();
+  ctx.fillStyle = grad(ctx, y, y + h, p.light, p.dark); ctx.fill(shell);
+  ctx.save(); ctx.clip(shell);
+  if (s > 60) { ctx.fillStyle = "rgba(255,255,255,.13)"; for (let i = 0; i < 9; i++) ctx.fillRect(x + w * (.08 + i * .105), y + h * .72, w * .035, h * .3); }
+  ctx.fillStyle = "rgba(255,255,255,.16)"; ctx.beginPath(); ctx.ellipse(x + w * .35, y + h * .02, w * .45, h * .27, 0, 0, 7); ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = "rgba(255,255,255,.45)"; ctx.lineWidth = Math.max(.5, s * .009); ctx.stroke(shell);
+  const sc = { x: x + w * .15, y: y + h * .11, w: w * .7, h: h * .5 };
+  ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = Math.max(1, s * .02); rr(ctx, sc.x - w * .025, sc.y - w * .025, sc.w + w * .05, sc.h + w * .05, w * .11, false, true);
+  const slot = { x: bx - w * .16, y: y + h * .72, w: w * .32, h: Math.max(1.5, h * .03) };
+  if (m === "eating" || o.open) { const q = o.open ? 0 : (t * 1.4) % 1, d = w * .24; ctx.fillStyle = "#e9f4ff"; ctx.beginPath(); ctx.ellipse(bx, slot.y - d * (1 - q) / 2, d / 2, d * (1 - q) / 2, 0, 0, 7); ctx.fill(); }
+  ctx.fillStyle = "rgba(0,0,0,.45)"; rr(ctx, slot.x, slot.y, slot.w, slot.h, slot.h / 2, true);
+  if (s > 60) { ctx.fillStyle = "rgba(0,0,0,.3)"; for (const side of [-1, 1]) for (let rw = 0; rw < 2; rw++) for (let c = 0; c < 3; c++) { ctx.beginPath(); ctx.arc(bx + side * w * (.27 + c * .035), slot.y - h * .03 + rw * h * .05, s * .006, 0, 7); ctx.fill(); } }
+  return { body: { x, y, w, h }, screen: sc };
+}
+
+function screen(ctx, s, t, o, m, sc) {
+  const glass = new Path2D(); glass.roundRect(sc.x, sc.y, sc.w, sc.h, sc.w * .1);
+  const cg = ctx.createRadialGradient(sc.x + sc.w / 2, sc.y + sc.h / 2, 0, sc.x + sc.w / 2, sc.y + sc.h / 2, sc.w * .7);
+  cg.addColorStop(0, "#1f3a28"); cg.addColorStop(1, "#0a120d"); ctx.fillStyle = cg; ctx.fill(glass);
+  const ink = o.glow || "#a6f25c";
+  const f = { cx: sc.x + sc.w / 2, ey: sc.y + sc.h * .4, dx: sc.w * .2, r: sc.w * .075, my: sc.y + sc.h * .73, w: sc.w, h: sc.h };
+  const lw = Math.max(1.2, s * .03);
+  if (m === "work") {
+    ctx.save(); ctx.clip(glass); matrix(ctx, s, t, sc, ink); ctx.restore();
+    eyes(ctx, s, t, o, m, f, lw, "rgba(255,255,255,.92)");
   } else {
-    drawGob(ectx, 440, t, { hue: state.pet.hue, shiny: state.pet.shiny, mood: "party", look: hero.look, lookY: hero.lookY });
+    ctx.save(); if (s > 60) { ctx.shadowColor = ink; ctx.shadowBlur = s * .04; }
+    eyes(ctx, s, t, o, m, f, lw, ink); mouth(ctx, s, t, o, m, f, lw, ink); ctx.restore();
+    ctx.fillStyle = "rgba(255,111,165,.3)"; for (const side of [-1, 1]) rr(ctx, f.cx + side * f.dx * 1.6 - f.r, f.ey + f.r * 1.3, f.r * 2, f.r * .8, f.r * .3, true);
+    if (m === "think") for (let i = 0; i < 3; i++) { ctx.fillStyle = ink; ctx.globalAlpha = Math.floor(t * 3) % 3 === i ? 1 : .3; const d = Math.max(1.2, sc.w * .05); ctx.beginPath(); ctx.arc(sc.x + sc.w * .7 + i * d * 1.6 + d / 2, sc.y + sc.h * .84 + d / 2, d / 2, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+  }
+  if (s > 60) { ctx.fillStyle = "rgba(0,0,0,.22)"; for (let y = sc.y + s * .01; y < sc.y + sc.h - s * .005; y += s * .018) ctx.fillRect(sc.x + sc.w * .03, y, sc.w * .94, Math.max(.5, s * .004)); }
+  ctx.fillStyle = "rgba(255,255,255,.07)"; ctx.beginPath(); ctx.ellipse(sc.x + sc.w * .23, sc.y + sc.h * .13, sc.w * .15, sc.h * .07, 0, 0, 7); ctx.fill();
+}
+function matrix(ctx, s, t, sc, ink) {
+  const cell = Math.max(2.4, s * .045), cols = Math.max(4, Math.floor(sc.w / cell)), rows = Math.floor(sc.h / cell) + 1, colW = sc.w / cols;
+  ctx.font = `700 ${cell * .95}px ui-monospace,Menlo,monospace`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (let c = 0; c < cols; c++) {
+    const speed = 4 + (c * 7) % 6, offset = (c * 37) % 97, trail = 4 + (c * 5) % 5;
+    const head = Math.floor((t * speed + offset) % (rows + trail)), x = sc.x + (c + .5) * colW;
+    for (let k = 0; k < trail; k++) {
+      const r = head - k; if (r < 0 || r >= rows) continue;
+      const y = sc.y + (r + .5) * cell;
+      ctx.fillStyle = k === 0 ? "rgba(255,255,255,.95)" : ink; ctx.globalAlpha = k === 0 ? 1 : .85 * (1 - k / trail);
+      if (s > 60) ctx.fillText(GLYPHS[(c * 131 + r * 17 + Math.floor(t * 8)) % GLYPHS.length], x, y);
+      else ctx.fillRect(x - cell * .18, y - cell * .32, cell * .36, cell * .64);
+    }
+  }
+  ctx.globalAlpha = 1; ctx.textAlign = "start"; ctx.textBaseline = "alphabetic";
+}
+function heartPath(ctx, x, y, size) { const s = size / 2; ctx.beginPath(); ctx.moveTo(x, y + s * .8); ctx.bezierCurveTo(x - s * .4, y + s * .5, x - s, y + s * .2, x - s, y - s * .2); ctx.arc(x - s * .5, y - s * .25, s * .5, Math.PI, 0); ctx.arc(x + s * .5, y - s * .25, s * .5, Math.PI, 0); ctx.bezierCurveTo(x + s, y + s * .2, x + s * .4, y + s * .5, x, y + s * .8); ctx.fill(); }
+function eyes(ctx, s, t, o, m, f, lw, col) {
+  const blink = (t % 4.3) < .13, r = f.r;
+  ctx.strokeStyle = ctx.fillStyle = col; ctx.lineWidth = lw; ctx.lineCap = "round";
+  for (const side of [-1, 1]) {
+    const ex = f.cx + side * f.dx, ey = f.ey;
+    if (m === "party" || m === "dance" || m === "happy") { ctx.beginPath(); ctx.moveTo(ex - r, ey + r * .3); ctx.quadraticCurveTo(ex, ey - r * 1.2, ex + r, ey + r * .3); ctx.stroke(); }
+    else if (m === "love") { ctx.fillStyle = "#ff6fa5"; heartPath(ctx, ex, ey, r * 2.3); ctx.fillStyle = col; }
+    else if (m === "sleep") { ctx.beginPath(); ctx.moveTo(ex - r, ey); ctx.quadraticCurveTo(ex, ey + r * .9, ex + r, ey); ctx.stroke(); }
+    else if (blink && !o.open && m !== "think") { ctx.beginPath(); ctx.moveTo(ex - r, ey); ctx.lineTo(ex + r, ey); ctx.stroke(); }
+    else {
+      const big = (o.open || m === "alert" || m === "curious") ? 1.25 : 1, lid = m === "work" ? .5 : m === "think" ? .85 : 1;
+      const w = r * 1.5 * big, h = r * 2 * big * lid;
+      let px = ex + Math.max(-1, Math.min(1, o.look || 0)) * r * .45, py = ey + Math.max(-1, Math.min(1, o.lookY || 0)) * r * .35;
+      if (m === "work") { px = ex + Math.sin(t * 5) * r * .3; py = ey + r * .35; }
+      if (m === "type") { px = ex + Math.sin(t * 7) * r * .2; py = ey + r * .35; }
+      if (m === "think") { px = ex + r * .45; py = ey - r * .4; }
+      rr(ctx, px - w / 2, py - h / 2, w, h, w * .25, true);
+      if (m === "think" && side > 0) { ctx.beginPath(); ctx.moveTo(ex - r * .9, ey - r * 1.55); ctx.lineTo(ex + r * .9, ey - r * 2.05); ctx.stroke(); }
+    }
+  }
+}
+function mouth(ctx, s, t, o, m, f, lw, ink) {
+  const cx = f.cx, my = f.my;
+  ctx.strokeStyle = ctx.fillStyle = ink; ctx.lineWidth = lw;
+  if (m === "eating" || o.open) { const w = f.w * (o.open ? .32 : .28), h = o.open ? f.h * .24 : f.h * (.06 + Math.abs(Math.sin(t * 14)) * .16); ctx.beginPath(); ctx.ellipse(cx, my, w / 2, h / 2, 0, 0, 7); ctx.fill(); }
+  else if (m === "alert") { ctx.beginPath(); ctx.arc(cx, my, s * .035, 0, 7); ctx.fill(); }
+  else if (m === "think") { ctx.beginPath(); ctx.moveTo(cx - f.w * .05, my + f.h * .02); ctx.lineTo(cx + f.w * .07, my - f.h * .03); ctx.stroke(); }
+  else if (m === "sleep") { ctx.beginPath(); ctx.moveTo(cx - f.w * .05, my); ctx.lineTo(cx + f.w * .05, my); ctx.stroke(); }
+  else { const wide = ["happy", "love", "party", "dance"].includes(m) ? .13 : .08; ctx.beginPath(); ctx.moveTo(cx - f.w * wide, my - f.h * .02); ctx.quadraticCurveTo(cx, my + f.h * (wide > .1 ? .14 : .08), cx + f.w * wide, my - f.h * .02); ctx.stroke(); }
+}
+function hat(ctx, s, t, kind, b) {
+  const cx = b.x + b.w / 2, top = b.y;
+  if (kind === "party") { const x = cx - b.w * .18, y = top + s * .03; ctx.fillStyle = grad(ctx, y, y - s * .3, "#5b9cf6", "#9d7cf6"); ctx.beginPath(); ctx.moveTo(x - s * .11, y); ctx.lineTo(x + s * .03, y - s * .3); ctx.lineTo(x + s * .13, y + s * .01); ctx.fill(); ctx.fillStyle = "#ff6fa5"; ctx.beginPath(); ctx.arc(x + s * .03, y - s * .31, s * .035, 0, 7); ctx.fill(); }
+  if (kind === "crown") { const w = s * .24, h = s * .13, x = cx - w / 2, y = top + s * .01; ctx.fillStyle = "#f5c542"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - h); ctx.lineTo(x + w * .25, y - h * .5); ctx.lineTo(x + w * .5, y - h * 1.1); ctx.lineTo(x + w * .75, y - h * .5); ctx.lineTo(x + w, y - h); ctx.lineTo(x + w, y); ctx.fill(); }
+  if (kind === "beanie") { ctx.fillStyle = "#3e6be0"; ctx.beginPath(); ctx.moveTo(b.x + b.w * .12, top); ctx.quadraticCurveTo(cx, top - s * .28, b.x + b.w * .88, top); ctx.fill(); ctx.fillStyle = "#2b4fb5"; rr(ctx, b.x + b.w * .1, top - s * .02, b.w * .8, s * .07, s * .035, true); ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(cx, top - s * .15, s * .045, 0, 7); ctx.fill(); }
+  if (kind === "halo") { ctx.strokeStyle = "#f5c542"; ctx.lineWidth = Math.max(1.5, s * .03); ctx.beginPath(); ctx.ellipse(cx, top - s * .1 + Math.sin(t * 2) * s * .01, b.w * .3, s * .04, 0, 0, 7); ctx.stroke(); }
+  if (kind === "headphones") { ctx.strokeStyle = "#2a2d33"; ctx.lineWidth = s * .045; ctx.beginPath(); ctx.moveTo(b.x + b.w * .02, top + b.h * .35); ctx.quadraticCurveTo(cx, top - s * .24, b.x + b.w * .98, top + b.h * .35); ctx.stroke(); ctx.fillStyle = "#a6f25c"; rr(ctx, b.x - s * .05, top + b.h * .25, s * .1, s * .17, s * .04, true); rr(ctx, b.x + b.w - s * .05, top + b.h * .25, s * .1, s * .17, s * .04, true); }
+}
+function extras(ctx, s, t, m, b, ages, heat) {
+  const glyph = { sleep: ["z", "#fff"], love: ["♥", "#ff6fa5"], dance: ["♪", "#a6f25c"], alert: ["!", "#f5c542"] }[m];
+  if (glyph) for (let i = 0; i < 2; i++) { const q = (t * .6 + i * .5) % 1; ctx.globalAlpha = 1 - q; ctx.fillStyle = glyph[1]; ctx.font = `900 ${s * .15 * (.7 + q * .5)}px sans-serif`; ctx.fillText(glyph[0], b.x + b.w + s * .02 + q * s * .08, b.y + s * .02 - q * s * .25); ctx.globalAlpha = 1; }
+  if (m === "party") { const cs = ["#a6f25c", "#f5c542", "#ff6fa5", "#5b9cf6"]; for (let i = 0; i < 12; i++) { const q = (t * .9 + i / 12) % 1, a = i * .63; ctx.globalAlpha = 1 - q; ctx.fillStyle = cs[i % 4]; ctx.fillRect(b.x + b.w / 2 + Math.cos(a * 3) * s * .45 * q, b.y - s * .1 + q * q * s * .5 - Math.sin(a) * s * .2, s * .035, s * .05); } ctx.globalAlpha = 1; }
+  if (m === "think") {
+    ctx.fillStyle = "rgba(255,255,255,.92)";
+    ctx.beginPath(); ctx.arc(b.x + b.w - s * .02, b.y - s * .01, s * .018, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(b.x + b.w + s * .02, b.y - s * .06, s * .026, 0, 7); ctx.fill();
+    const x = b.x + b.w - s * .02, y = b.y - s * .22; rr(ctx, x, y, s * .26, s * .13, s * .065, true);
+    ctx.fillStyle = "#16161a"; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(x + s * .062 + i * s * .06, y + s * .065 - Math.max(0, Math.sin(t * 6 - i * .8)) * s * .015, s * .017, 0, 7); ctx.fill(); }
+  }
+  if (m === "type") {
+    const L = "ASDFJKLGHQWERTYUIOPZXCVBNM", k = s * .085;
+    ages.forEach((age, i) => {
+      if (age >= .9) return;
+      const q = age / .9, seed = (i * 97 + Math.floor((performance.now() / 1000 - age) * 10)) % 1000;
+      const side = seed % 2 ? 1 : -1, spread = (seed % 100) / 100;
+      const x = b.x + b.w / 2 + side * b.w * (.25 + .3 * spread) * q, y = b.y - s * .02 - q * s * .3 + q * q * s * .12;
+      ctx.save(); ctx.globalAlpha = 1 - q; ctx.translate(x, y); ctx.rotate(side * q * .8);
+      ctx.fillStyle = "#f4f4f6"; rr(ctx, -k / 2, -k / 2, k, k, k * .22, true);
+      ctx.fillStyle = "#2a2d33"; ctx.font = `700 ${k * .5}px ui-rounded,-apple-system,sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(L[seed % L.length], 0, 0);
+      ctx.restore();
+    });
+    if (heat >= .6) { ctx.font = `${s * .16}px sans-serif`; ctx.fillText("🔥", b.x - s * .08, b.y + s * .02); }
+  }
+}
+
+/* ---------- one animation loop for every visible pet ---------- */
+const pets = [];
+function addPet(canvas, state) {
+  const entry = { canvas, ctx: canvas.getContext("2d"), state, visible: true };
+  pets.push(entry);
+  new IntersectionObserver(es => es.forEach(e => entry.visible = e.isIntersecting)).observe(canvas);
+  return entry;
+}
+let mouse = { x: innerWidth / 2, y: innerHeight / 2 };
+addEventListener("pointermove", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+function frame(now) {
+  const t = reduce ? 1 : now / 1000;
+  for (const p of pets) {
+    if (!p.visible) continue;
+    const r = p.canvas.getBoundingClientRect();
+    p.state.look = Math.max(-1, Math.min(1, (mouse.x - (r.left + r.width / 2)) / 350));
+    p.state.lookY = Math.max(-1, Math.min(1, (mouse.y - (r.top + r.height / 2)) / 350));
+    if (p.state.until && now > p.state.until) { p.state.mood = p.state.rest || "idle"; p.state.until = 0; }
+    drawPet(p.ctx, p.canvas.width, t, p.state);
   }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+const react = (p, mood, ms) => { p.state.mood = mood; p.state.until = performance.now() + ms; };
+
+/* ---------- nav, progress, reveals, magnetic, tilt, counters ---------- */
+const progress = $("#progress"), nav = $("#nav");
+addEventListener("scroll", () => {
+  const max = document.documentElement.scrollHeight - innerHeight;
+  progress.style.transform = `scaleX(${scrollY / max})`;
+  nav.classList.toggle("small", scrollY > 60);
+}, { passive: true });
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .15 });
+$$(".reveal").forEach(el => io.observe(el));
+if (!reduce) {
+  $$(".magnetic").forEach(b => {
+    b.addEventListener("pointermove", e => { const r = b.getBoundingClientRect(); b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * .18}px,${(e.clientY - r.top - r.height / 2) * .28}px)`; });
+    b.addEventListener("pointerleave", () => b.style.transform = "");
+  });
+  $$(".card").forEach(c => {
+    c.addEventListener("pointermove", e => { const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height; c.style.transform = `perspective(900px) rotateX(${(.5 - y) * 8}deg) rotateY(${(x - .5) * 10}deg) translateZ(0)`; c.style.setProperty("--mx", x * 100 + "%"); c.style.setProperty("--my", y * 100 + "%"); });
+    c.addEventListener("pointerleave", () => c.style.transform = "");
+  });
+}
+const counter = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return; counter.unobserve(e.target);
+  const el = e.target, to = +el.dataset.count, pre = el.dataset.prefix || "", suf = el.dataset.suffix || "";
+  if (to === 0) { el.textContent = pre + "0" + suf; return; }
+  const t0 = performance.now(); (function tick(n) { const k = Math.min(1, (n - t0) / 1200), v = Math.round(to * (1 - Math.pow(1 - k, 3))); el.textContent = pre + v + suf; if (k < 1) requestAnimationFrame(tick); })(t0);
+}), { threshold: .6 });
+$$("[data-count]").forEach(el => counter.observe(el));
+$("#marquee").innerHTML += $("#marquee").innerHTML;
+
+/* ---------- confetti ---------- */
+const cv = $("#confetti"), cx = cv.getContext("2d"); let bits = [];
+function confetti(x, y, n = 90) {
+  if (reduce) return; cv.width = innerWidth; cv.height = innerHeight;
+  const cs = ["#a6f25c", "#f5c542", "#ff6fa5", "#5b9cf6", "#fff"];
+  for (let i = 0; i < n; i++) bits.push({ x, y, vx: (Math.random() - .5) * 14, vy: -Math.random() * 14 - 4, r: Math.random() * 6 + 3, c: cs[i % 5], a: Math.random() * 6, life: 1 });
+  if (bits.length === n) requestAnimationFrame(boom);
+}
+function boom() { cx.clearRect(0, 0, cv.width, cv.height); bits = bits.filter(b => b.life > 0); for (const b of bits) { b.x += b.vx; b.y += b.vy; b.vy += .45; b.a += .2; b.life -= .012; cx.save(); cx.globalAlpha = Math.max(0, b.life); cx.translate(b.x, b.y); cx.rotate(b.a); cx.fillStyle = b.c; cx.fillRect(-b.r / 2, -b.r / 4, b.r, b.r / 2); cx.restore(); } if (bits.length) requestAnimationFrame(boom); else cx.clearRect(0, 0, cv.width, cv.height); }
+
+/* ---------- notch devices ---------- */
+function device(mac, state) {
+  const notch = $("[data-notch]", mac), pet = addPet($(".mini", notch), state);
+  const tabs = $$(".tabs i", notch), order = ["shelf", "clip", "music", "agent", "tools"];
+  return {
+    notch, pet,
+    show(name) {
+      $$(".panel", notch).forEach(p => p.classList.toggle("on", p.dataset.panel === name));
+      tabs.forEach((tb, i) => tb.classList.toggle("on", order[i] === name));
+      const panel = $(`[data-panel="${name}"]`, notch); // replay the panel's entrance animations
+      $$(".tile,.row", panel).forEach(el => { el.style.animation = "none"; el.offsetHeight; el.style.animation = ""; });
+      const a = $(".agent", panel); if (a) a.classList.remove("ok");
+    },
+    open(v) { notch.classList.toggle("open", v); }
+  };
+}
+
+// Hero: a scripted demo that loops while it's on screen.
+const heroMac = $("#heroMac"), hero = device(heroMac, { hue: .30, mood: "idle", rest: "idle" });
+const cursor = $("#cursor"), flyer = $("#flyer"), srcFile = $('[data-f="1"]', heroMac);
+let heroVisible = true; new IntersectionObserver(es => heroVisible = es[0].isIntersecting, { threshold: .2 }).observe(heroMac);
+const moveTo = (el, x, y) => el.style.transform = `translate(${x}px,${y}px)`;
+async function heroLoop() {
+  await sleep(2400);
+  while (true) {
+    if (!heroVisible) { await sleep(600); continue; }
+    const scr = $(".screen", heroMac).getBoundingClientRect(), f = srcFile.getBoundingClientRect(), n = hero.notch.getBoundingClientRect();
+    const fx = f.left - scr.left + 7, fy = f.top - scr.top, nx = n.left - scr.left + n.width / 2 - 20, ny = 8;
+    moveTo(cursor, scr.width * .45, scr.height * .75); await sleep(700);
+    moveTo(cursor, fx + 22, fy + 26); await sleep(1100);
+    cursor.classList.add("click"); flyer.style.transition = "none"; moveTo(flyer, fx, fy); flyer.style.opacity = 1; srcFile.style.opacity = .25; await sleep(250); cursor.classList.remove("click");
+    flyer.style.transition = ""; moveTo(flyer, nx, ny + 30); moveTo(cursor, nx + 20, ny + 50);
+    await sleep(700); hero.notch.classList.add("drop"); hero.pet.state.open = true; await sleep(500);
+    flyer.style.opacity = 0; hero.notch.classList.remove("drop"); hero.pet.state.open = false; react(hero.pet, "eating", 1300);
+    await sleep(400); hero.show("shelf"); hero.open(true); srcFile.style.opacity = 1;
+    moveTo(cursor, scr.width * .72, scr.height * .6); await sleep(2600);
+    hero.show("music"); hero.pet.state.rest = "dance"; hero.pet.state.mood = "dance"; await sleep(3000);
+    hero.show("agent"); hero.pet.state.rest = "idle"; react(hero.pet, "alert", 2200); await sleep(1300);
+    const allow = $('[data-panel="agent"] .pill.go', hero.notch).getBoundingClientRect();
+    moveTo(cursor, allow.left - scr.left + 18, allow.top - scr.top + 8); await sleep(1100);
+    cursor.classList.add("click"); $('[data-panel="agent"] .pill.go', hero.notch).classList.add("pressed"); await sleep(200);
+    $('[data-panel="agent"] .pill.go', hero.notch).classList.remove("pressed"); $('[data-panel="agent"] .agent', hero.notch).classList.add("ok"); cursor.classList.remove("click");
+    react(hero.pet, "party", 2200); await sleep(2400);
+    hero.open(false); react(hero.pet, "happy", 1500); moveTo(cursor, scr.width * .8, scr.height * .82); await sleep(2800);
+  }
+}
+if (reduce) { hero.show("shelf"); hero.open(true); } else heroLoop();
+$("[data-notch]", heroMac).addEventListener("click", () => react(hero.pet, "love", 1600));
+
+// Story: the pinned Mac follows the step in view.
+const story = device($("#storyMac"), { hue: .30, mood: "idle", rest: "idle" });
+const stepIO = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  $$(".step").forEach(s => s.classList.toggle("active", s === e.target));
+  story.show(e.target.dataset.show);
+  const m = e.target.dataset.mood; story.pet.state.rest = m === "dance" ? "dance" : "idle"; react(story.pet, m, m === "dance" ? 1e9 : 1600);
+  if (m === "alert") setTimeout(() => { $('#storyMac [data-panel="agent"] .agent').classList.add("ok"); react(story.pet, "party", 2000); }, 1600);
+}), { threshold: .6, rootMargin: "-20% 0px -20% 0px" });
+$$(".step").forEach(s => stepIO.observe(s));
+
+// Agents: a terminal types a Claude Code session and Gob reacts.
+const agentPet = addPet($("#agentPet"), { hue: .30, mood: "idle", rest: "idle", char: "retro", hat: "headphones" });
+const term = $("#term"), status = $("#agentStatus");
+let agentStarted = false;
+new IntersectionObserver(es => { if (es[0].isIntersecting && !agentStarted) { agentStarted = true; agentLoop(); } }, { threshold: .4 }).observe(term);
+const setStatus = (text, cls) => { status.textContent = text; status.className = "status " + (cls || ""); };
+async function type(line, speed = 42) {
+  for (const ch of line) {
+    term.innerHTML = term.innerHTML.replace('<span class="caret"></span>', "") + ch + '<span class="caret"></span>';
+    keyTimes.push(performance.now()); react(agentPet, "type", 500); // Gob types along
+    await sleep(reduce ? 0 : speed);
+  }
+}
+const say = html => term.innerHTML = term.innerHTML.replace('<span class="caret"></span>', "") + html + '<span class="caret"></span>';
+async function agentLoop() {
+  while (true) {
+    term.innerHTML = '<span class="caret"></span>'; setStatus("Waiting for a prompt…"); agentPet.state.rest = "idle"; agentPet.state.mood = "idle";
+    say('<span class="p">❯</span> '); await type("add dark mode to the settings page");
+    say("\n"); await sleep(300); agentPet.state.until = 0; agentPet.state.rest = "think"; agentPet.state.mood = "think"; setStatus("Claude is thinking…", "work");
+    say('<span class="d">  ✻ Thinking…\n</span>'); await sleep(1800);
+    agentPet.state.rest = "work"; agentPet.state.mood = "work"; setStatus("Claude is coding", "work");
+    say('<span class="d">  ⏺ Reading src/settings/…\n</span>'); await sleep(900);
+    say('<span class="d">  ⏺ Editing Theme.swift, SettingsView.swift\n</span>'); await sleep(1400);
+    say('<span class="y">  ? Allow Bash: npm test --silent</span>  <span class="d">(answered in the notch)</span>\n'); react(agentPet, "alert", 1600); setStatus("Needs you, Allow in the notch", "need"); await sleep(1700);
+    say('<span class="p">  ✓ Allowed</span>\n'); agentPet.state.mood = "work"; setStatus("Claude is coding", "work"); await sleep(900);
+    say('<span class="d">  ⏺ 42 tests passed\n</span>'); await sleep(700);
+    say('<span class="p">  ✓ Done.</span> Dark mode is live.\n'); agentPet.state.rest = "idle"; react(agentPet, "party", 2600); setStatus("✓ Task done", "ok");
+    const r = $("#agentPet").getBoundingClientRect(); if (r.top < innerHeight && r.bottom > 0) confetti(r.left + r.width / 2, r.top + r.height / 3, 60);
+    await sleep(4200);
+  }
+}
+
+// Playground: computers, colours, hats, skins, mystery boxes.
+const play = addPet($("#playPet"), { hue: .30, mood: "idle", rest: "idle", char: "retro", hat: null });
+const stage = $("#stage"), tag = $("#playTag");
+stage.addEventListener("click", () => react(play, "love", 1600));
+const species = $("#species");
+SPECIES.forEach(([name, hue], i) => {
+  const b = document.createElement("button"); b.className = "sw" + (i === 1 ? " on" : ""); b.title = name; b.style.background = hsl(hue, 90, 65);
+  b.onclick = () => { $$(".sw", species).forEach(x => x.classList.remove("on")); b.classList.add("on"); play.state.hue = hue; delete play.state.top; delete play.state.bottom; delete play.state.face; tag.textContent = name; react(play, "happy", 900); };
+  species.appendChild(b);
+});
+const hats = $("#hats");
+[["none", "None"], ["party", "🎉 Party"], ["beanie", "🧢 Beanie"], ["headphones", "🎧 Headphones"], ["halo", "😇 Halo"], ["crown", "👑 Crown"]].forEach(([k, label], i) => {
+  const b = document.createElement("button"); b.className = "chip" + (i === 0 ? " on" : ""); b.textContent = label;
+  b.onclick = () => { $$(".chip", hats).forEach(x => x.classList.remove("on")); b.classList.add("on"); play.state.hat = k === "none" ? null : k; react(play, "happy", 900); };
+  hats.appendChild(b);
+});
+$$("#charSeg button").forEach(b => b.onclick = () => { $$("#charSeg button").forEach(x => x.classList.remove("on")); b.classList.add("on"); play.state.char = b.dataset.c; react(play, "party", 1200); });
+const skin = () => { play.state.top = $("#cTop").value; play.state.bottom = $("#cBot").value; play.state.face = $("#cFace").value; play.state.glow = $("#cFace").value === "#16161a" ? null : $("#cFace").value; tag.textContent = "Your skin"; };
+["cTop", "cBot", "cFace"].forEach(id => $("#" + id).addEventListener("input", skin));
+$("#saveSkin").onclick = () => {
+  skin();
+  const data = { format: 1, id: "my-gob", name: "My Gob", bodyTop: $("#cTop").value.toUpperCase(), bodyBottom: $("#cBot").value.toUpperCase(), face: $("#cFace").value.toUpperCase(), glow: $("#cFace").value.toUpperCase() };
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })); a.download = "My Gob.gobskin"; a.click();
+  react(play, "party", 1500);
+  track("skin_download");
+};
+$("#hatch").onclick = async e => {
+  let r = Math.random() * 100, pick = SPECIES[0];
+  for (const s of SPECIES) { if (r < s[2]) { pick = s; break; } r -= s[2]; }
+  const shiny = Math.random() < .01;
+  track("open_box");
+  // A random model too: computers ship, they don't hatch.
+  const models = { classic: "Classic", retro: "Compact", candy: "Candy" }, char = Object.keys(models)[Math.floor(Math.random() * 3)];
+  tag.textContent = "📦 Unboxing…"; play.state.boxUntil = performance.now() + 1200; await sleep(1200); play.state.boxUntil = 0;
+  play.state.char = char; $$("#charSeg button").forEach(b => b.classList.toggle("on", b.dataset.c === char));
+  delete play.state.top; delete play.state.bottom; delete play.state.face;
+  play.state.hue = pick[1]; play.state.shiny = shiny;
+  $$(".sw", species).forEach((x, i) => x.classList.toggle("on", SPECIES[i] === pick));
+  tag.innerHTML = `It's a ${shiny ? "limited-edition " : ""}${pick[0]} ${models[char]}! <span style="font-size:12px;letter-spacing:.12em;color:var(--lime)">${(shiny ? "limited" : rarity(pick[2])).toUpperCase()}</span>`;
+  stage.style.setProperty("--stage", hsl(pick[1], 80, 60).replace("hsl", "hsla").replace(")", ",.28)"));
+  react(play, "party", 2200);
+  const b = stage.getBoundingClientRect(); confetti(b.left + b.width / 2, b.top + b.height / 3);
+};
+
+// Final CTA pet waves (celebrates) when you reach it.
+const fin = addPet($("#finalPet"), { hue: .55, mood: "idle", rest: "idle", char: "candy", hat: "party" });
+
+// Type anywhere on the page and every pet on screen types along.
+addEventListener("keydown", e => {
+  if (e.repeat || e.metaKey || e.ctrlKey) return;
+  keyTimes.push(performance.now()); while (keyTimes.length > 30) keyTimes.shift();
+  for (const p of pets) if (p.visible && (!p.state.until || p.state.mood === "type")) react(p, "type", 800);
+});
+new IntersectionObserver(es => { if (es[0].isIntersecting) react(fin, "party", 2400); }, { threshold: .6 }).observe($("#finalPet"));
+$$('.final .btn').forEach(b => b.addEventListener("click", () => { const r = b.getBoundingClientRect(); confetti(r.left + r.width / 2, r.top); }));
+})();
 </script>
 </body>
 </html>

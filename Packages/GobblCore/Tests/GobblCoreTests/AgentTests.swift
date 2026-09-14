@@ -8,6 +8,7 @@ import Testing
     @Test func parsesClaudeLifecycle() {
         #expect(claude(#"{"hook_event_name":"UserPromptSubmit","session_id":"s1","cwd":"/src/gobbl"}"#)?.kind == .promptSubmitted)
         #expect(claude(#"{"hook_event_name":"PreToolUse","session_id":"s1","tool_name":"Bash"}"#)?.kind == .toolUse("Bash"))
+        #expect(claude(#"{"hook_event_name":"PostToolUse","session_id":"s1","tool_name":"Bash"}"#)?.kind == .toolFinished)
         #expect(claude(#"{"hook_event_name":"Stop","session_id":"s1","last_assistant_message":"All done"}"#)?.kind == .turnDone("All done"))
         #expect(claude(#"{"hook_event_name":"SessionEnd","session_id":"s1"}"#)?.kind == .sessionEnd)
         #expect(claude(#"{"hook_event_name":"UserPromptSubmit","session_id":"s1","cwd":"/src/gobbl"}"#)?.cwd == "/src/gobbl")
@@ -53,6 +54,23 @@ import Testing
         #expect(t.sessions[0].hostApp == "com.mitchellh.ghostty")
         #expect(t.apply(ev(.turnDone("ok")), now: t0) == .done("ok"))
         #expect(!t.anyWorking)
+    }
+
+    @Test func thinkingVersusCoding() {
+        var t = AgentTracker()
+        #expect(t.activity == .idle)
+        t.apply(ev(.promptSubmitted), now: t0)
+        #expect(t.activity == .thinking)
+        t.apply(ev(.toolUse("Edit")), now: t0)
+        #expect(t.activity == .coding)
+        t.apply(ev(.toolFinished), now: t0)
+        #expect(t.activity == .thinking)
+        t.apply(ev(.promptSubmitted, "s2"), now: t0)
+        t.apply(ev(.toolUse("Bash"), "s2"), now: t0)
+        #expect(t.activity == .coding) // any session coding wins
+        t.apply(ev(.turnDone(nil)), now: t0)
+        t.apply(ev(.turnDone(nil), "s2"), now: t0)
+        #expect(t.activity == .idle)
     }
 
     @Test func permissionThenResolve() {

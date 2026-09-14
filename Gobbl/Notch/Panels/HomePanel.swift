@@ -31,7 +31,7 @@ struct PetCorner: View {
                     .frame(height: 84)
             } else {
                 GobView(mood: pet.mood, genome: pet.genome, stage: pet.stats.stage, size: 84, hat: pet.hat,
-                        anticipating: anticipating, look: { pet.look })
+                        anticipating: anticipating, look: { pet.look }, lookY: { pet.lookY })
                     .onTapGesture { pet.send(.petted) }
                     .help("Pet \(pet.name)")
                     .contextMenu {

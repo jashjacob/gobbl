@@ -23,6 +23,7 @@ struct SettingsView: View {
     @AppStorage("basketEnabled") private var basketEnabled = true
     @AppStorage("lyricsEnabled") private var lyricsEnabled = false
     @AppStorage("airpodsHUD") private var airpodsHUD = false
+    @AppStorage("reactToTyping") private var reactToTyping = false
     @AppStorage("clipboardEnabled") private var clipboardEnabled = true
     @AppStorage("calendarEnabled") private var calendarEnabled = true
     @AppStorage(PetModel.Keys.hidden) private var petHidden = false
@@ -79,10 +80,21 @@ struct SettingsView: View {
                 LabeledContent("Streak", value: "\(pet.stats.streak) days (best \(pet.stats.longestStreak))")
                 Toggle("Show pet", isOn: Binding(get: { !petHidden }, set: { petHidden = !$0 }))
                 Toggle("Quiet mode", isOn: $petQuiet)
+                Toggle(isOn: $reactToTyping) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("React when I type")
+                        Text("Bounces along as you type anywhere. Needs Accessibility; only counts key presses, never which keys.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                .onChange(of: reactToTyping) { _, on in
+                    if on && !MediaKeyTap.isTrusted { MediaKeyTap.requestTrust() }
+                    TypingMonitor.apply()
+                }
                 HStack {
                     Button("Share Pet Card…") { PetCard.share() }
                     Spacer()
-                    Button("Hatch a New Egg…") { confirmRehatch = true }
+                    Button("Unbox a New Computer…") { confirmRehatch = true }
                 }
             } header: {
                 Text("Pet")
@@ -192,12 +204,18 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 500, height: 620)
-        .onReceive(poll) { _ in trusted = MediaKeyTap.isTrusted }
+        .onReceive(poll) { _ in
+            let now = MediaKeyTap.isTrusted
+            guard now != trusted else { return }
+            trusted = now
+            HUDService.apply()
+            TypingMonitor.apply()
+        }
         .sheet(isPresented: $showSkinEditor) { SkinEditor() }
-        .confirmationDialog("Hatch a new egg?", isPresented: $confirmRehatch) {
-            Button("Hatch", role: .destructive) { pet.rehatch() }
+        .confirmationDialog("Unbox a new computer?", isPresented: $confirmRehatch) {
+            Button("Unbox", role: .destructive) { pet.rehatch() }
         } message: {
-            Text("\(pet.name), their level and their stats are replaced by a new pet. This can't be undone.")
+            Text("\(pet.name), their level and their stats are replaced by a fresh computer in a random colour. This can't be undone.")
         }
     }
 }

@@ -74,7 +74,7 @@ final class AgentHub {
         finish(prompt)
         HUDModel.shared.show(.init(symbol: allow ? "checkmark.circle.fill" : "xmark.circle.fill",
                                    label: allow ? "Allowed" : "Denied", tint: allow ? Palette.accent : .red), for: 1.5)
-        if allow { PetModel.shared.send(.agentsWorking(true)) }
+        PetModel.shared.send(.agentActivity(tracker.activity))
     }
 
     /// No answer: Claude Code asks in the terminal as usual.
@@ -105,7 +105,7 @@ final class AgentHub {
         }
         // The prompt was just typed, so the frontmost app is the terminal or editor running the agent.
         let host = event.kind == .promptSubmitted ? NSWorkspace.shared.frontmostApplication?.bundleIdentifier : nil
-        let wasWorking = tracker.anyWorking
+        let activityBefore = tracker.activity
         let effect = tracker.apply(event, hostApp: host)
         let project = tracker.sessions.first { $0.id == event.sessionID }?.project ?? source.displayName
 
@@ -134,7 +134,8 @@ final class AgentHub {
         case .startedWorking, .none:
             break
         }
-        if tracker.anyWorking != wasWorking { PetModel.shared.send(.agentsWorking(tracker.anyWorking)) }
+        // Thinking (reasoning) and coding (running tools) look different on Gob's screen.
+        if tracker.activity != activityBefore { PetModel.shared.send(.agentActivity(tracker.activity)) }
         scheduleExpiry()
     }
 
@@ -158,9 +159,9 @@ final class AgentHub {
         let t = Timer(timeInterval: 30, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self else { return }
-                let wasWorking = self.tracker.anyWorking
+                let before = self.tracker.activity
                 self.tracker.expire()
-                if self.tracker.anyWorking != wasWorking { PetModel.shared.send(.agentsWorking(self.tracker.anyWorking)) }
+                if self.tracker.activity != before { PetModel.shared.send(.agentActivity(self.tracker.activity)) }
                 self.scheduleExpiry()
             }
         }

@@ -346,8 +346,11 @@ final class NotchController {
         }
         let pet = PetModel.shared
         pet.wakeIfSleeping()
-        if let near {
-            pet.look = max(-1, min(1, (p.x - near.state.geometry.centerX) / 250))
+        // Gob's eyes follow the pointer anywhere on screen, measured from the notch.
+        if let anchor = near ?? windows.values.first(where: \.isVisible) {
+            let g = anchor.state.geometry
+            pet.pointerMoved(look: max(-1, min(1, (p.x - g.centerX) / 500)),
+                             lookY: max(-1, min(1, (g.screenTop - g.barHeight - p.y) / 450)))
         }
         if (near != nil) != cursorNear {
             cursorNear = near != nil

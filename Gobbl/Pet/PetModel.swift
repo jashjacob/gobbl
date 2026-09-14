@@ -26,6 +26,14 @@ final class PetModel {
     /// −1…1: where the cursor is, horizontally, relative to Gob. Read every
     /// animation frame, so it is not observed (no SwiftUI invalidation per mouse move).
     @ObservationIgnored var look: CGFloat = 0
+    /// −1…1: pointer above (−) or below (+) the notch.
+    @ObservationIgnored var lookY: CGFloat = 0
+    /// True while the pointer is moving, so the tiny notch pet animates its
+    /// eyes then and drops back to blink-only redraws when the mouse rests.
+    private(set) var lookActive = false
+    @ObservationIgnored private var lookRestTask: Task<Void, Never>?
+    /// Recent key presses (times only — never which key), for the typing animation.
+    @ObservationIgnored private(set) var keyTimes: [Date] = []
     /// DEBUG `--mood`: pins the drawn mood, for screenshots.
     @ObservationIgnored var debugMood: Mood? {
         didSet { refresh() }
@@ -49,7 +57,8 @@ final class PetModel {
         self.genome = genome
         self.brain = brain
         hat = Wardrobe.owned(stats: stats, date: Date()).contains(savedHat) ? savedHat : .none
-        character = d.string(forKey: Keys.character).flatMap(PetCharacter.init(rawValue:)) ?? .gob
+        // "gob" (the retired blob) and anything unknown become the default computer.
+        character = d.string(forKey: Keys.character).flatMap(PetCharacter.init(rawValue:)) ?? .defaultCharacter
         skinID = d.string(forKey: Keys.skin)
         save()
     }
@@ -83,6 +92,34 @@ final class PetModel {
         checkWardrobe()
         if brain.stats != before { save() }
         refresh()
+    }
+
+    /// Every pointer move: where Gob should look.
+    func pointerMoved(look: CGFloat, lookY: CGFloat) {
+        self.look = look
+        self.lookY = lookY
+        if !lookActive { lookActive = true }
+        lookRestTask?.cancel()
+        lookRestTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1.2))
+            guard !Task.isCancelled else { return }
+            self?.lookActive = false
+        }
+    }
+
+    /// A key press anywhere (from TypingMonitor).
+    func keyPressed() {
+        let now = Date()
+        keyTimes.append(now)
+        keyTimes.removeAll { now.timeIntervalSince($0) > 2 }
+        brain.quiet = defaults.bool(forKey: Keys.quiet)
+        brain.handle(.keyPressed, now: now)
+        refresh()
+    }
+
+    /// 0–1: how fast the user is typing (≈ 7 keys/s and up is 1).
+    func typingHeat(at now: Date) -> Double {
+        Double(keyTimes.filter { now.timeIntervalSince($0) < 2 }.count) / 14
     }
 
     /// Called on user input: a sleeping Gob wakes straight away rather than at the next sample.

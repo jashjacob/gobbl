@@ -3,7 +3,7 @@ import GobblCore
 import ServiceManagement
 import SwiftUI
 
-/// First run: hatch the egg (the reveal people screenshot), grant optional
+/// First run: unbox the computer (the reveal people screenshot), grant optional
 /// permissions, learn the three gestures. Every permission is skippable.
 @MainActor
 enum Onboarding {
@@ -49,7 +49,7 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             Group {
                 switch step {
-                case 0: HatchStep { withAnimation(.gob) { step = 1 } }
+                case 0: UnboxStep { withAnimation(.gob) { step = 1 } }
                 case 1: PermissionsStep()
                 default: TipsStep()
                 }
@@ -92,122 +92,6 @@ struct PrimaryButtonStyle: ButtonStyle {
             .background(Capsule().fill(Palette.accent))
             .scaleEffect(configuration.isPressed ? 0.96 : 1)
             .animation(.gob, value: configuration.isPressed)
-    }
-}
-
-// MARK: - Hatch
-
-private struct HatchStep: View {
-    let next: () -> Void
-    @State private var pet = PetModel.shared
-    @State private var phase = 0 // 0 egg, 1 cracking, 2 hatched
-    @AppStorage(PetModel.Keys.name) private var name = "Gob"
-
-    var body: some View {
-        VStack(spacing: 14) {
-            ZStack {
-                if phase < 2 {
-                    EggView(hue: pet.genome.species.hue, cracking: phase == 1)
-                        .frame(width: 140, height: 170)
-                        .transition(.scale(scale: 1.3).combined(with: .opacity))
-                } else {
-                    GobView(mood: pet.mood, genome: pet.genome, stage: 0, size: 180)
-                        .onTapGesture { pet.send(.petted) }
-                        .transition(.scale(scale: 0.2).combined(with: .opacity))
-                }
-            }
-            .frame(height: 200)
-
-            if phase < 2 {
-                Text("Something's hatching…").font(.system(size: 24, weight: .bold, design: .rounded))
-                Text("A little creature wants to move into your notch.")
-                    .font(.system(size: 13.5)).foregroundStyle(Palette.textSecondary)
-                Button("Hatch it") { hatch() }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .disabled(phase == 1)
-                    .padding(.top, 8)
-            } else {
-                HStack(spacing: 10) {
-                    Text("It's a \(pet.genome.shiny ? "shiny " : "")\(pet.genome.species.displayName)!")
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
-                    RarityChip(rarity: pet.genome.rarity, shiny: pet.genome.shiny)
-                }
-                Text(rarityLine).font(.system(size: 13)).foregroundStyle(Palette.textSecondary)
-                Picker("", selection: Binding(get: { pet.character }, set: { pet.character = $0 })) {
-                    ForEach(PetCharacter.allCases) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(width: 240)
-                HStack(spacing: 10) {
-                    TextField("Name", text: $name)
-                        .textFieldStyle(.roundedBorder)
-                        .multilineTextAlignment(.center)
-                        .frame(width: 170)
-                    Button("That's my pet", action: next)
-                        .buttonStyle(PrimaryButtonStyle())
-                        .keyboardShortcut(.defaultAction)
-                }
-                .padding(.top, 8)
-            }
-        }
-    }
-
-    private var rarityLine: String {
-        if pet.genome.shiny { return "Only 1 in 100 eggs hatch shiny. Show it off." }
-        switch pet.genome.species.rarity {
-        case .legendary: return "1 in 100 eggs. You lucky thing."
-        case .rare: return "Only 1 in 20 eggs hatch one of these."
-        case .uncommon: return "1 in 10 eggs. Nice."
-        case .common: return "Give them a name. You can pet them any time."
-        }
-    }
-
-    private func hatch() {
-        withAnimation(.easeIn(duration: 0.2)) { phase = 1 }
-        Task {
-            try? await Task.sleep(for: .seconds(1.5))
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.55)) { phase = 2 }
-            pet.send(.celebrate)
-        }
-    }
-}
-
-/// A speckled egg that wobbles, then shakes and cracks.
-private struct EggView: View {
-    let hue: Double
-    let cracking: Bool
-
-    var body: some View {
-        TimelineView(.animation) { context in
-            let t = context.date.timeIntervalSinceReferenceDate
-            // Idle: a wobble every couple of seconds. Cracking: a fast shake.
-            let wobble = cracking ? sin(t * 38) * 0.14 : sin(t * 9) * 0.08 * max(0, sin(t * 1.3))
-            Canvas { c, size in
-                let w = size.width, h = size.height
-                var egg = Path()
-                egg.move(to: CGPoint(x: w / 2, y: 0))
-                egg.addCurve(to: CGPoint(x: w, y: h * 0.62), control1: CGPoint(x: w * 0.86, y: 0), control2: CGPoint(x: w, y: h * 0.32))
-                egg.addCurve(to: CGPoint(x: w / 2, y: h), control1: CGPoint(x: w, y: h * 0.88), control2: CGPoint(x: w * 0.78, y: h))
-                egg.addCurve(to: CGPoint(x: 0, y: h * 0.62), control1: CGPoint(x: w * 0.22, y: h), control2: CGPoint(x: 0, y: h * 0.88))
-                egg.addCurve(to: CGPoint(x: w / 2, y: 0), control1: CGPoint(x: 0, y: h * 0.32), control2: CGPoint(x: w * 0.14, y: 0))
-                c.fill(egg, with: .linearGradient(Gradient(colors: [Color(hex: 0xFFF6E6), Color(hex: 0xE9D9BE)]),
-                                                  startPoint: .zero, endPoint: CGPoint(x: w, y: h)))
-                for (x, y, r) in [(0.3, 0.35, 0.07), (0.62, 0.25, 0.05), (0.68, 0.6, 0.08), (0.36, 0.72, 0.05), (0.5, 0.5, 0.04)] {
-                    c.fill(Path(ellipseIn: CGRect(x: w * x - w * r, y: h * y - w * r, width: w * r * 2, height: w * r * 2)),
-                           with: .color(Color(hue: hue, saturation: 0.55, brightness: 0.95)))
-                }
-                if cracking {
-                    var crack = Path()
-                    crack.move(to: CGPoint(x: w * 0.08, y: h * 0.48))
-                    for (i, x) in stride(from: 0.18, through: 0.92, by: 0.1).enumerated() {
-                        crack.addLine(to: CGPoint(x: w * x, y: h * (i.isMultiple(of: 2) ? 0.42 : 0.52)))
-                    }
-                    c.stroke(crack, with: .color(Color(hex: 0x6B5A40)), style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
-                }
-            }
-            .rotationEffect(.radians(wobble), anchor: .bottom)
-        }
     }
 }
 

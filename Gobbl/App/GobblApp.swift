@@ -49,6 +49,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             AgentHub.shared.start()
             SystemEvents.shared.start()
             HUDService.apply()
+            TypingMonitor.apply()
             _ = Updater.shared // starts Sparkle's scheduled checks
             RemoteFlags.refresh()
             if let clipboard = HotKey(keyCode: kVK_Space, modifiers: cmdKey | shiftKey, id: 1, action: {
@@ -81,6 +82,47 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                                  gif: dir.appendingPathComponent("\(scene.rawValue).gif"))
                     exit(0)
                 }
+            }
+            if let i = args.firstIndex(of: "--render-pets"), i + 1 < args.count {
+                // Review sheet: every character in the key moods, as one PNG.
+                let moods: [Mood] = [.idle, .eating, .thinking, .working, .love, .celebrating, .sleeping]
+                let genome = PetModel.shared.genome
+                let sheet = VStack(spacing: 14) {
+                    ForEach(PetCharacter.allCases) { character in
+                        HStack(spacing: 14) {
+                            ForEach(moods, id: \.self) { mood in
+                                VStack(spacing: 4) {
+                                    GobView(mood: mood, genome: genome, stage: 1, size: 130, hat: .none, character: character,
+                                            skin: nil, time: 1.3)
+                                    Text("\(character.title) · \(mood.rawValue)").font(.caption).foregroundStyle(.white)
+                                }
+                            }
+                        }
+                    }
+                    HStack(spacing: 6) {
+                        // Unboxing, frame by frame.
+                        ForEach([-1.0, 0.3, 0.9, 1.4, 2.0, 2.6, 3.2, 4.0], id: \.self) { e in
+                            UnboxScene(elapsed: e, t: 1.3, pet: PetModel.shared)
+                                .scaleEffect(0.62)
+                                .frame(width: 165, height: 158)
+                        }
+                    }
+                    HStack(spacing: 14) {
+                        ForEach(Species.allCases, id: \.self) { species in
+                            GobView(mood: .happy, genome: PetGenome(seed: 0, species: species, shiny: false), stage: 0, size: 100,
+                                    hat: .party, character: .candy, skin: nil, time: 1.3)
+                        }
+                    }
+                }
+                .padding(24)
+                .background(Color.black)
+                let renderer = ImageRenderer(content: sheet)
+                renderer.scale = 2
+                if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
+                   let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {
+                    try? png.write(to: URL(fileURLWithPath: args[i + 1]))
+                }
+                exit(0)
             }
             if args.contains("--onboarding") { Onboarding.show() }
             #endif
