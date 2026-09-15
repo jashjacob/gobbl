@@ -104,15 +104,74 @@ if (demos.length) {
   }
 }
 
-// Download prompt: pay what you want, or download free. Skipped once someone has paid
-// (/thanks sets the flag) and for modified clicks. Its choices are buttons, not links, so
-// the head's "download_clicked" handler counts each download intent once.
+// Download prompt: pay what you want, or download free. "Pay" embeds Dodo Payments' checkout
+// in the dialog (session from /api/support-checkout); on success it thanks them and starts
+// the download. Skipped once someone has paid (this, or /thanks, sets the flag) and for
+// modified clicks. Choices are buttons, not links, so the head's "download_clicked" handler
+// counts each download intent once.
 const paid = () => { try { return localStorage.getItem("gobbl_paid") === "1"; } catch (_) { return false; } };
-let dlg;
+const markPaid = () => { try { localStorage.setItem("gobbl_paid", "1"); } catch (_) {} };
+const choose = choice => {
+  track("download_choice", { choice });
+  try { window.posthog && posthog.capture("download_choice", { choice }); } catch (_) {}
+};
+const SDK = "/js/vendor/dodo-checkout-1.9.9.js";
+let sdk;
+const loadSdk = () => sdk || (sdk = new Promise((ok, fail) => {
+  const s = document.createElement("script"); s.src = SDK; s.onload = ok; s.onerror = () => { sdk = null; fail(); };
+  document.head.appendChild(s);
+}));
+// Dodo reports the result as a status, or as a redirect URL carrying ?status=.
+const statusOf = d => {
+  const m = (d && (d.message || d)) || {};
+  if (typeof m.status === "string") return m.status;
+  try { return new URL(m.redirect_to).searchParams.get("status"); } catch (_) { return null; }
+};
+let dlg, dodoMode;
+const view = name => {
+  dlg.querySelectorAll("[data-view]").forEach(v => v.hidden = v.dataset.view !== name);
+  dlg.classList.toggle("wide", name === "checkout");
+};
+const download = () => { location.href = "/download"; };
+const thank = () => {
+  if (dlg.dataset.done) return; dlg.dataset.done = "1";
+  markPaid(); choose("paid");
+  view("thanks");
+  setTimeout(download, 900);
+};
+const startCheckout = async () => {
+  view("checkout");
+  const frame = dlg.querySelector("#pay-frame"), note = dlg.querySelector(".pay-note");
+  frame.innerHTML = ""; note.textContent = "Loading secure checkout…"; note.hidden = false;
+  try {
+    const [res] = await Promise.all([fetch("/api/support-checkout", { method: "POST" }), loadSdk()]);
+    if (!res.ok) throw new Error("session");
+    const { checkout_url, mode } = await res.json();
+    const Dodo = window.DodoPaymentsCheckout.DodoPayments;
+    if (dodoMode !== mode) {
+      Dodo.Initialize({ mode, displayType: "inline", onEvent: e => {
+        if (e.event_type === "checkout.form_ready" || e.event_type === "checkout.opened") note.hidden = true;
+        if (/^checkout\.(status|redirect|redirect_requested)$/.test(e.event_type) && statusOf(e.data) === "succeeded") thank();
+        if (e.event_type === "checkout.error") { note.textContent = "Checkout hit a snag. Try again, or download free."; note.hidden = false; }
+      } });
+      dodoMode = mode;
+    }
+    Dodo.Checkout.open({ checkoutUrl: checkout_url, elementId: "pay-frame", options: { manualRedirect: true, showTimer: false } });
+  } catch (_) {
+    // Checkout couldn't load here: fall back to Dodo's hosted page in a new tab.
+    note.innerHTML = 'Checkout couldn’t load here. <a class="link" href="/support" target="_blank" rel="noopener">Open it in a new tab</a>, or download free.';
+    note.hidden = false;
+  }
+};
 const payPrompt = () => {
   if (!dlg) {
     const css = document.createElement("style");
-    css.textContent = `dialog.pay{width:min(440px,calc(100% - 32px));padding:32px 28px 24px;border-radius:24px;background:var(--surface,#131418);color:var(--text,#f2f3f5);border:1px solid var(--line2,rgba(255,255,255,.15));box-shadow:0 40px 80px -30px #000;text-align:center}
+    css.textContent = `dialog.pay{width:min(440px,calc(100% - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:32px 28px 24px;border-radius:24px;background:var(--surface,#131418);color:var(--text,#f2f3f5);border:1px solid var(--line2,rgba(255,255,255,.15));box-shadow:0 40px 80px -30px #000;text-align:center}
+dialog.pay.wide{width:min(560px,calc(100% - 32px));padding:28px 20px 20px}
+dialog.pay #pay-frame{min-height:120px;margin:0 0 14px;text-align:left}
+dialog.pay .pay-note{font-size:14px;color:var(--muted,#a3a9b1);margin:0 0 14px}
+dialog.pay .back{font-size:14px;color:var(--muted,#a3a9b1);text-decoration:underline;text-underline-offset:3px}
+dialog.pay .back:hover{color:var(--text,#f2f3f5)}
 dialog.pay::backdrop{background:rgba(0,0,0,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 dialog.pay[open]{animation:payIn .3s var(--spring,ease)}
 @keyframes payIn{from{opacity:0;transform:scale(.94)}}
@@ -127,23 +186,28 @@ dialog.pay .x:hover{background:rgba(255,255,255,.08);color:var(--text,#f2f3f5)}`
     dlg = document.createElement("dialog");
     dlg.className = "pay";
     dlg.setAttribute("aria-labelledby", "pay-h");
-    dlg.innerHTML = `<h2 id="pay-h">Gobbl is free.</h2>
+    dlg.innerHTML = `<div data-view="choose"><h2 id="pay-h">Gobbl is free.</h2>
 <p>If it earns a spot in your notch, you can pay what you want. We suggest $20, one time. It unlocks nothing: it keeps Gobbl free and open source.</p>
 <div class="cta"><button type="button" class="btn primary" data-choice="pay" autofocus>Pay what you want</button><button type="button" class="btn ghost" data-choice="free">Download free</button></div>
-<p class="fine">Paying opens checkout in a new tab. Your download starts either way.</p>
+<p class="fine">Pay right here. Your download starts as soon as you&rsquo;re done.</p></div>
+<div data-view="checkout" hidden><p class="pay-note" role="status"></p><div id="pay-frame"></div>
+<button type="button" class="back" data-choice="free">Skip and download free</button></div>
+<div data-view="thanks" hidden><h2>Thank you!</h2>
+<p>Your support keeps Gobbl free and open source. Your download is starting, and Dodo Payments has emailed you a receipt.</p>
+<p class="fine">Download didn&rsquo;t start? <a class="link" href="/download">Download Gobbl</a></p></div>
 <button type="button" class="x" aria-label="Close">&times;</button>`;
     document.body.appendChild(dlg);
     dlg.addEventListener("click", e => {
-      if (e.target === dlg || e.target.closest(".x")) { dlg.close(); return; }
+      if (e.target === dlg && !dlg.classList.contains("wide") || e.target.closest(".x")) { dlg.close(); return; }
       const b = e.target.closest("[data-choice]"); if (!b) return;
-      const choice = b.dataset.choice;
-      track("download_choice", { choice });
-      try { window.posthog && posthog.capture("download_choice", { choice }); } catch (_) {}
-      if (choice === "pay") window.open("/support", "_blank", "noopener");
-      dlg.close();
-      location.href = "/download";
+      if (b.dataset.choice === "pay") { choose("pay"); startCheckout(); return; }
+      choose("free"); dlg.close(); download();
     });
+    // Leaving mid-checkout drops the embedded frame; the next open starts over.
+    dlg.addEventListener("close", () => { try { window.DodoPaymentsCheckout.DodoPayments.Checkout.close(); } catch (_) {} dlg.querySelector("#pay-frame").innerHTML = ""; });
   }
+  delete dlg.dataset.done;
+  view("choose");
   dlg.showModal();
 };
 document.addEventListener("click", e => {

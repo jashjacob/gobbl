@@ -74,4 +74,5 @@ HEADERS
 
 CLOUDFLARE_API_TOKEN="$(grep '^CF_XEVE_API_TOKEN=' ~/.secrets/cloudflare.env | cut -d= -f2-)" \
 CLOUDFLARE_ACCOUNT_ID="$(grep '^CF_XEVE_ACCOUNT_ID=' ~/.secrets/cloudflare.env | cut -d= -f2-)" \
-  wrangler pages deploy "$OUT" --project-name gobbl --branch "$BRANCH" --commit-dirty=true
+  wrangler pages deploy "$OUT" --cwd "$ROOT/server/site" --project-name gobbl --branch "$BRANCH" --commit-dirty=true
+# (--cwd picks up server/site/functions: /api/support-checkout needs the DODO_API_KEY Pages secret.)
