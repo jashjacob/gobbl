@@ -20,6 +20,17 @@ Free and open source, by [Xeve](https://xeve.io). Site: https://gobbl.xeve.io
 - **Tools:** focus timer, keep-awake, mic mute, color picker, copy text from the screen; audio output picker and optional synced lyrics (lrclib.net) on the music card.
 - Pill mode on Macs without a notch and on external displays; hides for full-screen apps.
 
+## Install
+
+Download the DMG from [gobbl.xeve.io](https://gobbl.xeve.io/download) or [GitHub releases](https://github.com/xeveio/gobbl/releases), or use Homebrew:
+
+```sh
+brew trust xeveio/tap        # Homebrew 7+ asks you to trust third-party taps once
+brew install --cask xeveio/tap/gobbl
+```
+
+Gobbl updates itself (Sparkle). macOS 14 or later.
+
 ## Build
 
 Requires Xcode 26 and [XcodeGen](https://github.com/yonaskolb/XcodeGen).

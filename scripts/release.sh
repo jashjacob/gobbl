@@ -234,7 +234,7 @@ cask "gobbl" do
   url "${PUBLIC_BASE}/Gobbl-#{version}.dmg"
   name "Gobbl"
   desc "Notch utility with a pet: file shelf, clipboard, music and more"
-  homepage "https://gobbl.xeve.io"
+  homepage "https://gobbl.xeve.io/"
 
   livecheck do
     url "${PUBLIC_BASE}/appcast.xml"
@@ -242,7 +242,7 @@ cask "gobbl" do
   end
 
   auto_updates true
-  depends_on macos: ">= :sonoma"
+  depends_on macos: :sonoma
 
   app "Gobbl.app"
 
