@@ -3,7 +3,7 @@
 > Gobbl is a free, open-source (MIT) notch app for Mac, made by Xeve (https://xeve.io). It lives in the MacBook notch with a pet mascot, Gob: a small retro computer with a face on its screen, in three models (Classic, Compact, Candy). It runs on macOS 14 or later. Macs without a notch get a pill at the top of the screen instead. There is no Windows or Linux version.
 
 Key facts:
-- Price: free. The AI features (writing, chat, briefs, Polish with AI, Memory to-dos) are free during the beta and will become a paid plan later.
+- Price: free. The AI features (writing, chat, briefs, Polish with AI, Memory to-dos) are free during the beta and will become a paid plan later. Optional one-time "pay what you want" support payment (suggested $20): https://gobbl.xeve.io/support
 - Open source: https://github.com/xeveio/gobbl (MIT license). No account, and no analytics in the app.
 - Notch basics:
   - drag-and-drop file shelf with file tools (convert, compress, remove background, copy text, zip);

@@ -3,27 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Free offline dictation for Mac, with Whisper | Gobbl</title>
-<meta name="description" content="Free, on-device Whisper dictation for Mac. About 0.5 s per sentence on Apple silicon, no word cap, no account, and your voice never leaves your Mac.">
-<link rel="canonical" href="https://gobbl.xeve.io/dictation">
-<meta name="robots" content="index, follow, max-image-preview:large">
+<title>Thank you | Gobbl</title>
+<meta name="description" content="Thanks for supporting Gobbl, the free notch app for Mac.">
+<link rel="canonical" href="https://gobbl.xeve.io/thanks">
+<meta name="robots" content="noindex">
 <link rel="icon" href="/img/icon.png">
 <link rel="apple-touch-icon" href="/img/icon.png">
 <meta name="theme-color" content="#08080a">
 <meta name="color-scheme" content="dark">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Gobbl">
-<meta property="og:title" content="Free offline dictation for Mac, with Whisper | Gobbl">
-<meta property="og:description" content="Free, on-device Whisper dictation for Mac. About 0.5 s per sentence on Apple silicon, no word cap, no account, and your voice never leaves your Mac.">
-<meta property="og:url" content="https://gobbl.xeve.io/dictation">
+<meta property="og:title" content="Thank you | Gobbl">
+<meta property="og:description" content="Thanks for supporting Gobbl, the free notch app for Mac.">
+<meta property="og:url" content="https://gobbl.xeve.io/thanks">
 <meta property="og:image" content="https://gobbl.xeve.io/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Gob, a small retro computer with a smiling face, peeking out of a MacBook notch next to the words: Your notch has a pet.">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Free offline dictation for Mac, with Whisper | Gobbl">
-<meta name="twitter:description" content="Free, on-device Whisper dictation for Mac. About 0.5 s per sentence on Apple silicon, no word cap, no account, and your voice never leaves your Mac.">
+<meta name="twitter:title" content="Thank you | Gobbl">
+<meta name="twitter:description" content="Thanks for supporting Gobbl, the free notch app for Mac.">
 <meta name="twitter:image" content="https://gobbl.xeve.io/og.png">
 <meta name="twitter:image:alt" content="Gob, the Gobbl pet, in a MacBook notch.">
 <link rel="preconnect" href="https://www.googletagmanager.com">
@@ -32,9 +32,7 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-21SSB74NQD"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-21SSB74NQD');
 (function(){var c=document.documentElement.classList;c.add('js');if(/[?&]static\b/.test(location.search))c.add('static');})();</script>
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://gobbl.xeve.io/"},{"@type":"ListItem","position":2,"name":"Dictation","item":"https://gobbl.xeve.io/dictation"}]}
-</script>
+
 <style>
 :root{--bg:#08080a;--bg2:#0d0e11;--surface:#131418;--raised:#1a1c21;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.15);--text:#f2f3f5;--soft:#cfd3d9;--muted:#a3a9b1;--faint:#858b94;--lime:#a6f25c;--lime2:#6fd39b;--pink:#ff6fa5;--gold:#f5c542;--blue:#5b9cf6;--red:#ef6b63;--ease:cubic-bezier(.2,.8,.2,1);--spring:cubic-bezier(.3,1.5,.5,1)}
 *{box-sizing:border-box}
@@ -236,74 +234,6 @@ footer.site{border-top:1px solid var(--line);padding:56px 0 44px;margin-top:30px
 /* ?static: every animation at its final frame, for screenshots */
 .static *,.static *::before,.static *::after{animation-duration:0s!important;animation-delay:0s!important;animation-iteration-count:1!important;transition:none!important}
 
-.seg{display:inline-flex;flex-wrap:wrap;padding:4px;border-radius:999px;background:var(--bg2);border:1px solid var(--line)}
-.seg button{padding:8px 16px;border-radius:999px;font-weight:650;font-size:14.5px;color:var(--muted);transition:all .25s var(--ease)}
-.seg button[aria-pressed=true],.seg button.on{background:var(--lime);color:#07120a}
-/* dictation */
-.dk{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}
-.dk-panel{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:24px}
-.dk-wave{width:100%;height:auto;aspect-ratio:4/1;display:block}
-.dk-hold{width:100%;margin-top:16px;padding:16px;border-radius:14px;background:rgba(166,242,92,.1);border:1px solid rgba(166,242,92,.3);color:var(--lime);font-weight:750;display:flex;gap:10px;justify-content:center;align-items:center;user-select:none;-webkit-user-select:none;touch-action:none;transition:background .2s,color .2s,transform .15s}
-.dk-hold.down{background:var(--lime);color:#07120a;transform:scale(.98)}
-.dk-hint{font-size:13px;color:var(--faint);margin:12px 0 0;text-align:center}
-.dk-out{min-height:5.2em;font-size:clamp(18px,1.9vw,22px);line-height:1.45;margin:22px 0 10px;letter-spacing:-.01em}
-.dk-out.working{color:var(--faint)}.dk-out.working::after{content:"";display:inline-block;width:9px;height:1em;margin-left:4px;background:var(--lime);vertical-align:-2px;animation:blink 1s steps(1) infinite}
-.dk-out.ai{color:#e6f9d3}
-.dk-meta{font-size:13.5px;color:var(--faint);margin:0}
-@keyframes blink{50%{opacity:0}}
-/* to-dos */
-.todos{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:22px 18px 12px}
-.todos .fh{padding:0 12px}
-.todo{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:12px;border-radius:14px;transition:background .4s}
-.todo+.todo{border-top:1px solid var(--line);border-radius:0}
-.todo input{appearance:none;-webkit-appearance:none;width:21px;height:21px;border-radius:7px;border:1.5px solid var(--faint);margin:3px 0 0;display:grid;place-items:center;cursor:pointer;transition:background .3s,border-color .3s}
-.todo input:checked{background:var(--lime);border-color:var(--lime)}
-.todo input:checked::after{content:"";width:9px;height:5px;border-left:2px solid #07120a;border-bottom:2px solid #07120a;transform:translateY(-1px) rotate(-45deg)}
-.todo b{font-weight:620;transition:color .4s}.todo.done b{color:var(--faint);text-decoration:line-through;text-decoration-color:var(--faint)}
-.todo small{display:block;color:var(--muted);font-size:13.5px;line-height:1.45;margin-top:2px}
-.todo .auto{display:none;gap:6px;align-items:center;color:var(--lime);font-size:13px;font-weight:650;margin-top:6px}
-.todo.done .auto{display:flex}.todo.done{background:rgba(166,242,92,.05)}
-.undo{color:var(--text);text-decoration:underline;text-underline-offset:3px;font-size:13px;margin-left:6px}
-.proof{position:absolute;right:16px;top:-20px;display:flex;gap:8px;align-items:center;max-width:calc(100% - 32px);padding:8px 14px;border-radius:999px;background:#1d2a17;border:1px solid rgba(166,242,92,.35);color:var(--soft);font-size:13px;box-shadow:0 14px 30px -12px #000;opacity:0;transform:translateY(8px) scale(.96);transition:opacity .4s,transform .5s var(--spring)}
-.proof .i{color:var(--lime)}.proof.in{opacity:1;transform:none}
-/* people graph */
-.people{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;align-items:stretch}
-.graph{position:relative;aspect-ratio:16/11;border-radius:24px;border:1px solid var(--line);background:radial-gradient(circle at 50% 50%,rgba(166,242,92,.08),transparent 60%),var(--surface);overflow:hidden}
-.graph>svg{position:absolute;inset:0;width:100%;height:100%}
-.graph line{stroke:rgba(255,255,255,.14);stroke-width:1.2;vector-effect:non-scaling-stroke}
-.graph line.dash{stroke:rgba(245,197,66,.5);stroke-dasharray:4 4}
-.node{position:absolute;transform:translate(-50%,-50%);display:flex;gap:6px;align-items:center;padding:7px 12px;border-radius:999px;background:var(--raised);border:1px solid var(--line2);font-size:13.5px;font-weight:650;white-space:nowrap;transition:border-color .25s,box-shadow .25s,transform .3s var(--spring)}
-.node .i{color:var(--muted);width:14px;height:14px}
-.node:hover,.node.on{border-color:var(--lime);box-shadow:0 0 0 4px rgba(166,242,92,.12);transform:translate(-50%,-50%) scale(1.05)}
-.node.me{background:var(--lime);color:#07120a;border-color:var(--lime)}
-.node.proj{border-radius:10px}.node.proj .i{color:var(--gold)}
-.node.dup{border-style:dashed;border-color:rgba(245,197,66,.6)}
-.pcard{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:24px;min-height:100%}
-.pcard b{display:block;font-size:22px;letter-spacing:-.02em}
-.pcard span{color:var(--lime);font-size:14px;font-weight:600}
-.pcard p{color:var(--muted);font-size:15px}
-.merge{margin-top:14px;padding:12px 14px;border-radius:14px;background:rgba(245,197,66,.07);border:1px solid rgba(245,197,66,.28);font-size:14px;color:var(--soft)}
-.merge em{font-style:normal;font-weight:700;color:var(--gold);display:block;margin-bottom:2px}
-.merge .mb{display:flex;gap:8px;margin-top:10px}
-.merge button{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.08);font-size:13px;font-weight:650}
-.merge button:first-of-type{background:var(--gold);color:#1a1405}
-/* memory chat */
-.memchat{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:22px}
-.memchat .q{margin:0 0 10px auto;width:fit-content;max-width:85%;background:var(--lime);color:#07120a;padding:9px 14px;border-radius:16px 16px 4px 16px;font-size:15px;font-weight:550}
-.memchat .a{margin:0;background:rgba(255,255,255,.07);padding:11px 14px;border-radius:16px 16px 16px 4px;width:fit-content;max-width:90%;font-size:15px}
-.memchat sup{color:var(--lime);font-weight:700;margin-left:2px}
-.memchat .src{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:6px;font-size:13px;color:var(--muted)}
-.memchat .src li{display:flex;gap:8px;align-items:center;counter-increment:src}
-.memchat .src li::before{content:counter(src);font-weight:700;color:var(--lime);width:14px}
-@media (max-width:900px){.dk,.people{grid-template-columns:1fr}}
-@media (max-width:560px){.node{font-size:11.5px;padding:5px 9px}.node .i{display:none}.graph{aspect-ratio:1/1}.proof{position:static;margin-bottom:12px;border-radius:14px}}
-.prose .dk,.prose .people,.prose .todos,.prose .memchat{margin:26px 0}
-.prose .tbl{margin:22px 0 6px}
-.prose .tile2 h3{margin:0 0 6px}
-.feature-group{scroll-margin-top:110px}
-.prose .tile2 p{color:var(--muted)}
-a.tile2{display:block;text-decoration:none!important;transition:border-color .2s}a.tile2:hover{border-color:var(--lime)}a.tile2 h3{justify-content:space-between;color:var(--text)}
-.prose .faq summary{font-size:17px}
 </style>
 <!-- Analytics for Xeve's websites (not the apps): Google Analytics, and PostHog's "Xeve websites"
      project on posthog.doteosde.com. One cookie is shared across xeve.io and its subdomains so a
@@ -323,6 +253,7 @@ a.tile2{display:block;text-decoration:none!important;transition:border-color .2s
     respect_dnt: true,
   });
   posthog.register({ site: location.hostname });
+  posthog.capture('support_thanks', { status: new URLSearchParams(location.search).get('status') });
   document.addEventListener('click', function (e) {
     var a = e.target.closest && e.target.closest('a[href]');
     if (!a) return;
@@ -341,72 +272,13 @@ a.tile2{display:block;text-decoration:none!important;transition:border-color .2s
 
 <header class="top" id="nav">
   <a class="brand" href="/" aria-label="Gobbl home"><img src="/img/icon.png" alt="" width="26" height="26">Gobbl</a>
-  <nav class="links" aria-label="Main"><a href="/features">Features</a><a href="/dictation" aria-current="page">Dictation</a><a href="/memory">Memory</a><a href="/compare/">Compare</a><a href="/faq">FAQ</a></nav>
+  <nav class="links" aria-label="Main"><a href="/features">Features</a><a href="/dictation">Dictation</a><a href="/memory">Memory</a><a href="/compare/">Compare</a><a href="/faq">FAQ</a></nav>
   <a class="btn primary small magnetic" href="https://github.com/xeveio/gobbl"><svg class="i" aria-hidden="true"><use href="#i-github"/></svg><span class="gh">Star on GitHub</span></a>
-  <details class="menu"><summary aria-label="Menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></summary><nav class="sheet" aria-label="Mobile"><a href="/features">Features</a><a href="/dictation" aria-current="page">Dictation</a><a href="/memory">Memory</a><a href="/compare/">Compare</a><a href="/faq">FAQ</a><a href="/privacy">Privacy</a><a href="https://github.com/xeveio/gobbl">GitHub</a></nav></details>
+  <details class="menu"><summary aria-label="Menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></summary><nav class="sheet" aria-label="Mobile"><a href="/features">Features</a><a href="/dictation">Dictation</a><a href="/memory">Memory</a><a href="/compare/">Compare</a><a href="/faq">FAQ</a><a href="/privacy">Privacy</a><a href="https://github.com/xeveio/gobbl">GitHub</a></nav></details>
 </header>
 <main id="main">
-<div class="wrap crumbs-wrap"><nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a></li><li aria-current="page">Dictation</li></ol></nav></div>
-<section class="phero"><div class="wrap"><div class="grid">
-  <div>
-    <div class="kicker"><svg class="i" aria-hidden="true"><use href="#i-mic"/></svg>Dictation</div>
-    <h1>Free offline dictation for Mac, powered by Whisper</h1>
-    <p class="lede">Hold the right Option key, talk, and let go. Gobbl transcribes with OpenAI's Whisper model on your Mac, so your voice never leaves it. There's no word cap and no account.</p>
-    <div class="cta"><a class="btn primary magnetic" href="/download"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Download for Mac</a><a class="btn ghost magnetic" href="https://github.com/xeveio/gobbl"><svg class="i" aria-hidden="true"><use href="#i-github"/></svg>View on GitHub</a></div>
-    <div class="meta-row"><span><svg class="i" aria-hidden="true"><use href="#i-bolt"/></svg>About 0.5 s per sentence</span><span><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg>Audio stays on your Mac</span><span><svg class="i" aria-hidden="true"><use href="#i-cpu"/></svg>Needs Apple silicon</span></div>
-  </div>
-  <div class="pet"><canvas width="440" height="440" data-gob='{"char":"retro","hue":0.55,"mood":"curious","rest":"curious","hat":"headphones"}' role="img" aria-label="Gob, the Gobbl pet, a small retro computer with a face on its screen"></canvas></div>
-</div></div></section>
-<div class="wrap page">
-  <article class="prose">
-<div class="tldr"><p><strong>In short:</strong> Gobbl gives any Mac with Apple silicon free, offline dictation into any app. It runs Whisper locally, takes about half a second per sentence, and has no word cap, subscription or account.</p></div>
-<h2 id="try">Try it</h2>
-<p>This demo shows the flow and the three clean-up levels. The real thing listens to your microphone; this page doesn't.</p>
-<div class="dk" data-demo="dictate">
-  <div class="dk-panel reveal">
-    <div class="skel"></div>
-    <canvas class="dk-wave" width="880" height="220" aria-hidden="true"></canvas>
-    <button class="dk-hold" type="button" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-mic"/></svg>Hold to talk</button>
-    <p class="dk-hint">Press and hold, or hold Space while the button is focused. In the app it's the right Option key.</p>
-  </div>
-  <div class="dk-panel reveal" style="--i:1">
-    <div class="seg dk-seg" role="group" aria-label="Clean-up level"><button type="button" data-l="verbatim" aria-pressed="false">Verbatim</button><button type="button" data-l="light" aria-pressed="true">Light</button><button type="button" data-l="polish" aria-pressed="false">Polish with AI</button></div>
-    <p class="dk-out" aria-live="polite">So I think we should ship the update on Friday and then tell the beta testers.</p>
-    <p class="dk-meta">Transcribed on your Mac in about 0.5 s</p>
-  </div>
-</div>
-<h2 id="how">How it works</h2>
-<ol class="steps3"><li><b>Hold the Gobbl key</b>The right Option key, in any text field: Mail, Slack, Notes, a browser, your code editor.</li><li><b>Talk</b>Gobbl starts recording instantly, so nothing is lost while the model wakes up.</li><li><b>Let go</b>Whisper transcribes on your Mac and the text lands where your cursor is.</li></ol>
-<p>The first time, pick a Whisper model in Settings and Gobbl downloads it once. After that, dictation works offline.</p>
-<h2 id="cleanup">Three clean-up levels</h2>
-<div class="grid3"><div class="tile2"><h3><svg class="i" aria-hidden="true"><use href="#i-list"/></svg>Verbatim</h3><p>Exactly what you said, ums and all.</p></div><div class="tile2"><h3><svg class="i" aria-hidden="true"><use href="#i-wand"/></svg>Light</h3><p>Removes filler words and fixes punctuation, on your Mac. The default.</p></div><div class="tile2"><h3><svg class="i" aria-hidden="true"><use href="#i-layers"/></svg>Polish with AI</h3><p>Tidies the text into clear writing. Only the text is sent, never the audio.</p></div></div>
-<h2 id="models">Whisper models</h2>
-<div class="scroll"><table class="data"><thead><tr><th>Model</th><th>Size</th><th>Best for</th></tr></thead><tbody>
-<tr><td>Whisper Small</td><td>About 480 MB</td><td>Recommended: the balance of speed and accuracy</td></tr>
-<tr><td>Whisper Turbo</td><td>About 630 MB</td><td>The most accurate, a little slower</td></tr>
-<tr><td>Whisper Base</td><td>About 150 MB</td><td>The fastest and smallest</td></tr></tbody></table></div>
-<p>You can switch or remove the model any time in Settings, Dictation.</p>
-<h2 id="tune">Custom words and language lock</h2>
-<p>Add names, products and jargon as custom words, and Whisper spells them your way. Whisper can detect your language automatically, but picking one language gives better results, especially if you mix languages when you speak.</p>
-<h2 id="handsfree">Hands-free mode</h2>
-<p>For longer thoughts, double-tap and hold the Gobbl key to start hands-free dictation, then tap once to stop. No need to keep a finger down.</p>
-<h2 id="privacy">Your voice stays on your Mac</h2>
-<p>Audio is recorded and transcribed on your Mac, then thrown away. Nothing is uploaded, which is also why there's no word limit and no sign-up. If you choose Polish with AI, the finished text goes through Xeve's AI service to a provider that doesn't keep data, and the request shows up in Gobbl's local log. See <a href="/privacy">Privacy</a>.</p>
-<h2 id="requirements">Requirements</h2>
-<ul><li>A Mac with Apple silicon (M1 or later). Dictation isn't available on Intel Macs; the rest of Gobbl is.</li><li>macOS 14 Sonoma or later.</li><li>Microphone permission, and Accessibility permission so the text can be typed into other apps.</li></ul>
-<h2 id="vs">Compared with cloud dictation</h2>
-<p>Cloud dictation apps can be excellent, and some work on Windows and phones too. The trade-off is that your audio goes to a server, and free tiers usually cap words. Wispr Flow, for example, is cloud-only, its Pro plan costs $15 a month, and its free desktop tier is capped at 2,000 words a week. Gobbl's dictation is Mac-only, and it's free, offline and uncapped.</p>
-<p><a href="/compare/wispr-flow">Read the full Gobbl vs Wispr Flow comparison</a>.</p>
-<h2 id="faq">Dictation questions</h2>
-<div class="faq"><details class="reveal"><summary><h3>Does my voice leave my Mac?</h3></summary><p>No. Dictation runs OpenAI's Whisper model on your Mac, so audio never leaves it. Only if you choose the Polish with AI clean-up level is the transcribed text (never the audio) sent for polishing. More on the <a href="/dictation">dictation page</a>.</p></details>
-<details class="reveal"><summary><h3>Is there a word limit on dictation?</h3></summary><p>No. There's no word cap and no account, because transcription happens on your Mac.</p></details>
-<details class="reveal"><summary><h3>Is Gobbl a free Wispr Flow alternative?</h3></summary><p>For dictation on a Mac, yes: it's free, has no word cap and runs on-device. Wispr Flow is cloud-based, works on more platforms and costs $15 a month for Pro. See <a href="/compare/wispr-flow">Gobbl vs Wispr Flow</a>.</p></details></div>
-<h2 id="related">Related</h2><div class="grid2"><a class="tile2" href="/compare/wispr-flow"><h3>Gobbl vs Wispr Flow<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></h3><p>A free, on-device alternative, compared fairly.</p></a><a class="tile2" href="/features#key"><h3>The Gobbl key<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></h3><p>Write, rewrite and ask in any text field.</p></a></div></article>
-  <aside class="aside">
-    <nav class="box toc" aria-label="On this page"><p class="fh">On this page</p><a href="#try">Try it</a><a href="#how">How it works</a><a href="#cleanup">Clean-up levels</a><a href="#models">Whisper models</a><a href="#tune">Custom words and language</a><a href="#handsfree">Hands-free mode</a><a href="#privacy">Privacy</a><a href="#requirements">Requirements</a><a href="#vs">Compared with cloud dictation</a></nav>
-    <div class="box"><p>Free and open source for macOS 14+. No account.</p><a class="btn primary" href="/download"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Download Gobbl</a></div>
-  </aside>
-</div>
+
+<section class="phero" style="padding-top:150px;text-align:center"><div class="wrap"><canvas width="360" height="360" style="width:180px;height:180px" data-gob='{"char":"retro","mood":"happy","rest":"happy"}' role="img" aria-label="Gob, happy"></canvas><h1>Thank you!</h1><p class="lede" style="margin:0 auto 28px">Your support keeps Gobbl free and open source. Dodo Payments has emailed you a receipt.</p><div class="cta" style="justify-content:center"><a class="btn primary" href="/download">Download Gobbl</a><a class="btn ghost" href="/">Go home</a></div></div></section>
 </main>
 <footer class="site"><div class="wrap">
   <div class="fgrid">
@@ -417,6 +289,16 @@ a.tile2{display:block;text-decoration:none!important;transition:border-color .2s
   </div>
   <div class="fine2"><span>&copy; 2026 Xeve. Gobbl is free software under the MIT License.</span><span>macOS 14 or later. Not affiliated with Apple.</span></div>
 </div></footer>
+<script>
+  // Dodo appends ?status=succeeded|failed|… to the return URL.
+  (function () {
+    var s = new URLSearchParams(location.search).get('status');
+    if (!s || s === 'succeeded' || s === 'active') return;
+    document.querySelector('.phero h1').textContent = 'That didn’t go through.';
+    document.querySelector('.phero .lede').textContent = 'You haven’t been charged. Gobbl is free either way.';
+    var b = document.querySelector('.phero .btn.primary'); b.href = '/support'; b.textContent = 'Try again';
+  })();
+</script>
 <script src="/js/gob.js" defer></script>
 <script src="/js/site.js" defer></script>
 </body>

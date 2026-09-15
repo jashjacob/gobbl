@@ -53,6 +53,11 @@ else
   fi
 fi
 
+# /support → Dodo Payments checkout for "Support Gobbl" (pay what you want, $20 suggested,
+# one time). Live product; the test-mode twin is pdt_0NndI2JAsENYxqUNdCoC7 on test.checkout.
+SUPPORT_URL="${GOBBL_SUPPORT_URL:-https://checkout.dodopayments.com/buy/pdt_0NndKfZ0bejwqwSDQYi5f?quantity=1&redirect_url=https://gobbl.xeve.io/thanks}"
+printf '/support %s 302\n' "$SUPPORT_URL" >> "$OUT/_redirects"
+
 cat > "$OUT/_headers" <<'HEADERS'
 /*
   X-Content-Type-Options: nosniff
