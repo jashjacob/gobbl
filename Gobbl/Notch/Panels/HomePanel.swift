@@ -10,11 +10,16 @@ struct HomePanel: View {
             PetCorner(anticipating: state.dropTargeted)
                 .frame(width: 128)
             Rectangle().fill(Palette.border).frame(width: 1)
-            VStack(spacing: 8) {
-                NowPlayingCard()
-                EventCard()
-                TodoCard()
+            // The panel's height is fixed; with to-dos the cards can outgrow it, so scroll
+            // rather than clip. Bounces only when there's actually more to see.
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 8) {
+                    NowPlayingCard()
+                    EventCard()
+                    TodoCard()
+                }
             }
+            .scrollBounceBehavior(.basedOnSize)
             .frame(maxWidth: .infinity)
         }
     }
