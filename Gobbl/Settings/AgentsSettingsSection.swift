@@ -33,6 +33,12 @@ struct AgentsSettingsSection: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
+            if codex {
+                // Codex skips any hook the user hasn't reviewed; Gobbl doesn't trust them on the user's behalf.
+                Label("One step left in Codex: run /hooks (or open Hooks in Codex's settings in your editor) and trust Gobbl's hooks. Codex skips them until you do.",
+                      systemImage: "checkmark.shield")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             Toggle(isOn: Binding(get: { grok }, set: setGrok)) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Grok")

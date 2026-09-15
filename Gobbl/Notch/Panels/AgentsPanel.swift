@@ -172,6 +172,13 @@ private struct EmptyAgents: View {
                     .font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.text)
                 Text("Start a task and Gob works along, then cheers when it's done.")
                     .font(.system(size: 11)).foregroundStyle(Palette.textTertiary)
+                if codex {
+                    // Codex runs only hooks the user has trusted.
+                    Text("Codex: trust Gobbl's hooks once with /hooks, or under Hooks in Codex's settings.")
+                        .font(.system(size: 10.5)).foregroundStyle(Palette.textTertiary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                }
             } else {
                 Text("Let Gob cheer on your AI agents").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.text)
                 Text("Connect Claude Code, Codex or Grok: Gob works along, cheers when a task finishes, and can approve prompts from the notch.")
