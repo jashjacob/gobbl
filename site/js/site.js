@@ -103,4 +103,54 @@ if (demos.length) {
     demos.forEach(d => lazy.observe(d));
   }
 }
+
+// Download prompt: pay what you want, or download free. Skipped once someone has paid
+// (/thanks sets the flag) and for modified clicks. Its choices are buttons, not links, so
+// the head's "download_clicked" handler counts each download intent once.
+const paid = () => { try { return localStorage.getItem("gobbl_paid") === "1"; } catch (_) { return false; } };
+let dlg;
+const payPrompt = () => {
+  if (!dlg) {
+    const css = document.createElement("style");
+    css.textContent = `dialog.pay{width:min(440px,calc(100% - 32px));padding:32px 28px 24px;border-radius:24px;background:var(--surface,#131418);color:var(--text,#f2f3f5);border:1px solid var(--line2,rgba(255,255,255,.15));box-shadow:0 40px 80px -30px #000;text-align:center}
+dialog.pay::backdrop{background:rgba(0,0,0,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+dialog.pay[open]{animation:payIn .3s var(--spring,ease)}
+@keyframes payIn{from{opacity:0;transform:scale(.94)}}
+@media (prefers-reduced-motion:reduce){dialog.pay[open]{animation:none}}
+dialog.pay h2{font-size:28px;letter-spacing:-.02em;margin:0 0 10px}
+dialog.pay p{color:var(--muted,#a3a9b1);font-size:16px;margin:0 0 22px;text-wrap:pretty}
+dialog.pay .cta{justify-content:center}
+dialog.pay .fine{font-size:13px;color:var(--faint,#858b94);margin:16px 0 0}
+dialog.pay .x{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;font-size:22px;line-height:1;color:var(--muted,#a3a9b1)}
+dialog.pay .x:hover{background:rgba(255,255,255,.08);color:var(--text,#f2f3f5)}`;
+    document.head.appendChild(css);
+    dlg = document.createElement("dialog");
+    dlg.className = "pay";
+    dlg.setAttribute("aria-labelledby", "pay-h");
+    dlg.innerHTML = `<h2 id="pay-h">Gobbl is free.</h2>
+<p>If it earns a spot in your notch, you can pay what you want. We suggest $20, one time. It unlocks nothing: it keeps Gobbl free and open source.</p>
+<div class="cta"><button type="button" class="btn primary" data-choice="pay" autofocus>Pay what you want</button><button type="button" class="btn ghost" data-choice="free">Download free</button></div>
+<p class="fine">Paying opens checkout in a new tab. Your download starts either way.</p>
+<button type="button" class="x" aria-label="Close">&times;</button>`;
+    document.body.appendChild(dlg);
+    dlg.addEventListener("click", e => {
+      if (e.target === dlg || e.target.closest(".x")) { dlg.close(); return; }
+      const b = e.target.closest("[data-choice]"); if (!b) return;
+      const choice = b.dataset.choice;
+      track("download_choice", { choice });
+      try { window.posthog && posthog.capture("download_choice", { choice }); } catch (_) {}
+      if (choice === "pay") window.open("/support", "_blank", "noopener");
+      dlg.close();
+      location.href = "/download";
+    });
+  }
+  dlg.showModal();
+};
+document.addEventListener("click", e => {
+  const a = e.target.closest('a[href="/download"]');
+  if (!a || paid() || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return;
+  if (typeof HTMLDialogElement !== "function") return;
+  e.preventDefault();
+  payPrompt();
+});
 })();

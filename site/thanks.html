@@ -293,7 +293,11 @@ footer.site{border-top:1px solid var(--line);padding:56px 0 44px;margin-top:30px
   // Dodo appends ?status=succeeded|failed|… to the return URL.
   (function () {
     var s = new URLSearchParams(location.search).get('status');
-    if (!s || s === 'succeeded' || s === 'active') return;
+    if (!s || s === 'succeeded' || s === 'active') {
+      // Paid: skip the pay-or-free prompt on future downloads (js/site.js).
+      try { localStorage.setItem('gobbl_paid', '1'); } catch (_) {}
+      return;
+    }
     document.querySelector('.phero h1').textContent = 'That didn’t go through.';
     document.querySelector('.phero .lede').textContent = 'You haven’t been charged. Gobbl is free either way.';
     var b = document.querySelector('.phero .btn.primary'); b.href = '/support'; b.textContent = 'Try again';
