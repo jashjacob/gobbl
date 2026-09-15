@@ -9,11 +9,15 @@ export async function onRequestPost({ env, request }) {
   if (!env.DODO_API_KEY) return json({ error: "checkout not configured" }, 503);
   const base = env.DODO_API_BASE || "https://live.dodopayments.com";
   const origin = new URL(request.url).origin;
+  // Pay-what-you-want sessions must carry the amount (US cents): $1–$1,000, $20 by default.
+  const { amount: raw } = await request.json().catch(() => ({}));
+  const amount = raw === undefined ? 2000 : Math.round(Number(raw));
+  if (!Number.isFinite(amount) || amount < 100 || amount > 100000) return json({ error: "amount must be $1 to $1,000" }, 400);
   const r = await fetch(`${base}/checkouts`, {
     method: "POST",
     headers: { Authorization: `Bearer ${env.DODO_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      product_cart: [{ product_id: env.DODO_PRODUCT_ID || LIVE_PRODUCT, quantity: 1 }],
+      product_cart: [{ product_id: env.DODO_PRODUCT_ID || LIVE_PRODUCT, quantity: 1, amount }],
       return_url: `${origin}/thanks`,
       customization: { theme: "dark" },
     }),

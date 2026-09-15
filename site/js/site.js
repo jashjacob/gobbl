@@ -139,12 +139,27 @@ const thank = () => {
   view("thanks");
   setTimeout(download, 900);
 };
-const startCheckout = async () => {
+// The chosen amount in whole dollars, or null if "Other" isn't a valid $1–$1,000.
+const amountOf = () => {
+  const own = dlg.querySelector(".amt-own input");
+  const on = dlg.querySelector(".amts [aria-checked=true]");
+  const v = on ? Number(on.dataset.amt) : Math.round(Number(own.value));
+  return v >= 1 && v <= 1000 ? v : null;
+};
+const syncPay = () => {
+  const v = amountOf(), b = dlg.querySelector('[data-choice="pay"]');
+  b.textContent = v ? `Pay $${v}` : "Pay what you want";
+  b.disabled = !v;
+};
+const startCheckout = async dollars => {
   view("checkout");
   const frame = dlg.querySelector("#pay-frame"), note = dlg.querySelector(".pay-note");
   frame.innerHTML = ""; note.textContent = "Loading secure checkout…"; note.hidden = false;
   try {
-    const [res] = await Promise.all([fetch("/api/support-checkout", { method: "POST" }), loadSdk()]);
+    const [res] = await Promise.all([
+      fetch("/api/support-checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount: dollars * 100 }) }),
+      loadSdk(),
+    ]);
     if (!res.ok) throw new Error("session");
     const { checkout_url, mode } = await res.json();
     const Dodo = window.DodoPaymentsCheckout.DodoPayments;
@@ -172,6 +187,13 @@ dialog.pay #pay-frame{min-height:120px;margin:0 0 14px;text-align:left}
 dialog.pay .pay-note{font-size:14px;color:var(--muted,#a3a9b1);margin:0 0 14px}
 dialog.pay .back{font-size:14px;color:var(--muted,#a3a9b1);text-decoration:underline;text-underline-offset:3px}
 dialog.pay .back:hover{color:var(--text,#f2f3f5)}
+dialog.pay .amts{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 18px}
+dialog.pay .amts button,dialog.pay .amt-own{min-width:56px;padding:9px 12px;border-radius:999px;border:1px solid var(--line2,rgba(255,255,255,.15));background:rgba(255,255,255,.04);font-weight:650;font-size:15px}
+dialog.pay .amts button[aria-checked=true],dialog.pay .amt-own:focus-within{border-color:var(--lime,#a6f25c);background:rgba(166,242,92,.1);color:var(--lime,#a6f25c)}
+dialog.pay .amt-own{display:inline-flex;align-items:center;gap:2px;cursor:text}
+dialog.pay .amt-own input{width:46px;background:none;border:0;color:inherit;font:inherit;outline:none;-moz-appearance:textfield}
+dialog.pay .amt-own input::-webkit-inner-spin-button,dialog.pay .amt-own input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+dialog.pay .btn:disabled{opacity:.5;cursor:not-allowed}
 dialog.pay::backdrop{background:rgba(0,0,0,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 dialog.pay[open]{animation:payIn .3s var(--spring,ease)}
 @keyframes payIn{from{opacity:0;transform:scale(.94)}}
@@ -188,7 +210,8 @@ dialog.pay .x:hover{background:rgba(255,255,255,.08);color:var(--text,#f2f3f5)}`
     dlg.setAttribute("aria-labelledby", "pay-h");
     dlg.innerHTML = `<div data-view="choose"><h2 id="pay-h">Gobbl is free.</h2>
 <p>If it earns a spot in your notch, you can pay what you want. We suggest $20, one time. It unlocks nothing: it keeps Gobbl free and open source.</p>
-<div class="cta"><button type="button" class="btn primary" data-choice="pay" autofocus>Pay what you want</button><button type="button" class="btn ghost" data-choice="free">Download free</button></div>
+<div class="amts" role="radiogroup" aria-label="Amount in US dollars"><button type="button" role="radio" aria-checked="false" data-amt="5">$5</button><button type="button" role="radio" aria-checked="false" data-amt="10">$10</button><button type="button" role="radio" aria-checked="true" data-amt="20">$20</button><button type="button" role="radio" aria-checked="false" data-amt="50">$50</button><label class="amt-own">$<input type="number" min="1" max="1000" step="1" inputmode="numeric" placeholder="Other" aria-label="Other amount in US dollars"></label></div>
+<div class="cta"><button type="button" class="btn primary" data-choice="pay" autofocus>Pay $20</button><button type="button" class="btn ghost" data-choice="free">Download free</button></div>
 <p class="fine">Pay right here. Your download starts as soon as you&rsquo;re done.</p></div>
 <div data-view="checkout" hidden><p class="pay-note" role="status"></p><div id="pay-frame"></div>
 <button type="button" class="back" data-choice="free">Skip and download free</button></div>
@@ -199,9 +222,18 @@ dialog.pay .x:hover{background:rgba(255,255,255,.08);color:var(--text,#f2f3f5)}`
     document.body.appendChild(dlg);
     dlg.addEventListener("click", e => {
       if (e.target === dlg && !dlg.classList.contains("wide") || e.target.closest(".x")) { dlg.close(); return; }
+      const chip = e.target.closest("[data-amt]");
+      if (chip) {
+        dlg.querySelectorAll("[data-amt]").forEach(c => c.setAttribute("aria-checked", String(c === chip)));
+        dlg.querySelector(".amt-own input").value = ""; syncPay(); return;
+      }
       const b = e.target.closest("[data-choice]"); if (!b) return;
-      if (b.dataset.choice === "pay") { choose("pay"); startCheckout(); return; }
+      if (b.dataset.choice === "pay") { const v = amountOf(); if (!v) return; choose("pay"); startCheckout(v); return; }
       choose("free"); dlg.close(); download();
+    });
+    // Typing an amount of your own replaces the chips.
+    dlg.querySelector(".amt-own input").addEventListener("input", () => {
+      dlg.querySelectorAll("[data-amt]").forEach(c => c.setAttribute("aria-checked", "false")); syncPay();
     });
     // Leaving mid-checkout drops the embedded frame; the next open starts over.
     dlg.addEventListener("close", () => { try { window.DodoPaymentsCheckout.DodoPayments.Checkout.close(); } catch (_) {} dlg.querySelector("#pay-frame").innerHTML = ""; });
