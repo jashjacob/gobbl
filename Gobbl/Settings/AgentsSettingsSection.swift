@@ -28,7 +28,7 @@ struct AgentsSettingsSection: View {
             Toggle(isOn: Binding(get: { codex }, set: setCodex)) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Codex")
-                    Text(AgentLink.codexInstalled ? "Sets notify in ~/.codex/config.toml" : "Codex isn't set up on this Mac yet")
+                    Text(AgentLink.codexInstalled ? "Adds hooks to ~/.codex/hooks.json" : "Codex isn't set up on this Mac yet")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }

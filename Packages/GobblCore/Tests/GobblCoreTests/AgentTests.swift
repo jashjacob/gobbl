@@ -32,6 +32,20 @@ import Testing
         #expect(AgentEvent.parse(source: .codex, json: Data(#"{"type":"something-else"}"#.utf8)) == nil)
     }
 
+    @Test func parsesCodexHooks() {
+        func codex(_ json: String) -> AgentEvent? { AgentEvent.parse(source: .codex, json: Data(json.utf8)) }
+        let prompt = codex(#"{"hook_event_name":"UserPromptSubmit","session_id":"019d","turn_id":"t1","cwd":"/src/api","model":"gpt-5"}"#)
+        #expect(prompt?.kind == .promptSubmitted)
+        #expect(prompt?.source == .codex)
+        #expect(prompt?.sessionID == "019d")
+        #expect(prompt?.cwd == "/src/api")
+        #expect(codex(#"{"hook_event_name":"PreToolUse","session_id":"019d","tool_name":"shell"}"#)?.kind == .toolUse("shell"))
+        #expect(codex(#"{"hook_event_name":"PermissionRequest","session_id":"019d","tool_name":"shell","tool_input":{"command":"npm test"}}"#)?.kind
+                == .permissionRequest(tool: "shell", detail: "npm test"))
+        #expect(codex(#"{"hook_event_name":"Stop","session_id":"019d"}"#)?.kind == .turnDone(nil))
+        #expect(codex(#"{"hook_event_name":"PreCompact","session_id":"019d"}"#) == nil)
+    }
+
     @Test func ignoresGarbage() {
         #expect(claude("nope") == nil)
         #expect(claude(#"{"hook_event_name":"PreCompact","session_id":"s"}"#) == nil)
@@ -146,19 +160,31 @@ import Testing
         }
     }
 
-    @Test func codexNotify() throws {
-        let config = "model = \"gpt-5\"\n\n[profiles.fast]\nmodel = \"mini\"\n"
-        let installed = try AgentHookConfig.installCodex(into: config, helper: helper)
-        #expect(installed.hasPrefix("notify = [\"/usr/bin/perl\""))
-        #expect(installed.contains("[profiles.fast]"))
-        #expect(AgentHookConfig.codexConnected(installed))
-        #expect(AgentHookConfig.uninstallCodex(from: installed) == config)
-        #expect(try AgentHookConfig.installCodex(into: installed, helper: helper) == installed)
+    @Test func codexHooks() throws {
+        let existing = #"{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"say done"}]}]}}"#
+        let installed = try AgentHookConfig.installCodex(into: Data(existing.utf8), helper: helper, approvals: true)
+        let hooks = try #require(try object(installed)["hooks"] as? [String: Any])
+        #expect(Set(hooks.keys) == Set(AgentHookConfig.codexEvents + ["PermissionRequest"]))
+        #expect(hooks["Notification"] == nil) // Codex has no Notification event
+        #expect((hooks["Stop"] as? [[String: Any]])?.count == 2) // theirs + ours
+        let ours = try #require((hooks["PreToolUse"] as? [[String: Any]])?.first?["hooks"] as? [[String: Any]])
+        #expect(ours.first?["command"] as? String == "/usr/bin/perl \"\(helper)\" codex")
+        #expect(ours.first?["async"] as? Bool == true)
+        #expect(AgentHookConfig.codexStatus(installed) == (true, true))
+        #expect(try AgentHookConfig.installCodex(into: installed, helper: helper, approvals: true) == installed)
+
+        let removed = try AgentHookConfig.uninstallCodex(from: installed)
+        #expect(Array(try #require(try object(removed)["hooks"] as? [String: Any]).keys) == ["Stop"])
+        #expect(AgentHookConfig.codexStatus(removed) == (false, false))
     }
 
-    @Test func codexRefusesSomeoneElsesNotify() {
-        #expect(throws: AgentHookConfig.ConfigError.existingNotify("notify = [\"terminal-notifier\"]")) {
-            try AgentHookConfig.installCodex(into: "notify = [\"terminal-notifier\"]\n", helper: helper)
-        }
+    @Test func legacyCodexNotifyIsRemovedButOthersStay() {
+        let ours = "notify = [\"/usr/bin/perl\", \"\(helper)\", \"codex\"] # added by Gobbl\nmodel = \"gpt-5\"\n"
+        #expect(AgentHookConfig.hasLegacyCodexNotify(ours))
+        #expect(AgentHookConfig.removeLegacyCodexNotify(from: ours) == "model = \"gpt-5\"\n")
+
+        let theirs = "notify = [\"/usr/bin/env\", \"node\", \"/Users/me/.tokentracker/bin/notify.cjs\"]\nmodel = \"gpt-5\"\n"
+        #expect(!AgentHookConfig.hasLegacyCodexNotify(theirs))
+        #expect(AgentHookConfig.removeLegacyCodexNotify(from: theirs) == theirs)
     }
 }

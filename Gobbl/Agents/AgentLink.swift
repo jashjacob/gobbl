@@ -2,8 +2,8 @@ import AppKit
 import GobblCore
 
 /// Connects Claude Code and Codex to Gobbl, only when the user asks:
-/// installs the `gobbl-agent` helper and adds (or removes) Gobbl's entries in
-/// ~/.claude/settings.json and ~/.codex/config.toml. Each file is backed up to
+/// installs the `gobbl-agent` helper and adds (or removes) Gobbl's hooks in
+/// ~/.claude/settings.json and ~/.codex/hooks.json. Each file is backed up to
 /// `<file>.gobbl-backup` before it is changed; symlinked dotfiles are followed.
 @MainActor
 enum AgentLink {
@@ -13,6 +13,7 @@ enum AgentLink {
     private static var home: URL { FileManager.default.homeDirectoryForCurrentUser }
     static var claudeSettings: URL { home.appendingPathComponent(".claude/settings.json") }
     static var codexConfig: URL { home.appendingPathComponent(".codex/config.toml") }
+    static var codexHooks: URL { home.appendingPathComponent(".codex/hooks.json") }
 
     static var claudeInstalled: Bool { FileManager.default.fileExists(atPath: home.appendingPathComponent(".claude").path) }
     static var codexInstalled: Bool { FileManager.default.fileExists(atPath: home.appendingPathComponent(".codex").path) }
@@ -41,22 +42,36 @@ enum AgentLink {
 
     // MARK: Codex
 
+    /// Connected through hooks.json, or through the notify line older versions added.
     static func codexConnected() -> Bool {
-        AgentHookConfig.codexConnected((try? String(contentsOf: codexConfig, encoding: .utf8)) ?? "")
+        AgentHookConfig.codexStatus(try? Data(contentsOf: codexHooks)).connected
+            || AgentHookConfig.hasLegacyCodexNotify((try? String(contentsOf: codexConfig, encoding: .utf8)) ?? "")
     }
 
+    /// Codex's lifecycle hooks, like Claude Code's: Gob sees prompts and tool use as they
+    /// happen, not just finished turns. The PermissionRequest hook is always installed;
+    /// with approvals off, AgentHub answers nothing and Codex asks as usual.
     static func connectCodex() throws {
         try installHelper()
-        let url = codexConfig.resolvingSymlinksInPath()
-        let old = try? String(contentsOf: url, encoding: .utf8)
-        let new = try AgentHookConfig.installCodex(into: old ?? "", helper: helperURL.path)
-        try write(Data(new.utf8), to: url, backup: old.map { Data($0.utf8) })
+        let url = codexHooks.resolvingSymlinksInPath()
+        let old = try? Data(contentsOf: url)
+        try write(try AgentHookConfig.installCodex(into: old, helper: helperURL.path, approvals: true), to: url, backup: old)
+        try removeLegacyCodexNotify()
     }
 
     static func disconnectCodex() throws {
+        let url = codexHooks.resolvingSymlinksInPath()
+        if let old = try? Data(contentsOf: url) {
+            try write(try AgentHookConfig.uninstallCodex(from: old), to: url, backup: old)
+        }
+        try removeLegacyCodexNotify()
+    }
+
+    /// Drops the notify line older Gobbl versions put in config.toml; anyone else's stays.
+    private static func removeLegacyCodexNotify() throws {
         let url = codexConfig.resolvingSymlinksInPath()
-        guard let old = try? String(contentsOf: url, encoding: .utf8) else { return }
-        try write(Data(AgentHookConfig.uninstallCodex(from: old).utf8), to: url, backup: Data(old.utf8))
+        guard let old = try? String(contentsOf: url, encoding: .utf8), AgentHookConfig.hasLegacyCodexNotify(old) else { return }
+        try write(Data(AgentHookConfig.removeLegacyCodexNotify(from: old).utf8), to: url, backup: Data(old.utf8))
     }
 
     // MARK: Test
@@ -96,9 +111,7 @@ enum AgentLink {
     static func describe(_ error: Error) -> String {
         switch error {
         case AgentHookConfig.ConfigError.notJSONObject:
-            return "~/.claude/settings.json isn't a JSON object, so Gobbl left it alone."
-        case AgentHookConfig.ConfigError.existingNotify(let line):
-            return "Codex already has a notify command (\(line)). Codex allows only one, so Gobbl left it alone."
+            return "The agent's hooks file isn't a JSON object, so Gobbl left it alone."
         default:
             return error.localizedDescription
         }

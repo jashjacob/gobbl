@@ -15,9 +15,11 @@ use Socket;
 
 my $source = shift @ARGV // 'claude';
 my $payload = '';
-if ($source eq 'codex') {
-    $payload = $ARGV[-1] // '';
+if ($source eq 'codex' && @ARGV) {
+    # Legacy Codex notify: the event JSON is the last argument.
+    $payload = $ARGV[-1];
 } else {
+    # Hooks (Claude Code, and Codex): the event JSON is on stdin.
     local $/;
     $payload = <STDIN> // '';
 }

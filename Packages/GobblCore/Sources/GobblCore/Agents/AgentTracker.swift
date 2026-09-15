@@ -1,7 +1,7 @@
 import Foundation
 
-/// One message from an AI coding agent, decoded from a Claude Code hook
-/// payload (stdin JSON) or a Codex `notify` payload (argv JSON).
+/// One message from an AI coding agent, decoded from a Claude Code or Codex
+/// hook payload (stdin JSON), or a legacy Codex `notify` payload (argv JSON).
 public struct AgentEvent: Equatable, Sendable {
     public enum Source: String, Sendable, CaseIterable {
         case claude, codex
@@ -41,15 +41,8 @@ public struct AgentEvent: Equatable, Sendable {
         func str(_ key: String) -> String? { (o[key] as? String).flatMap { $0.isEmpty ? nil : $0 } }
         let cwd = str("cwd")
 
-        switch source {
-        case .codex:
-            // notify payload: {"type":"agent-turn-complete","turn-id":…,"last-assistant-message":…,"cwd"?}
-            guard str("type") == "agent-turn-complete" else { return nil }
-            return AgentEvent(source: .codex, sessionID: "codex:\(cwd ?? "default")", cwd: cwd,
-                              kind: .turnDone(str("last-assistant-message")))
-        case .claude:
-            guard let event = str("hook_event_name") else { return nil }
-            let session = str("session_id") ?? "claude"
+        // Lifecycle hooks: Claude Code, and Codex, which uses the same payload.
+        if let event = str("hook_event_name") {
             let kind: Kind
             switch event {
             case "SessionStart": kind = .sessionStart
@@ -68,8 +61,12 @@ public struct AgentEvent: Equatable, Sendable {
             case "SessionEnd": kind = .sessionEnd
             default: return nil
             }
-            return AgentEvent(source: .claude, sessionID: session, cwd: cwd, kind: kind)
+            return AgentEvent(source: source, sessionID: str("session_id") ?? source.rawValue, cwd: cwd, kind: kind)
         }
+        // Legacy Codex notify: {"type":"agent-turn-complete","turn-id":…,"last-assistant-message":…,"cwd"?}
+        guard source == .codex, str("type") == "agent-turn-complete" else { return nil }
+        return AgentEvent(source: .codex, sessionID: "codex:\(cwd ?? "default")", cwd: cwd,
+                          kind: .turnDone(str("last-assistant-message")))
     }
 
     /// The interesting part of a tool call: a command, a path, a URL.

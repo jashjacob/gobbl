@@ -65,7 +65,8 @@ final class AgentHub {
     func decide(_ prompt: PermissionPrompt, allow: Bool) {
         let decision: [String: Any] = allow
             ? ["behavior": "allow"]
-            : ["behavior": "deny", "reason": "Denied from the Gobbl notch"]
+            // Claude Code reads "reason", Codex reads "message"; each ignores the other.
+            : ["behavior": "deny", "reason": "Denied from the Gobbl notch", "message": "Denied from the Gobbl notch"]
         let output: [String: Any] = ["hookSpecificOutput": ["hookEventName": "PermissionRequest", "decision": decision]]
         if let data = try? JSONSerialization.data(withJSONObject: output), let json = String(data: data, encoding: .utf8) {
             prompt.reply.send(json)
