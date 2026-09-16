@@ -4,13 +4,14 @@ import Foundation
 /// Grok hook payload (stdin JSON), or a legacy Codex `notify` payload (argv JSON).
 public struct AgentEvent: Equatable, Sendable {
     public enum Source: String, Sendable, CaseIterable {
-        case claude, codex, grok
+        case claude, codex, grok, opencode
 
         public var displayName: String {
             switch self {
             case .claude: "Claude Code"
             case .codex: "Codex"
             case .grok: "Grok"
+            case .opencode: "OpenCode"
             }
         }
     }

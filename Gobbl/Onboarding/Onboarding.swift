@@ -102,7 +102,8 @@ private struct PermissionsStep: View {
     @State private var calendar = CalendarModel.shared
     @State private var trusted = MediaKeyTap.isTrusted
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
-    @State private var agentsLinked = AgentLink.claudeStatus().connected || AgentLink.codexConnected() || AgentLink.grokConnected()
+    @State private var agentsLinked = AgentLink.claudeStatus().connected || AgentLink.codexConnected()
+        || AgentLink.grokConnected() || AgentLink.openCodeConnected()
     private let poll = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -120,14 +121,16 @@ private struct PermissionsStep: View {
                           detail: "Gob nudges you five minutes before it starts.", granted: calendar.authorized) {
                 Task { await calendar.requestAccess() }
             }
-            if AgentLink.claudeInstalled || AgentLink.codexInstalled || AgentLink.grokInstalled {
+            if AgentLink.claudeInstalled || AgentLink.codexInstalled || AgentLink.grokInstalled || AgentLink.openCodeInstalled {
                 PermissionRow(symbol: "sparkles", title: "Cheer on your AI agents",
-                              detail: "Gob works along with Claude Code, Codex and Grok, and celebrates when they finish.",
+                              detail: "Gob works along with Claude Code, Codex, Grok and OpenCode, and celebrates when they finish.",
                               granted: agentsLinked) {
                     if AgentLink.claudeInstalled { try? AgentLink.connectClaude(approvals: false) }
                     if AgentLink.codexInstalled { try? AgentLink.connectCodex() }
                     if AgentLink.grokInstalled { try? AgentLink.connectGrok() }
-                    agentsLinked = AgentLink.claudeStatus().connected || AgentLink.codexConnected() || AgentLink.grokConnected()
+                    if AgentLink.openCodeInstalled { try? AgentLink.connectOpenCode() }
+                    agentsLinked = AgentLink.claudeStatus().connected || AgentLink.codexConnected()
+                        || AgentLink.grokConnected() || AgentLink.openCodeConnected()
                 }
             }
             PermissionRow(symbol: "power", title: "Open at login",

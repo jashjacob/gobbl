@@ -6,6 +6,7 @@ struct AgentsSettingsSection: View {
     @State private var claude = AgentLink.claudeStatus()
     @State private var codex = AgentLink.codexConnected()
     @State private var grok = AgentLink.grokConnected()
+    @State private var opencode = AgentLink.openCodeConnected()
     @State private var error: String?
 
     var body: some View {
@@ -46,10 +47,17 @@ struct AgentsSettingsSection: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
+            Toggle(isOn: Binding(get: { opencode }, set: setOpenCode)) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("OpenCode")
+                    Text(AgentLink.openCodeInstalled ? "Adds a Gobbl plugin to ~/.config/opencode/plugin/gobbl.js" : "OpenCode isn't set up on this Mac yet")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
             if let error {
                 Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange).font(.caption)
             }
-            if claude.connected || codex || grok {
+            if claude.connected || codex || grok || opencode {
                 Button("Send a Test Event") { AgentLink.sendTest() }
             }
         } header: {
@@ -79,6 +87,16 @@ struct AgentsSettingsSection: View {
             self.error = AgentLink.describe(error)
         }
         codex = AgentLink.codexConnected()
+    }
+
+    private func setOpenCode(_ on: Bool) {
+        do {
+            if on { try AgentLink.connectOpenCode() } else { try AgentLink.disconnectOpenCode() }
+            error = nil
+        } catch {
+            self.error = AgentLink.describe(error)
+        }
+        opencode = AgentLink.openCodeConnected()
     }
 
     private func setGrok(_ on: Bool) {

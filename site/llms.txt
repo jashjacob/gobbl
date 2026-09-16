@@ -13,7 +13,7 @@ Key facts:
   - calendar with Join links;
   - focus timer, keep-awake and quick tools.
 - The pet: moods, eyes that follow the cursor, types along with you, Matrix rain while AI coding agents work, unboxing, 11 hats, streaks and levels, shareable .gobskin skins and 6-second clips.
-- AI agents: Claude Code, Codex and Grok status in the notch, in a terminal or through an editor or desktop app. Claude Code permission requests can be allowed or denied from the notch (it falls back to the terminal after 30 seconds). Codex runs only hooks the user has approved, so Gobbl's hooks must be approved once with /hooks in Codex, or under Hooks in Codex's settings in the editor.
+- AI agents: Claude Code, Codex, Grok and OpenCode status in the notch, in a terminal or through an editor or desktop app. OpenCode connects through a Gobbl plugin at ~/.config/opencode/plugin/gobbl.js. Claude Code permission requests can be allowed or denied from the notch (it falls back to the terminal after 30 seconds). Codex runs only hooks the user has approved, so Gobbl's hooks must be approved once with /hooks in Codex, or under Hooks in Codex's settings in the editor.
 - Gobbl key (right Option): tap to write or rewrite in any text field; double-tap for edit mode with versions (shorter, friendlier, and more); hold to dictate; type /g plus a question to get an answer.
 - Dictation:
   - on-device Whisper, and audio never leaves the Mac;

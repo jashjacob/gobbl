@@ -86,6 +86,92 @@ public enum AgentHookConfig {
         status(data, events: grokEvents)
     }
 
+    // MARK: OpenCode
+
+    /// OpenCode has no hooks file: it loads plugins from ~/.config/opencode/plugin/*.js.
+    /// This one hands the same payloads to `gobbl-agent` that Claude Code's hooks send,
+    /// so the tracker and the notch treat OpenCode like every other agent.
+    public static func openCodePlugin(helper: String, approvals: Bool) -> String {
+        let approvalHook = """
+
+            // Best effort: blocks until the notch answers, and no answer leaves OpenCode's own
+            // flow alone. `opencode run` auto-rejects without consulting plugins, so this only
+            // reaches the notch where OpenCode really asks (its TUI).
+            "permission.ask": async (permission, output) => {
+              const reply = send({
+                hook_event_name: "PermissionRequest",
+                session_id: permission.sessionID,
+                tool_name: permission.type || "a tool",
+                tool_input: { description: permission.title, ...(permission.metadata || {}) },
+                cwd,
+              }, true)
+              try {
+                const decision = JSON.parse(reply)?.hookSpecificOutput?.decision
+                if (decision?.behavior === "allow") output.status = "allow"
+                else if (decision?.behavior === "deny") output.status = "deny"
+              } catch (_) {}
+            },
+        """
+        return """
+        // Gobbl: shows OpenCode sessions in the Mac notch (gobbl.xeve.io).
+        // Written by Gobbl when you connect OpenCode in Settings, AI Agents, and removed
+        // when you disconnect it. Events go to Gobbl over a private socket on this Mac.
+        import { execFileSync } from "node:child_process"
+        import { homedir } from "node:os"
+
+        const HELPER = homedir() + "/Library/Application Support/Gobbl/bin/\(marker)"
+
+        function send(payload, wait) {
+          try {
+            return execFileSync("/usr/bin/perl", [HELPER, "opencode"], {
+              input: JSON.stringify(payload),
+              encoding: "utf8",
+              timeout: wait ? 40000 : 2000,
+              stdio: ["pipe", "pipe", "ignore"],
+            }) || ""
+          } catch (_) {
+            return "" // Gobbl isn't running, or it didn't answer: carry on regardless.
+          }
+        }
+
+        export const GobblPlugin = async ({ directory, worktree }) => {
+          // OpenCode can report "/" here; the process's own directory is the real project.
+          const cwd = [worktree, directory, process.cwd()].find((d) => d && d !== "/") || process.cwd()
+          return {
+            event: async ({ event }) => {
+              const p = (event && event.properties) || {}
+              switch (event?.type) {
+                case "session.created":
+                  send({ hook_event_name: "SessionStart", session_id: p.info?.id, cwd }); break
+                case "session.idle":
+                  send({ hook_event_name: "Stop", session_id: p.sessionID, cwd }); break
+                case "session.error":
+                  send({ hook_event_name: "StopFailure", session_id: p.sessionID, cwd }); break
+                case "session.deleted":
+                  send({ hook_event_name: "SessionEnd", session_id: p.info?.id, cwd }); break
+              }
+            },
+            "chat.message": async ({ sessionID }) => {
+              send({ hook_event_name: "UserPromptSubmit", session_id: sessionID, cwd })
+            },
+            "tool.execute.before": async ({ tool, sessionID }, output) => {
+              send({ hook_event_name: "PreToolUse", session_id: sessionID, tool_name: tool, tool_input: output?.args, cwd })
+            },
+            "tool.execute.after": async ({ sessionID }) => {
+              send({ hook_event_name: "PostToolUse", session_id: sessionID, cwd })
+            },\(approvals ? approvalHook : "")
+          }
+        }
+
+        """
+    }
+
+    /// (connected, approvals) read straight from the plugin file.
+    public static func openCodeStatus(_ text: String?) -> (connected: Bool, approvals: Bool) {
+        guard let text, text.contains(marker) else { return (false, false) }
+        return (true, text.contains("permission.ask"))
+    }
+
     /// Older Gobbl versions connected Codex through a `notify` line in config.toml,
     /// which only reported finished turns. Hooks replace it.
     public static func hasLegacyCodexNotify(_ configToml: String) -> Bool {

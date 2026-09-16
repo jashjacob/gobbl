@@ -16,10 +16,12 @@ enum AgentLink {
     static var codexConfig: URL { home.appendingPathComponent(".codex/config.toml") }
     static var codexHooks: URL { home.appendingPathComponent(".codex/hooks.json") }
     static var grokHooks: URL { home.appendingPathComponent(".grok/hooks/gobbl.json") }
+    static var openCodePlugin: URL { home.appendingPathComponent(".config/opencode/plugin/gobbl.js") }
 
     static var claudeInstalled: Bool { FileManager.default.fileExists(atPath: home.appendingPathComponent(".claude").path) }
     static var codexInstalled: Bool { FileManager.default.fileExists(atPath: home.appendingPathComponent(".codex").path) }
     static var grokInstalled: Bool { FileManager.default.fileExists(atPath: home.appendingPathComponent(".grok").path) }
+    static var openCodeInstalled: Bool { FileManager.default.fileExists(atPath: home.appendingPathComponent(".config/opencode").path) }
 
     // MARK: Claude Code
 
@@ -34,8 +36,9 @@ enum AgentLink {
         let new = try AgentHookConfig.installClaude(into: old, helper: helperURL.path, approvals: approvals)
         try write(new, to: url, backup: old)
         UserDefaults.standard.set(approvals, forKey: "agentApprovals")
-        // One switch for both agents: keep Codex's permission hook in step with it.
+        // One switch for every agent: keep their permission hooks in step with it.
         if codexConnected() { try? connectCodex() }
+        if openCodeConnected() { try? connectOpenCode() }
     }
 
     static func disconnectClaude() throws {
@@ -44,6 +47,7 @@ enum AgentLink {
         try write(try AgentHookConfig.uninstallClaude(from: old), to: url, backup: old)
         UserDefaults.standard.set(false, forKey: "agentApprovals")
         if codexConnected() { try? connectCodex() }
+        if openCodeConnected() { try? connectOpenCode() }
     }
 
     // MARK: Codex
@@ -100,6 +104,30 @@ enum AgentLink {
         let url = grokHooks.resolvingSymlinksInPath()
         guard let old = try? Data(contentsOf: url) else { return }
         try write(try AgentHookConfig.uninstallGrok(from: old), to: url, backup: old)
+    }
+
+    // MARK: OpenCode
+
+    static func openCodeConnected() -> Bool {
+        AgentHookConfig.openCodeStatus(try? String(contentsOf: openCodePlugin, encoding: .utf8)).connected
+    }
+
+    /// OpenCode loads plugins from ~/.config/opencode/plugin/*.js. Gobbl owns only its own
+    /// file there, so nobody else's plugin is touched.
+    static func connectOpenCode() throws {
+        try installHelper()
+        let url = openCodePlugin.resolvingSymlinksInPath()
+        let old = try? Data(contentsOf: url)
+        let approvals = UserDefaults.standard.bool(forKey: "agentApprovals")
+        let js = AgentHookConfig.openCodePlugin(helper: helperURL.path, approvals: approvals)
+        try write(Data(js.utf8), to: url, backup: old)
+    }
+
+    static func disconnectOpenCode() throws {
+        let url = openCodePlugin.resolvingSymlinksInPath()
+        guard let text = try? String(contentsOf: url, encoding: .utf8),
+              AgentHookConfig.openCodeStatus(text).connected else { return }
+        try FileManager.default.removeItem(at: url)
     }
 
     // MARK: Test

@@ -60,6 +60,21 @@ import Testing
         #expect(req("bypassPermissions")?.permissionMode == "bypassPermissions")
     }
 
+    @Test func parsesOpenCodePayloads() {
+        func oc(_ json: String) -> AgentEvent? { AgentEvent.parse(source: .opencode, json: Data(json.utf8)) }
+        let prompt = oc(#"{"hook_event_name":"UserPromptSubmit","session_id":"ses_1","cwd":"/src/app"}"#)
+        #expect(prompt?.kind == .promptSubmitted)
+        #expect(prompt?.source == .opencode)
+        #expect(prompt?.sessionID == "ses_1")
+        #expect(AgentEvent.Source.opencode.displayName == "OpenCode")
+        #expect(oc(#"{"hook_event_name":"PreToolUse","session_id":"ses_1","tool_name":"bash","tool_input":{"command":"npm test"}}"#)?.kind
+                == .toolUse("bash"))
+        #expect(oc(#"{"hook_event_name":"Stop","session_id":"ses_1"}"#)?.kind == .turnDone(nil))
+        #expect(oc(#"{"hook_event_name":"StopFailure","session_id":"ses_1"}"#)?.kind == .turnAborted)
+        #expect(oc(#"{"hook_event_name":"PermissionRequest","session_id":"ses_1","tool_name":"bash","tool_input":{"description":"Run npm test"}}"#)?.kind
+                == .permissionRequest(tool: "bash", detail: "Run npm test"))
+    }
+
     @Test func ignoresGarbage() {
         #expect(claude("nope") == nil)
         #expect(claude(#"{"hook_event_name":"PreCompact","session_id":"s"}"#) == nil)
@@ -284,6 +299,24 @@ import Testing
         let hooks = try #require(try object(off)["hooks"] as? [String: Any])
         #expect(hooks["PermissionRequest"] == nil)
         #expect(AgentHookConfig.codexStatus(off) == (true, false))
+    }
+
+    @Test func openCodePluginCarriesTheHelperAndApprovals() {
+        let off = AgentHookConfig.openCodePlugin(helper: helper, approvals: false)
+        #expect(off.contains("[HELPER, \"opencode\"]"))
+        #expect(off.contains(#""hook_event_name": "PreToolUse""#) || off.contains("hook_event_name: \"PreToolUse\""))
+        #expect(off.contains("chat.message"))
+        #expect(off.contains("session.idle"))
+        #expect(!off.contains("permission.ask")) // approvals off: never blocks OpenCode
+        #expect(AgentHookConfig.openCodeStatus(off) == (true, false))
+
+        let on = AgentHookConfig.openCodePlugin(helper: helper, approvals: true)
+        #expect(on.contains("permission.ask"))
+        #expect(on.contains("output.status = \"allow\""))
+        #expect(AgentHookConfig.openCodeStatus(on) == (true, true))
+
+        #expect(AgentHookConfig.openCodeStatus(nil) == (false, false))
+        #expect(AgentHookConfig.openCodeStatus("export const Other = async () => ({})") == (false, false))
     }
 
     @Test func legacyCodexNotifyIsRemovedButOthersStay() {

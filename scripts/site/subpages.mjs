@@ -27,8 +27,8 @@ const GROUPS = [
     ["box", "Unboxing", "Pets ship in a box: Classic, Compact or Candy, in one of 8 colours. 1 in 100 are limited editions."],
     ["hat", "Hats, streaks and levels", "Keep a daily streak to level up and earn 11 hats, 4 of them seasonal."],
     ["film", "Skins and clips", "Make and share .gobskin skins. Render a 6-second MP4 and GIF of your pet, or record your real notch."]]],
-  ["agents", "terminal", "AI agents in your notch", "Connect Claude Code, Codex and Grok from Settings with one click.", [
-    ["terminal", "Agent status", "Gob thinks, codes and celebrates along with Claude Code, Codex and Grok, so you can look away while they work. Codex runs only hooks you've approved, so approve Gobbl's once with /hooks."],
+  ["agents", "terminal", "AI agents in your notch", "Connect Claude Code, Codex, Grok and OpenCode from Settings with one click.", [
+    ["terminal", "Agent status", "Gob thinks, codes and celebrates along with Claude Code, Codex, Grok and OpenCode, so you can look away while they work. Codex runs only hooks you've approved, so approve Gobbl's once with /hooks."],
     ["check", "Allow and Deny from the notch", "Claude Code's permission requests appear in the notch. If you don't answer within 30 seconds, Claude asks in the terminal as usual."]]],
   ["key", "keyboard", "Write anywhere with the Gobbl key", "The right Option key works in any text field, in any app.", [
     ["wand", "Tap to write or rewrite", "Tap in an empty field to draft, or with text in it to rewrite. Gobbl uses the nearby text as context."],
@@ -321,7 +321,7 @@ const vsNook = versus({
   pet: { char: "candy", hue: .93, mood: "dance", rest: "dance" },
   tldr: `<p>Pick <strong>Gobbl</strong> if you want a free, open-source MacBook notch app that also dictates, writes, remembers and watches your AI agents.</p><p>Pick <strong>NotchNook</strong> if you prefer a long-established paid app focused on the notch itself.</p>`,
   theirs: ["One of the best-known notch apps, with a polished, focused design.", "A longer history and a large user base.", "Widgets like the file tray, Now Playing and calendar, refined over many releases."],
-  ours: ["Free and open source under MIT. NotchNook is paid and closed source (sources disagree on the current price, so check its site).", "On-device Whisper dictation with no word cap.", "The Gobbl key for writing and rewriting in any app.", "Claude Code, Codex and Grok status, and Allow/Deny for Claude Code from the notch.", "Opt-in screen memory with automatic to-dos.", "A pet that reacts to what you do."],
+  ours: ["Free and open source under MIT. NotchNook is paid and closed source (sources disagree on the current price, so check its site).", "On-device Whisper dictation with no word cap.", "The Gobbl key for writing and rewriting in any app.", "Claude Code, Codex, Grok and OpenCode status, and Allow/Deny for Claude Code from the notch.", "Opt-in screen memory with automatic to-dos.", "A pet that reacts to what you do."],
   pick: `<p>If you only want notch widgets and already own NotchNook, it does that job well. If you're choosing today, Gobbl is a free NotchNook alternative that covers the basics and adds a lot more.</p>`,
   rel: [["/compare/droppy", "Gobbl vs Droppy", "Another notch app, compared."], ["/features", "All features", "Everything Gobbl does."]]
 });

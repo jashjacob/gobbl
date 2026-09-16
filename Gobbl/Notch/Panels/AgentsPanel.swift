@@ -144,6 +144,10 @@ struct AgentIcon: View {
             GrokMark()
                 .stroke(Color.white, style: StrokeStyle(lineWidth: 1.55, lineCap: .round))
                 .frame(width: 12, height: 12)
+        case .opencode:
+            Image(systemName: "curlybraces")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(Palette.text)
         }
     }
 }
@@ -163,11 +167,12 @@ private struct EmptyAgents: View {
     @State private var claude = AgentLink.claudeStatus().connected
     @State private var codex = AgentLink.codexConnected()
     @State private var grok = AgentLink.grokConnected()
+    @State private var opencode = AgentLink.openCodeConnected()
 
     var body: some View {
         VStack(spacing: 6) {
             Image(systemName: "sparkles").font(.system(size: 18, weight: .semibold)).foregroundStyle(Palette.accent)
-            if claude || codex || grok {
+            if claude || codex || grok || opencode {
                 Text("Gob is watching \(watching).")
                     .font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.text)
                 Text("Start a task and Gob works along, then cheers when it's done.")
@@ -193,7 +198,8 @@ private struct EmptyAgents: View {
     }
 
     private var watching: String {
-        let names = [claude ? "Claude Code" : nil, codex ? "Codex" : nil, grok ? "Grok" : nil].compactMap { $0 }
+        let names = [claude ? "Claude Code" : nil, codex ? "Codex" : nil, grok ? "Grok" : nil,
+                     opencode ? "OpenCode" : nil].compactMap { $0 }
         switch names.count {
         case 0, 1: return names.first ?? ""
         case 2: return "\(names[0]) and \(names[1])"

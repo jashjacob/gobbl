@@ -78,7 +78,7 @@ export const home = {
       <figure class="reveal" style="--i:0"><picture><source srcset="/img/notch/home.webp" type="image/webp"><img src="/img/notch/home.png" width="1140" height="460" alt="Gobbl's Home panel open in the MacBook notch: the pet, a playing track with controls, and a design review with a Join button" loading="lazy" decoding="async"></picture><figcaption><b>Home</b>Gob, what&rsquo;s playing and your next meeting, with a Join button.</figcaption></figure>
       <figure class="reveal" style="--i:1"><picture><source srcset="/img/notch/chat.webp" type="image/webp"><img src="/img/notch/chat.png" width="1140" height="460" alt="Gobbl's Chat panel: a question about the day, an answer, and a reminder being set" loading="lazy" decoding="async"></picture><figcaption><b>Chat</b>Ask about your day, or set a reminder in plain English.</figcaption></figure>
       <figure class="reveal" style="--i:2"><picture><source srcset="/img/notch/shelf.webp" type="image/webp"><img src="/img/notch/shelf.png" width="1140" height="460" alt="Gobbl's Shelf panel holding four files with AirDrop, Share and Clear buttons" loading="lazy" decoding="async"></picture><figcaption><b>Shelf</b>Drop files on the notch, then drag them out, AirDrop or share.</figcaption></figure>
-      <figure class="reveal" style="--i:3"><picture><source srcset="/img/notch/agents.webp" type="image/webp"><img src="/img/notch/agents.png" width="1140" height="460" alt="Gobbl's Agents panel: one Claude Code session needing permission, a finished Codex task and one working" loading="lazy" decoding="async"></picture><figcaption><b>AI agents</b>Claude Code, Codex and Grok at a glance, including permission requests.</figcaption></figure>
+      <figure class="reveal" style="--i:3"><picture><source srcset="/img/notch/agents.webp" type="image/webp"><img src="/img/notch/agents.png" width="1140" height="460" alt="Gobbl's Agents panel: one Claude Code session needing permission, a finished Codex task and one working" loading="lazy" decoding="async"></picture><figcaption><b>AI agents</b>Claude Code, Codex, Grok and OpenCode at a glance, including permission requests.</figcaption></figure>
       <figure class="reveal" style="--i:4"><picture><source srcset="/img/notch/tools.webp" type="image/webp"><img src="/img/notch/tools.png" width="1140" height="460" alt="Gobbl's Tools panel with a 25-minute focus timer and six quick tool buttons" loading="lazy" decoding="async"></picture><figcaption><b>Quick tools</b>A focus timer, keep-awake, mic mute, a colour picker and more.</figcaption></figure>
     </div>
   </div>
@@ -128,12 +128,12 @@ export const home = {
   <div class="wrap">
     <div class="kicker reveal">${ic("terminal")}AI agents in your notch</div>
     <h2 class="reveal" style="--i:1">Approve Claude Code<br>without switching windows.</h2>
-    <p class="sub reveal" style="--i:2">Connect Claude Code, Codex or Grok in one click. Gob thinks while the agent plans, codes along with Matrix rain, and waves when it needs you. Claude Code's permission requests show up in the notch with Allow and Deny.</p>
+    <p class="sub reveal" style="--i:2">Connect Claude Code, Codex, Grok or OpenCode in one click. Gob thinks while the agent plans, codes along with Matrix rain, and waves when it needs you. Claude Code's permission requests show up in the notch with Allow and Deny.</p>
     <div class="agents" data-demo="agents">
       <div class="term reveal"><div class="skel"></div><div class="tbar"><i></i><i></i><i></i><span>claude</span></div><pre aria-label="Example Claude Code session"><span class="p">&gt;</span> add dark mode to the settings page</pre></div>
       <div class="agent-pet reveal" style="--i:1"><canvas width="440" height="440" role="img" aria-label="Gob reacting to the coding agent"></canvas><p class="status" aria-live="polite">Waiting for a prompt</p></div>
     </div>
-    <p class="note">If Gobbl isn't running, or you don't answer within 30 seconds, Claude asks in the terminal as usual. Codex and Grok get status and celebrations; Allow and Deny are for Claude Code. Codex also asks you to approve Gobbl's hooks once, with /hooks.</p>
+    <p class="note">If Gobbl isn't running, or you don't answer within 30 seconds, Claude asks in the terminal as usual. Codex, Grok and OpenCode get status and celebrations; Allow and Deny are for Claude Code. Codex also asks you to approve Gobbl's hooks once, with /hooks.</p>
   </div>
 </section>
 
