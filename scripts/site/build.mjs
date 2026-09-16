@@ -75,7 +75,7 @@ function footer() {
   return `<footer class="site"><div class="wrap">
   <div class="fgrid">
     <div class="fabout"><a class="brand" href="/"><img src="/img/icon.png" alt="" width="26" height="26" loading="lazy">Gobbl</a><p>A free, open-source notch app for Mac with a pet that lives in the notch. Shelf, clipboard, music, dictation, AI writing and memory. Made by <a href="https://xeve.io">Xeve</a>.</p></div>
-    ${col("Product", [["/features", "All features"], ["/dictation", "Offline dictation"], ["/memory", "Screen memory"], ["/privacy", "Privacy"], ["/faq", "FAQ"], ["/download", "Download"]])}
+    ${col("Product", [["/features", "All features"], ["/dictation", "Offline dictation"], ["/memory", "Screen memory"], ["/privacy", "Privacy"], ["/faq", "FAQ"], ["/download", "Download"], ["/support", "Pay what you want"]])}
     ${col("Compare", [["/compare/wispr-flow", "Gobbl vs Wispr Flow"], ["/compare/droppy", "Gobbl vs Droppy"], ["/compare/notchnook", "Gobbl vs NotchNook"], ["/compare/goldfish", "Gobbl vs Goldfish"], ["/compare/", "All comparisons"]])}
     ${col("Open source", [["https://github.com/xeveio/gobbl", "GitHub"], ["https://github.com/xeveio/gobbl/releases", "Releases"], ["https://github.com/xeveio/gobbl/blob/main/LICENSE", "MIT License"], ["https://github.com/xeveio/gobbl/issues", "Report an issue"], ["https://xeve.io", "Xeve"]])}
   </div>

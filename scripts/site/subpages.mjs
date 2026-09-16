@@ -27,8 +27,8 @@ const GROUPS = [
     ["box", "Unboxing", "Pets ship in a box: Classic, Compact or Candy, in one of 8 colours. 1 in 100 are limited editions."],
     ["hat", "Hats, streaks and levels", "Keep a daily streak to level up and earn 11 hats, 4 of them seasonal."],
     ["film", "Skins and clips", "Make and share .gobskin skins. Render a 6-second MP4 and GIF of your pet, or record your real notch."]]],
-  ["agents", "terminal", "AI agents in your notch", "Connect Claude Code and Codex from Settings with one click.", [
-    ["terminal", "Agent status", "Gob thinks, codes and celebrates along with Claude Code and Codex, so you can look away while they work."],
+  ["agents", "terminal", "AI agents in your notch", "Connect Claude Code, Codex and Grok from Settings with one click.", [
+    ["terminal", "Agent status", "Gob thinks, codes and celebrates along with Claude Code, Codex and Grok, so you can look away while they work. Codex runs only hooks you've approved, so approve Gobbl's once with /hooks."],
     ["check", "Allow and Deny from the notch", "Claude Code's permission requests appear in the notch. If you don't answer within 30 seconds, Claude asks in the terminal as usual."]]],
   ["key", "keyboard", "Write anywhere with the Gobbl key", "The right Option key works in any text field, in any app.", [
     ["wand", "Tap to write or rewrite", "Tap in an empty field to draft, or with text in it to rewrite. Gobbl uses the nearby text as context."],
@@ -206,6 +206,7 @@ const privacy = {
 <p>Every AI request is written to a log on your Mac, which you can open from Settings. If you want to know exactly what left your Mac and when, it's all there.</p>
 <h2 id="verify">One-time verification</h2>
 <p>To keep the free AI service from being abused, the first AI request asks for a one-time Cloudflare Turnstile check. It doesn't create an account.</p>
+<p>If you choose to pay what you want, checkout is handled by Dodo Payments, which acts as the merchant of record and processes your name, email and payment details under its own privacy policy. Xeve receives a record of the payment, not your card details. Paying is optional and unlocks nothing: the app is the same either way.</p>
 <h2 id="website">This website</h2>
 <p>The Gobbl app has no analytics. This website, gobbl.xeve.io, uses Google Analytics to count visits and clicks on the download and GitHub buttons.</p>
 <h2 id="contact">Questions</h2>
@@ -320,7 +321,7 @@ const vsNook = versus({
   pet: { char: "candy", hue: .93, mood: "dance", rest: "dance" },
   tldr: `<p>Pick <strong>Gobbl</strong> if you want a free, open-source MacBook notch app that also dictates, writes, remembers and watches your AI agents.</p><p>Pick <strong>NotchNook</strong> if you prefer a long-established paid app focused on the notch itself.</p>`,
   theirs: ["One of the best-known notch apps, with a polished, focused design.", "A longer history and a large user base.", "Widgets like the file tray, Now Playing and calendar, refined over many releases."],
-  ours: ["Free and open source under MIT. NotchNook is paid and closed source (sources disagree on the current price, so check its site).", "On-device Whisper dictation with no word cap.", "The Gobbl key for writing and rewriting in any app.", "Claude Code and Codex status, and Allow/Deny for Claude Code from the notch.", "Opt-in screen memory with automatic to-dos.", "A pet that reacts to what you do."],
+  ours: ["Free and open source under MIT. NotchNook is paid and closed source (sources disagree on the current price, so check its site).", "On-device Whisper dictation with no word cap.", "The Gobbl key for writing and rewriting in any app.", "Claude Code, Codex and Grok status, and Allow/Deny for Claude Code from the notch.", "Opt-in screen memory with automatic to-dos.", "A pet that reacts to what you do."],
   pick: `<p>If you only want notch widgets and already own NotchNook, it does that job well. If you're choosing today, Gobbl is a free NotchNook alternative that covers the basics and adds a lot more.</p>`,
   rel: [["/compare/droppy", "Gobbl vs Droppy", "Another notch app, compared."], ["/features", "All features", "Everything Gobbl does."]]
 });

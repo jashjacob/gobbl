@@ -6,7 +6,8 @@ const files = walk(SITE).filter(f => f.endsWith(".html"));
 let bad = 0; const titles = new Map(), descs = new Map();
 const resolve = href => {
   let p = href.split("#")[0].split("?")[0]; if (!p) return true;
-  if (p === "/download") return true;
+  // Redirects written by deploy-site.sh, so they're not files in site/.
+  if (p === "/download" || p === "/support") return true;
   if (p.endsWith("/")) p += "index.html";
   const f = SITE + p; return existsSync(f) || existsSync(f + ".html");
 };
