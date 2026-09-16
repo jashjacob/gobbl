@@ -128,7 +128,10 @@ final class AgentHub {
         let effect = tracker.apply(event, hostApp: host)
         let project = tracker.sessions.first { $0.id == event.sessionID }?.project ?? event.source.displayName
 
-        if case .permissionRequest(let tool, let detail) = event.kind, UserDefaults.standard.bool(forKey: "agentApprovals") {
+        // A session running in auto or bypass mode approves its own tools: answer nothing,
+        // so the agent carries on instead of waiting on the notch.
+        if case .permissionRequest(let tool, let detail) = event.kind, event.wantsApproval,
+           UserDefaults.standard.bool(forKey: "agentApprovals") {
             let prompt = PermissionPrompt(sessionID: event.sessionID, source: event.source, project: project, tool: tool,
                                           detail: detail, created: Date(), reply: reply)
             pending.append(prompt)

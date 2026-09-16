@@ -21,7 +21,7 @@ struct AgentsSettingsSection: View {
                 Toggle(isOn: Binding(get: { claude.approvals }, set: { setClaude(true, approvals: $0) })) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Approve permission prompts from the notch")
-                        Text("Allow or Deny without switching to the terminal. Unanswered after 30 s, Claude asks in the terminal as usual.")
+                        Text("For Claude Code and Codex. Allow or Deny without switching to the terminal; unanswered after 30 s, the agent asks there as usual. Sessions running in an auto or bypass mode are never interrupted.")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }

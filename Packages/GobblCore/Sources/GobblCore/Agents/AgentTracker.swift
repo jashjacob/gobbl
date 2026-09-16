@@ -35,12 +35,25 @@ public struct AgentEvent: Equatable, Sendable {
     public var sessionID: String
     public var cwd: String?
     public var kind: Kind
+    /// The session's permission mode, when the agent sends one.
+    public var permissionMode: String?
 
-    public init(source: Source, sessionID: String, cwd: String?, kind: Kind) {
+    public init(source: Source, sessionID: String, cwd: String?, kind: Kind, permissionMode: String? = nil) {
         self.source = source
         self.sessionID = sessionID
         self.cwd = cwd
         self.kind = kind
+        self.permissionMode = permissionMode
+    }
+
+    /// Modes where the agent approves its own tools. Gobbl stays out of the way in those
+    /// sessions: no notch prompt, no waiting. Anything unfamiliar counts as asking.
+    static let autoModes: Set<String> = ["bypasspermissions", "dontask", "never", "full-access", "danger-full-access"]
+
+    /// Whether this session would really stop and ask the user.
+    public var wantsApproval: Bool {
+        guard let mode = permissionMode?.lowercased() else { return true }
+        return !Self.autoModes.contains(mode)
     }
 
     /// Returns nil for events Gob doesn't care about.
@@ -88,7 +101,8 @@ public struct AgentEvent: Equatable, Sendable {
             default: return nil
             }
             return AgentEvent(source: resolvedSource(claimed: source, json: o),
-                              sessionID: str("session_id", "sessionId") ?? source.rawValue, cwd: cwd, kind: kind)
+                              sessionID: str("session_id", "sessionId") ?? source.rawValue, cwd: cwd, kind: kind,
+                              permissionMode: str("permission_mode", "permissionMode"))
         }
         // Legacy Codex notify: {"type":"agent-turn-complete","turn-id":…,"last-assistant-message":…,"cwd"?}
         guard source == .codex, str("type") == "agent-turn-complete" else { return nil }

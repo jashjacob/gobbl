@@ -46,6 +46,20 @@ import Testing
         #expect(codex(#"{"hook_event_name":"PreCompact","session_id":"019d"}"#) == nil)
     }
 
+    @Test func autoModesNeverWaitOnTheUser() {
+        func req(_ mode: String?) -> AgentEvent? {
+            let m = mode.map { #", "permission_mode":"\#($0)""# } ?? ""
+            return AgentEvent.parse(source: .codex, json: Data(#"{"hook_event_name":"PermissionRequest","session_id":"s","tool_name":"Bash"\#(m)}"#.utf8))
+        }
+        #expect(req(nil)?.wantsApproval == true)
+        #expect(req("default")?.wantsApproval == true)
+        #expect(req("acceptEdits")?.wantsApproval == true) // edits are auto, other tools still ask
+        #expect(req("bypassPermissions")?.wantsApproval == false)
+        #expect(req("dontAsk")?.wantsApproval == false)
+        #expect(req("never")?.wantsApproval == false)
+        #expect(req("bypassPermissions")?.permissionMode == "bypassPermissions")
+    }
+
     @Test func ignoresGarbage() {
         #expect(claude("nope") == nil)
         #expect(claude(#"{"hook_event_name":"PreCompact","session_id":"s"}"#) == nil)
@@ -263,6 +277,13 @@ import Testing
         let removed = try AgentHookConfig.uninstallGrok(from: installed)
         #expect(Array(try #require(try object(removed)["hooks"] as? [String: Any]).keys) == ["Stop"])
         #expect(AgentHookConfig.grokStatus(removed) == (false, false))
+    }
+
+    @Test func codexWithoutApprovalsHasNoPermissionHook() throws {
+        let off = try AgentHookConfig.installCodex(into: nil, helper: helper, approvals: false)
+        let hooks = try #require(try object(off)["hooks"] as? [String: Any])
+        #expect(hooks["PermissionRequest"] == nil)
+        #expect(AgentHookConfig.codexStatus(off) == (true, false))
     }
 
     @Test func legacyCodexNotifyIsRemovedButOthersStay() {

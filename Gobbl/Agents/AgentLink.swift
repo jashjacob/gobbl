@@ -34,6 +34,8 @@ enum AgentLink {
         let new = try AgentHookConfig.installClaude(into: old, helper: helperURL.path, approvals: approvals)
         try write(new, to: url, backup: old)
         UserDefaults.standard.set(approvals, forKey: "agentApprovals")
+        // One switch for both agents: keep Codex's permission hook in step with it.
+        if codexConnected() { try? connectCodex() }
     }
 
     static func disconnectClaude() throws {
@@ -41,6 +43,7 @@ enum AgentLink {
         guard let old = try? Data(contentsOf: url) else { return }
         try write(try AgentHookConfig.uninstallClaude(from: old), to: url, backup: old)
         UserDefaults.standard.set(false, forKey: "agentApprovals")
+        if codexConnected() { try? connectCodex() }
     }
 
     // MARK: Codex
@@ -52,13 +55,14 @@ enum AgentLink {
     }
 
     /// Codex's lifecycle hooks, like Claude Code's: Gob sees prompts and tool use as they
-    /// happen, not just finished turns. The PermissionRequest hook is always installed;
-    /// with approvals off, AgentHub answers nothing and Codex asks as usual.
+    /// happen, not just finished turns. The PermissionRequest hook goes in only when the
+    /// user asked for notch approvals; it blocks Codex until someone answers.
     static func connectCodex() throws {
         try installHelper()
         let url = codexHooks.resolvingSymlinksInPath()
         let old = try? Data(contentsOf: url)
-        try write(try AgentHookConfig.installCodex(into: old, helper: helperURL.path, approvals: true), to: url, backup: old)
+        let approvals = UserDefaults.standard.bool(forKey: "agentApprovals")
+        try write(try AgentHookConfig.installCodex(into: old, helper: helperURL.path, approvals: approvals), to: url, backup: old)
         try removeLegacyCodexNotify()
     }
 
